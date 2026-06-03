@@ -10,8 +10,12 @@
      Paste your Firebase config here
 ════════════════════════════════════════════ -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDbBOEwneXr-zXz757hsq0QCN_kTne-cWU",
   authDomain: "mlt-games.firebaseapp.com",
@@ -19,7 +23,7 @@ const firebaseConfig = {
   projectId: "mlt-games",
   storageBucket: "mlt-games.firebasestorage.app",
   messagingSenderId: "155519296384",
-  appId: "1:155519296384:web:ba094a985194d0fd739765"
+  appId: "1:155519296384:web:ba094a985194d0fd739765""
 };
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
