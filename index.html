@@ -130,7 +130,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .pc.pf{background:rgba(6,214,160,.11);border-color:var(--green);color:var(--green);font-size:.75rem;cursor:default}
 .pc.pm{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#0f0e17}
 .pc.pw{background:linear-gradient(135deg,var(--accent2),var(--green)) !important;color:#0f0e17 !important;animation:pulse .6s infinite alternate}
-.pc.pp{outline:2px dashed rgba(255,209,102,.4);outline-offset:-3px}
+.pc.pp{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.7);border-width:2px}
 @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.06)}}
 .bhdr{display:contents}
 .bhdr span{background:rgba(255,255,255,.05);border-radius:5px;padding:5px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--accent)}
@@ -293,6 +293,20 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .tab-btn.active.find-tab{border-color:rgba(255,209,102,.5);color:var(--accent2)}
 .hcard.find-card:hover{border-color:var(--accent2)}
 .find-game-tag{background:rgba(255,209,102,.15);color:var(--accent2)}
+.tab-btn.active.rooms-tab{border-color:rgba(167,243,208,.5);color:#6ee7b7}
+/* ── MY ROOMS ── */
+.mr-card{background:var(--surface);border:1.5px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;transition:.2s}
+.mr-card:hover{border-color:rgba(255,255,255,.18)}
+.mr-name{font-weight:700;font-size:.95rem;margin-bottom:4px}
+.mr-meta{font-size:.76rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mr-code{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--accent2);margin-top:4px;letter-spacing:1px}
+.mr-role{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700}
+.mr-role.host{background:rgba(255,107,53,.15);color:var(--accent)}
+.mr-role.player{background:rgba(168,85,247,.15);color:var(--purple2)}
+.mr-actions{display:flex;gap:8px;flex-shrink:0}
+.mr-empty{color:var(--muted);font-size:.88rem;text-align:center;padding:24px 0}
+/* ── CLOSE ROOM BUTTON ── */
+.close-room-btn{background:rgba(239,71,111,.12)!important;border:1.5px solid rgba(239,71,111,.3)!important;color:var(--pink)!important;font-size:.78rem!important;padding:8px 14px!important}
 /* ── FIND GAMES OVERLAY ── */
 #find-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;flex-direction:column;overflow-y:auto}
 #find-overlay.show{display:flex}
@@ -369,7 +383,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 
 <header>
   <div class="logo">MLT Games <span>Multiplayer</span></div>
-  <button class="btn btn-outline btn-sm" onclick="goHome()">← Home</button>
+  <button class="btn btn-outline btn-sm" id="home-btn" onclick="goHome()">← Home</button>
 </header>
 
 <!-- ══════════ HOME ══════════ -->
@@ -384,6 +398,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <button class="tab-btn other-tab" onclick="switchTab('other')"><span class="t-icon">🎮</span>Other Games</button>
     <button class="tab-btn fb-tab" onclick="switchTab('fb')"><span class="t-icon">📘</span>Facebook Games</button>
     <button class="tab-btn find-tab" onclick="switchTab('find')"><span class="t-icon">🔎</span>Find Games</button>
+    <button class="tab-btn rooms-tab" id="rooms-tab-btn" onclick="switchTab('rooms')" style="display:none"><span class="t-icon">🚪</span>My Rooms</button>
   </div>
 
   <!-- BINGO TAB -->
@@ -586,7 +601,15 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
   </div>
 </div>
 
-<!-- ══════════ LUCKY NUMBERS MENU ══════════ -->
+  <!-- MY ROOMS TAB -->
+  <div class="tab-panel" id="tab-rooms" style="width:100%;max-width:760px">
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:20px;text-align:center">Rooms you hosted or joined recently. Tap <b>Rejoin</b> to jump straight back in.</p>
+    <div id="my-rooms-list"><div class="mr-empty">No recent rooms yet.</div></div>
+    <div style="margin-top:16px;text-align:center">
+      <button class="btn btn-outline btn-sm" onclick="if(confirm('Clear all saved rooms?')){localStorage.removeItem('mlt_my_rooms');renderMyRooms()}">🗑 Clear All</button>
+    </div>
+  </div>
+</div>
 <div class="screen" id="s-ln-menu">
   <div style="width:100%;max-width:580px">
     <h2 style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;background:linear-gradient(90deg,var(--purple),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">🍀 MLT Lucky Numbers</h2>
@@ -629,26 +652,48 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <p class="sub" id="ln-setup-sub">Configure your room</p>
     <div class="ig"><label>Your Name</label><input id="ln-host-name" placeholder="e.g. Sarah" maxlength="20"/></div>
     <div class="ig"><label>Room Name (optional)</label><input id="ln-room-label" placeholder="e.g. Lucky Night" maxlength="30"/></div>
-    <div class="ig"><label>Max Players</label>
-      <select id="ln-max-players">
-        <option value="5">5 players</option>
-        <option value="10">10 players</option>
-        <option value="15">15 players</option>
-        <option value="20" selected>20 players</option>
-        <option value="30">30 players</option>
-        <option value="50">50 players</option>
-      </select>
-    </div>
+
+    <!-- LN1: range + max players are linked -->
     <div id="ln-game1-opts" style="display:none">
-      <div class="ig"><label>Number Range</label>
-        <select id="ln1-range">
+      <div class="ig">
+        <label>Number Range <span style="color:var(--muted);font-size:.78rem">(sets how many unique numbers players can pick from)</span></label>
+        <select id="ln1-range" onchange="lnSyncRange()">
+          <option value="10">1 – 10</option>
+          <option value="20">1 – 20</option>
           <option value="25">1 – 25</option>
           <option value="50" selected>1 – 50</option>
           <option value="75">1 – 75</option>
           <option value="100">1 – 100</option>
         </select>
       </div>
+      <div class="ig">
+        <label>Max Players <span id="ln1-max-hint" style="color:var(--accent2);font-size:.78rem">(max 50 — limited by range)</span></label>
+        <select id="ln1-max-players">
+          <option value="5">5 players</option>
+          <option value="10">10 players</option>
+          <option value="15">15 players</option>
+          <option value="20" selected>20 players</option>
+          <option value="25">25 players</option>
+          <option value="30">30 players</option>
+          <option value="50">50 players</option>
+        </select>
+      </div>
     </div>
+
+    <!-- LN2: max players only (lucky numbers are auto-assigned from range, no picking) -->
+    <div id="ln-game2-opts" style="display:none">
+      <div class="ig"><label>Max Players</label>
+        <select id="ln2-max-players">
+          <option value="5">5 players</option>
+          <option value="10">10 players</option>
+          <option value="20" selected>20 players</option>
+          <option value="30">30 players</option>
+          <option value="50">50 players</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- LN3: range + max players independent (guessing, not picking unique numbers) -->
     <div id="ln-game3-opts" style="display:none">
       <div class="ig"><label>Number Range for Guessing</label>
         <select id="ln3-range">
@@ -658,7 +703,17 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
           <option value="1000">1 – 1000</option>
         </select>
       </div>
+      <div class="ig"><label>Max Players</label>
+        <select id="ln3-max-players">
+          <option value="5">5 players</option>
+          <option value="10">10 players</option>
+          <option value="20" selected>20 players</option>
+          <option value="30">30 players</option>
+          <option value="50">50 players</option>
+        </select>
+      </div>
     </div>
+
     <button class="btn btn-purple" onclick="createLNRoom()">Create Room →</button>
     <p class="err-txt" id="ln-setup-err"></p>
   </div>
@@ -676,6 +731,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <button class="copy-btn" id="ln-copy-btn" onclick="copyLink('ln-share-link','ln-copy-btn')">Copy Link</button>
       </div>
     </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
   </div>
 
   <!-- GAME 1: PICK & DRAW HOST -->
@@ -891,6 +947,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <button class="copy-btn" id="hl-copy-btn" onclick="copyLink('hl-share-link','hl-copy-btn')">Copy Link</button>
       </div>
     </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
   </div>
 
   <div class="card">
@@ -1030,6 +1087,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <button class="copy-btn" id="lastn-copy-btn" onclick="copyLink('lastn-share-link','lastn-copy-btn')">Copy Link</button>
       </div>
     </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
   </div>
   <div class="card">
     <h2>🏁 Last Number</h2>
@@ -1145,6 +1203,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <button class="copy-btn" id="oe-copy-btn" onclick="copyLink('oe-share-link','oe-copy-btn')">Copy Link</button>
       </div>
     </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
   </div>
   <div class="card">
     <h2>🎲 Odd or Even</h2>
@@ -1285,6 +1344,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <button class="copy-btn" id="duck-copy-btn" onclick="copyLink('duck-share-link','duck-copy-btn')">Copy Link</button>
       </div>
     </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
   </div>
   <div class="card">
     <h2>🦆 Lucky Duck</h2>
@@ -1384,6 +1444,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <button class="copy-btn" id="sq-copy-btn" onclick="copyLink('sq-share-link','sq-copy-btn')">Copy Link</button>
       </div>
     </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
   </div>
   <div class="card">
     <h2>🟦 Guess the Square</h2>
@@ -1480,6 +1541,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <button class="copy-btn" id="mm-copy-btn" onclick="copyLink('mm-share-link','mm-copy-btn')">Copy Link</button>
       </div>
     </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
   </div>
   <div class="card">
     <h2>🔍 Murder Mystery</h2>
@@ -1590,6 +1652,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <button class="copy-btn" id="bingo-copy-btn" onclick="copyLink('bingo-share-link','bingo-copy-btn')">Copy Link</button>
       </div>
     </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
   </div>
   <div class="card">
     <h2>🎯 Win Pattern</h2>
@@ -1734,6 +1797,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <button class="copy-btn" id="fg-copy-btn" onclick="copyLink('fg-share-link','fg-copy-btn')">Copy Link</button>
       </div>
     </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
   </div>
   <div class="card">
     <h2 id="fgh-game-title">🔎 Find Games</h2>
@@ -1859,6 +1923,13 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
   </div>
 </div>
 
+<!-- ══════════ ROOM CLOSED OVERLAY ══════════ -->
+<div id="room-closed-ov" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center">
+  <div style="font-size:3.5rem;margin-bottom:16px">🔒</div>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:2px;margin-bottom:10px">Room Closed</div>
+  <p style="color:var(--muted);font-size:.95rem;max-width:320px;margin-bottom:28px">The host has ended this session. Thanks for playing!</p>
+</div>
+
 <!-- STATUS BAR -->
 <div class="sbar" id="sbar">
   <div><span class="sdot" id="sdot"></span><span id="stxt">Connected</span></div>
@@ -1927,6 +1998,20 @@ function dbListen(p,cb){if(!db)return()=>{};const unsub=_onValue(_ref(db,p),s=>c
 
 // ════════════ NAVIGATION ════════════
 function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function setHostUI(){
+  // Hosts see Home button and My Rooms tab
+  const hb=document.getElementById('home-btn');
+  const rt=document.getElementById('rooms-tab-btn');
+  if(hb)hb.style.display='';
+  if(rt)rt.style.display='';
+}
+function setPlayerUI(){
+  // Players see NO Home button and NO My Rooms tab
+  const hb=document.getElementById('home-btn');
+  const rt=document.getElementById('rooms-tab-btn');
+  if(hb)hb.style.display='none';
+  if(rt)rt.style.display='none';
+}
 function goHome(){
   [unsubHost,unsubPlayer,unsubChat,unsubHL,unsubLastN,unsubOE,unsubDuck,unsubSq,unsubMM,unsubFG].forEach(u=>{if(u)u()});
   unsubHost=unsubPlayer=unsubChat=null;
@@ -1936,6 +2021,12 @@ function goHome(){
   document.getElementById('chat-panel').classList.remove('open');
   document.getElementById('chat-messages').innerHTML='';
   chatOpen=false;unreadCount=0;
+  document.getElementById('room-closed-ov').style.display='none';
+  // Restore full UI on home screen
+  const hb=document.getElementById('home-btn');
+  const rt=document.getElementById('rooms-tab-btn');
+  if(hb)hb.style.display='';
+  if(rt)rt.style.display='';
   go('s-home');
 }
 function goLN(role,game){
@@ -1944,7 +2035,9 @@ function goLN(role,game){
     document.getElementById('ln-setup-title').textContent = game==='ln1'?'1️⃣ Pick & Draw — Host Setup':game==='ln2'?'2️⃣ Lucky Draw — Host Setup':'3️⃣ Closest Wins — Host Setup';
     document.getElementById('ln-setup-sub').textContent = game==='ln1'?'Players pick a number — last standing wins':game==='ln2'?'Players get random numbers — first drawn wins':'Players guess your secret number — closest wins';
     document.getElementById('ln-game1-opts').style.display=game==='ln1'?'block':'none';
+    document.getElementById('ln-game2-opts').style.display=game==='ln2'?'block':'none';
     document.getElementById('ln-game3-opts').style.display=game==='ln3'?'block':'none';
+    if(game==='ln1') lnSyncRange(); // set initial cap
     go('s-ln-setup');
   }
 }
@@ -1955,6 +2048,25 @@ function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 // ════════════════════════════════════════
 //  LUCKY NUMBERS — HOST
 // ════════════════════════════════════════
+// Sync LN1 max-players cap to the number range
+function lnSyncRange(){
+  const rangeEl=document.getElementById('ln1-range');
+  const maxEl=document.getElementById('ln1-max-players');
+  const hint=document.getElementById('ln1-max-hint');
+  if(!rangeEl||!maxEl)return;
+  const range=parseInt(rangeEl.value);
+  Array.from(maxEl.options).forEach(o=>{
+    const v=parseInt(o.value);
+    o.disabled=v>range;
+    o.textContent=v>range?v+' players (exceeds range)':v+' players';
+  });
+  if(parseInt(maxEl.value)>range){
+    const valid=Array.from(maxEl.options).filter(o=>!o.disabled);
+    if(valid.length)maxEl.value=valid[valid.length-1].value;
+  }
+  if(hint)hint.textContent='(max '+range+' — limited by range)';
+}
+
 let lnPool=[], lnDrawn=[], lnMaxPlayers=20, lnRange=50, lnSecret=null;
 
 async function createLNRoom(){
@@ -1963,9 +2075,18 @@ async function createLNRoom(){
   const err=document.getElementById('ln-setup-err'); err.textContent='';
   if(!name){err.textContent='Enter your name';return}
   if(!db){err.textContent='Firebase not connected';return}
-  lnMaxPlayers=parseInt(document.getElementById('ln-max-players').value);
-  if(gameType==='ln1') lnRange=parseInt(document.getElementById('ln1-range').value);
-  if(gameType==='ln3') lnRange=parseInt(document.getElementById('ln3-range').value);
+  // Read from per-game selects
+  if(gameType==='ln1'){
+    lnRange=parseInt(document.getElementById('ln1-range').value);
+    lnMaxPlayers=parseInt(document.getElementById('ln1-max-players').value);
+    if(lnMaxPlayers>lnRange){err.textContent='Max players ('+lnMaxPlayers+') cannot exceed the number range ('+lnRange+'). Reduce max players or increase the range.';return}
+  } else if(gameType==='ln2'){
+    lnRange=50;
+    lnMaxPlayers=parseInt(document.getElementById('ln2-max-players').value);
+  } else if(gameType==='ln3'){
+    lnRange=parseInt(document.getElementById('ln3-range').value);
+    lnMaxPlayers=parseInt(document.getElementById('ln3-max-players').value);
+  }
   const code=genCode();
   roomCode=code; myName=name; myRole='host';
   lnPool=Array.from({length:lnRange},(_,i)=>i+1).sort(()=>Math.random()-.5);
@@ -1974,15 +2095,16 @@ async function createLNRoom(){
   document.getElementById('ln-h-code').textContent=code;
   document.getElementById('ln-share-link').value=buildJoinURL(code);
   document.getElementById('ln-h-hint').innerHTML='Share this code · <span id="ln-h-pcount">0/'+lnMaxPlayers+' players</span>';
-  // Show correct panel
   ['ln1-host-panel','ln2-host-panel','ln3-host-panel'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById(gameType+'-host-panel').style.display='block';
   if(gameType==='ln1'){document.getElementById('ln1-rem').textContent=lnPool.length+' remaining'}
   if(gameType==='ln2'){document.getElementById('ln2-rem').textContent=lnPool.length+' remaining'}
   go('s-ln-host');
+  setHostUI();
   startLNHostListen();
   startChatListen(); showChatFab();
-  addSystemMsg('🍀 Room '+code+' created by '+name+' ('+( gameType==='ln1'?'Pick & Draw':gameType==='ln2'?'Lucky Draw':'Closest Wins')+')');
+  saveRoomToLocal(code, name, gameType, 'host', label);
+  addSystemMsg('🍀 Room '+code+' created by '+name+' ('+(gameType==='ln1'?'Pick & Draw':gameType==='ln2'?'Lucky Draw':'Closest Wins')+')');
 }
 
 // ── LN Game 1 host ──
@@ -2108,18 +2230,22 @@ async function joinLNRoom(){
   if(room.players&&room.players[name]){err.textContent='Name taken — choose another';return}
   roomCode=code; myName=name; myRole='player'; gameType=room.type;
   lnRange=room.range||50;
-  // Assign lucky number for game 2
-  lnMyLucky=Math.floor(Math.random()*lnRange)+1;
+  // For LN2: assign a lucky number from room range, avoid already-taken lucky numbers
+  if(gameType==='ln2'){
+    const taken=Object.values(room.players||{}).map(p=>p.lucky).filter(Boolean);
+    const pool=Array.from({length:lnRange},(_,i)=>i+1).filter(n=>!taken.includes(n));
+    lnMyLucky=pool.length>0?pool[Math.floor(Math.random()*pool.length)]:Math.floor(Math.random()*lnRange)+1;
+  }
   const playerData={joined:Date.now()};
   if(gameType==='ln2') playerData.lucky=lnMyLucky;
   await dbUpdate('rooms/'+code+'/players',{[name]:playerData});
   document.getElementById('lnp-rlabel').textContent=room.label||'Lucky Numbers';
   document.getElementById('lnp-name').textContent=name;
   document.getElementById('lnp-code').textContent=code;
-  document.getElementById('lnp-game-label').textContent=gameType==='ln1'?'1️⃣ Pick & Draw — choose your lucky number below':gameType==='ln2'?'2️⃣ Lucky Draw — your number is assigned!':'3️⃣ Closest Wins — guess the host\'s secret number';
+  document.getElementById('lnp-game-label').textContent=gameType==='ln1'?'1️⃣ Pick & Draw — choose your lucky number below (1–'+lnRange+')':gameType==='ln2'?'2️⃣ Lucky Draw — your number is assigned!':'3️⃣ Closest Wins — guess the host\'s secret number (1–'+lnRange+')';
   ['lnp1-panel','lnp2-panel','lnp3-panel'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('lnp'+gameType.slice(2)+'-panel').style.display='block';
-  if(gameType==='ln1') buildLN1PlayerGrid();
+  if(gameType==='ln1') buildLN1PlayerGrid(room);
   if(gameType==='ln2') document.getElementById('lnp2-mynum').textContent=lnMyLucky;
   if(gameType==='ln3'){
     document.getElementById('lnp3-slider').max=lnRange;
@@ -2129,17 +2255,26 @@ async function joinLNRoom(){
   }
   go('s-ln-player');
   document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
   startLNPlayerListen();
   startChatListen(); showChatFab();
+  saveRoomToLocal(code, name, room.type, 'player', room.label||'Lucky Numbers');
   addSystemMsg('👋 '+name+' joined the room');
 }
 
-function buildLN1PlayerGrid(){
+function buildLN1PlayerGrid(room){
   const g=document.getElementById('lnp1-grid'); g.innerHTML='';
+  const taken=room?Object.values(room.players||{}).map(p=>p.pick).filter(Boolean):[];
   for(let i=1;i<=lnRange;i++){
     const d=document.createElement('div');
     d.className='np-cell'; d.textContent=i; d.dataset.n=i;
-    d.onclick=()=>pickLN1Number(i,d);
+    if(taken.includes(i)){
+      d.classList.add('np-taken');
+      d.title='Already picked';
+      d.style.opacity='.35';d.style.cursor='not-allowed';
+    } else {
+      d.onclick=()=>pickLN1Number(i,d);
+    }
     g.appendChild(d);
   }
 }
@@ -2176,6 +2311,17 @@ function startLNPlayerListen(){
     if(gameType==='ln1'){
       if(drawn.length)document.getElementById('lnp1-cur').textContent=drawn[0];
       renderLNPlayerTrack('lnp1-track',drawn,'lnp1');
+      // Keep grid up to date — grey out newly taken numbers
+      if(!lnMyPick){
+        const taken=Object.values(room.players||{}).map(p=>p.pick).filter(Boolean);
+        document.querySelectorAll('#lnp1-grid .np-cell').forEach(d=>{
+          const n=parseInt(d.dataset.n);
+          if(taken.includes(n)&&!d.classList.contains('np-picked')){
+            d.classList.add('np-taken'); d.onclick=null;
+            d.style.opacity='.35'; d.style.cursor='not-allowed';
+          }
+        });
+      }
     }
     if(gameType==='ln2'){
       if(drawn.length)document.getElementById('lnp2-cur').textContent=drawn[0];
@@ -2208,6 +2354,10 @@ function startLNPlayerListen(){
     if(room.winners&&room.winners.length&&room.winners.includes(myName)){
       if(gameType!=='ln3') showWin('🍀 You Win!','Congratulations '+myName+'!');
     }
+    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
+    }
   });
 }
 
@@ -2216,6 +2366,15 @@ function renderLNPlayerTrack(trackId,drawn,prefix){
     const isMyNum=(prefix==='lnp1'&&n===lnMyPick)||(prefix==='lnp2'&&n===lnMyLucky);
     return `<div class="dn-chip${i===0?' latest':''}${isMyNum?' hit':''}">${n}</div>`
   }).join('');
+}
+
+function showRoomClosed(){
+  // Stop all listeners so the closed state doesn't keep firing
+  [unsubHost,unsubPlayer,unsubChat].forEach(u=>{if(u)u()});
+  unsubHost=unsubPlayer=unsubChat=null;
+  document.getElementById('sbar').style.display='none';
+  document.getElementById('chat-fab').style.display='none';
+  document.getElementById('room-closed-ov').style.display='flex';
 }
 
 function showWin(title,msg){
@@ -2245,6 +2404,7 @@ async function createRoom(){
   document.getElementById('bingo-share-link').value=buildJoinURL(code);
   buildPatGrid(); initSavedPats();
   go('s-host-game');
+  setHostUI();
   startBingoHostListen(); startChatListen(); showChatFab();
   addSystemMsg('🎱 Bingo room '+code+' created by '+name);
 }
@@ -2321,6 +2481,7 @@ async function joinRoom(){
   renderPGrid();
   go('s-player-game');
   document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
   startBingoPlayerListen(); startChatListen(); showChatFab();
   addSystemMsg('👋 '+name+' joined the bingo room');
 }
@@ -2382,7 +2543,11 @@ function startBingoPlayerListen(){
       activePatCells=new Set(room.pattern.cells);curPatName=room.pattern.name||'Custom';
       const ph=document.getElementById('p-ph');ph.style.display='block';document.getElementById('p-ph-name').textContent=curPatName;
     }
-    renderPGrid();
+    renderPGrid();    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
+    }
+
   });
 }
 
@@ -2470,8 +2635,10 @@ async function createHLRoom(){
   document.getElementById('hl-total-rounds').textContent=hlTotalRounds;
   document.getElementById('hl-share-link').value=buildJoinURL(code);
   go('s-hl-host');
+  setHostUI();
   startHLHostListen();
   startChatListen(); showChatFab();
+  saveRoomToLocal(code,name,'hl','host',label);
   addSystemMsg('🔢 Higher or Lower room '+code+' created by '+name+' (1–'+hlRange+', '+hlTotalRounds+' rounds)');
 }
 
@@ -2604,8 +2771,10 @@ async function joinHLRoom(){
   document.getElementById('hlp-total-rounds').textContent=hlTotalRounds;
   go('s-hl-player');
   document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
   startHLPlayerListen();
   startChatListen(); showChatFab();
+  saveRoomToLocal(code,name,'hl','player',room.label||'Higher or Lower');
   addSystemMsg('👋 '+name+' joined the room');
 }
 
@@ -2657,7 +2826,11 @@ function startHLPlayerListen(){
     }
     const hist=room.history||[];
     const el=$id('hlp-history');
-    if(el) el.innerHTML=hist.map(h=>'<div class="hl-chip '+(h.eq?'curr':h.correct==='higher'?'higher-c':'lower-c')+'">'+h.n+'</div>').join('')+(cur!=null?'<div class="hl-chip curr">'+cur+'</div>':'');
+    if(el) el.innerHTML=hist.map(h=>'<div class="hl-chip '+(h.eq?'curr':h.correct==='higher'?'higher-c':'lower-c')+'">'+h.n+'</div>').join('')+(cur!=null?'<div class="hl-chip curr">'+cur+'</div>':'');    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
+    }
+
   });
 }
 
@@ -2683,7 +2856,9 @@ async function createLastNRoom(){
   document.getElementById('lastn-h-code').textContent=code;
   document.getElementById('lastn-share-link').value=buildJoinURL(code);
   document.getElementById('lastn-rem').textContent=lastNPool.length+' remaining';
-  go('s-lastn-host');startLastNHostListen();startChatListen();showChatFab();
+  go('s-lastn-host');setHostUI();
+  startLastNHostListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'lastn','host',label);
   addSystemMsg('🏁 Last Number room '+code+' created by '+name+' (1–'+lastNRange+')');
 }
 async function lastNDraw(){
@@ -2748,7 +2923,9 @@ async function joinLastNRoom(){
   document.getElementById('lastnp-code').textContent=code;
   buildLastNPlayerGrid();
   go('s-lastn-player');document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
   startLastNPlayerListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'lastn','player',room.label||'Last Number');
   addSystemMsg('👋 '+name+' joined the room');
 }
 function buildLastNPlayerGrid(){
@@ -2810,7 +2987,11 @@ function startLastNPlayerListen(){
         addSystemMsg('🏁 '+myName+' got all 3 numbers — WINNER!');
       }
       showWin('🏁 You Win!','All 3 of your numbers were drawn!');
+    }    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
     }
+
   });
 }
 
@@ -2836,7 +3017,9 @@ async function createOERoom(){
   document.getElementById('oe-h-code').textContent=code;
   document.getElementById('oe-share-link').value=buildJoinURL(code);
   document.getElementById('oe-total-rounds').textContent=oeTotalRounds;
-  go('s-oe-host');startOEHostListen();startChatListen();showChatFab();
+  go('s-oe-host');setHostUI();
+  startOEHostListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'oe','host',label);
   addSystemMsg('🎲 Odd or Even room '+code+' created by '+name+' ('+oeTotalRounds+' rounds, 1–'+oeRange+')');
 }
 async function oeDraw(){
@@ -2931,7 +3114,9 @@ async function joinOERoom(){
   document.getElementById('oep-code').textContent=code;
   document.getElementById('oep-total-rounds').textContent=oeTotalRounds;
   go('s-oe-player');document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
   startOEPlayerListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'oe','player',room.label||'Odd or Even');
   addSystemMsg('👋 '+name+' joined the room');
 }
 async function castOEVote(v){
@@ -2974,7 +3159,11 @@ function startOEPlayerListen(){
       if(isWinner)showWin('🏆 You Win!',myName+' wins Odd or Even with '+myS+' points!');
       safeAttr('oep-btn-odd','disabled',true);
       safeAttr('oep-btn-even','disabled',true);
+    }    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
     }
+
   });
 }
 
@@ -3022,7 +3211,9 @@ async function createDuckRoom(){
   document.getElementById('duck-share-link').value=buildJoinURL(code);
   document.getElementById('duck-h-winner-num').textContent=duckWinnerNum;
   buildDuckHostGrid();
-  go('s-duck-host');startDuckHostListen();startChatListen();showChatFab();
+  go('s-duck-host');setHostUI();
+  startDuckHostListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'duck','host',label);
   addSystemMsg('🦆 Lucky Duck room '+code+' created — '+duckCount+' ducks, pick '+duckPicksAllowed+'!');
 }
 
@@ -3112,6 +3303,7 @@ async function joinDuckRoom(code,name){
   document.getElementById('duckp-pick-label').textContent='Pick '+duckPicksAllowed+' duck'+(duckPicksAllowed>1?'s':'')+'! Tap to select.';
   buildDuckPlayerGrid(room);
   go('s-duck-player');document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
   startDuckPlayerListen();startChatListen();showChatFab();
   addSystemMsg('👋 '+name+' joined the Lucky Duck room');
   return true;
@@ -3167,7 +3359,11 @@ function startDuckPlayerListen(){
       });
       if(won)showWin('🦆 Lucky Duck!','Your duck had the winning number '+winNum+'!');
       addSystemMsg('🦆 '+myName+'\'s ducks: '+nums.join(' & ')+(won?' 🏆 WINNER!':''));
+    }    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
     }
+
   });
 }
 
@@ -3243,7 +3439,9 @@ async function createSqRoom(){
   document.getElementById('sq-share-link').value=buildJoinURL(code);
   document.getElementById('sq-h-winner-num').textContent='Square '+(sqWinnerCell+1);
   buildSqHostGrid();
-  go('s-sq-host');startSqHostListen();startChatListen();showChatFab();
+  go('s-sq-host');setHostUI();
+  startSqHostListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'sq','host',label);
   addSystemMsg('🟦 Guess the Square room '+code+' — '+sqSize+'×'+sqSize+' grid, pick '+sqPicksAllowed+'!');
 }
 
@@ -3297,6 +3495,7 @@ async function joinSqRoom(code,name){
   document.getElementById('sqp-pick-label').textContent='Pick '+sqPicksAllowed+' square'+(sqPicksAllowed>1?'s':'')+'! Tap to select.';
   buildSqPlayerGrid(room);
   go('s-sq-player');document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
   startSqPlayerListen();startChatListen();showChatFab();
   addSystemMsg('👋 '+name+' joined the Square room');
   return true;
@@ -3341,7 +3540,11 @@ function startSqPlayerListen(){
       res.style.cssText='display:block;margin-top:14px;border-radius:12px;padding:16px;text-align:center;background:'+(won?'rgba(251,191,36,.1)':'rgba(239,68,68,.08)')+';border:1.5px solid '+(won?'#fbbf24':'#ef4444');
       res.innerHTML=won?'<b style="color:#fbbf24;font-size:1.1rem">🏆 You picked the winning square!</b>':'<b style="color:#ef4444">❌ Not your square this time!</b><br><span style="color:var(--muted);font-size:.82rem">The winning square was '+(room.winnerCell+1)+'</span>';
       if(won&&!document.getElementById('win-ov').classList.contains('show'))showWin('🟦 You Win!','You picked square '+(room.winnerCell+1)+'!');
+    }    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
     }
+
   });
 }
 
@@ -3388,7 +3591,9 @@ async function createMMRoom(){
   document.getElementById('mm-h-location').textContent=locations.join(', ');
   document.getElementById('mm-h-killer').textContent=killer+(winnerWeapon?' with '+winnerWeapon:'')+( winnerLocation?' in '+winnerLocation:'')+' (only you see this)';
   renderMMHostVotes({});
-  go('s-mm-host');startMMHostListen();startChatListen();showChatFab();
+  go('s-mm-host');setHostUI();
+  startMMHostListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'mm','host',label);
   addSystemMsg('🔍 Murder Mystery started! Victim: '+victim+'. Suspects: '+mmSuspects.join(', '));
 }
 
@@ -3481,6 +3686,7 @@ async function joinMMRoom(code,name){
   locations.forEach(l=>{const o=document.createElement('option');o.value=l;o.textContent=l;locSel.appendChild(o)});
   renderMMPlayerSuspects(room,null);
   go('s-mm-player');document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
   startMMPlayerListen();startChatListen();showChatFab();
   addSystemMsg('👋 '+name+' joined the Mystery room');
   return true;
@@ -3548,7 +3754,11 @@ function startMMPlayerListen(){
       }
       safeText('mmp-reveal-result',detail);
       if(correct&&!document.getElementById('win-ov').classList.contains('show'))showWin('🔍 Correct!','You cracked the case!');
+    }    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
     }
+
   });
 }
 
@@ -3583,7 +3793,8 @@ function switchTab(tab) {
     'lucky':  { cls: 'lucky',  panel: 'lucky' },
     'other':  { cls: 'other',  panel: 'other' },
     'fb':     { cls: 'fb',     panel: 'fb' },
-    'find':   { cls: 'find',   panel: 'find' }
+    'find':   { cls: 'find',   panel: 'find' },
+    'rooms':  { cls: 'rooms',  panel: 'rooms' }
   };
   const t = tabMap[tab] || { cls: tab, panel: tab };
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -3592,6 +3803,7 @@ function switchTab(tab) {
   const panel = document.getElementById('tab-' + t.panel);
   if (btn) btn.classList.add('active');
   if (panel) panel.classList.add('active');
+  if (tab === 'rooms') renderMyRooms();
 }
 
 document.getElementById('j-code').addEventListener('input',function(){this.value=this.value.toUpperCase()});
@@ -3816,7 +4028,9 @@ async function createFGRoom(){
   document.getElementById('fgh-game-title').textContent=FG_GAME_LABELS[fghGameType]||'Find Games';
   document.getElementById('fgh-total-rounds').textContent=fghTotalRounds;
   document.getElementById('fgh-round').textContent=0;
-  go('s-fg-host'); startFGHostListen(); startChatListen(); showChatFab();
+  go('s-fg-host'); setHostUI();
+  startFGHostListen(); startChatListen(); showChatFab();
+  saveRoomToLocal(code,name,'fg','host',label);
   addSystemMsg('🔎 Find Games room '+code+' created — '+FG_GAME_LABELS[fghGameType]+' ('+fghTotalRounds+' rounds)');
 }
 
@@ -3932,7 +4146,9 @@ async function joinFGRoom(){
   document.getElementById('fgp-code').textContent=code;
   document.getElementById('fgp-total-rounds').textContent=fgpTotalRounds;
   go('s-fg-player'); document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
   startFGPlayerListen(); startChatListen(); showChatFab();
+  saveRoomToLocal(code,name,'fg','player',room.label||'Find Games');
   addSystemMsg('👋 '+name+' joined Find Games');
 }
 
@@ -3966,7 +4182,11 @@ function startFGPlayerListen(){
     if(room.status==='finished'&&room.winners&&room.winners.length){
       const won=room.winners[0]===myName;
       if(won&&!document.getElementById('win-ov').classList.contains('show'))showWin('🔎 You Win!','You topped the Find Games leaderboard! 🏆');
+    }    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
     }
+
   });
 }
 
@@ -4454,11 +4674,197 @@ function buildColour() {
 }
 
 // ════════════════════════════════════════
+//  MY ROOMS — localStorage persistence
+// ════════════════════════════════════════
+const MY_ROOMS_KEY='mlt_my_rooms';
+
+function saveRoomToLocal(code, name, type, role, label){
+  try{
+    const rooms=getMyRooms();
+    // Remove old entry for same code
+    const filtered=rooms.filter(r=>r.code!==code);
+    filtered.unshift({code,name,type,role,label:label||type,ts:Date.now()});
+    // Keep max 10
+    localStorage.setItem(MY_ROOMS_KEY,JSON.stringify(filtered.slice(0,10)));
+    renderMyRooms();
+  }catch(e){}
+}
+
+function removeRoomFromLocal(code){
+  try{
+    const rooms=getMyRooms().filter(r=>r.code!==code);
+    localStorage.setItem(MY_ROOMS_KEY,JSON.stringify(rooms));
+    renderMyRooms();
+  }catch(e){}
+}
+
+function getMyRooms(){
+  try{return JSON.parse(localStorage.getItem(MY_ROOMS_KEY)||'[]')}catch(e){return[]}
+}
+
+const TYPE_LABELS={bingo:'🎱 Bingo',ln1:'1️⃣ Pick & Draw',ln2:'2️⃣ Lucky Draw',ln3:'3️⃣ Closest Wins',hl:'🔢 Higher or Lower',lastn:'🏁 Last Number',oe:'🎲 Odd or Even',duck:'🦆 Lucky Duck',sq:'🟦 Guess the Square',mm:'🔍 Murder Mystery',fg:'🔎 Find Games'};
+
+function renderMyRooms(){
+  const el=document.getElementById('my-rooms-list');
+  if(!el)return;
+  const rooms=getMyRooms();
+  if(!rooms.length){
+    el.innerHTML='<div class="mr-empty">No recent rooms yet. Create or join a game to see it here.</div>';
+    return;
+  }
+  el.innerHTML=rooms.map(r=>{
+    const ago=timeSince(r.ts);
+    const label=r.label||TYPE_LABELS[r.type]||r.type;
+    const gameTag=TYPE_LABELS[r.type]||r.type;
+    const roleTag=r.role==='host'?'<span class="mr-role host">Host</span>':'<span class="mr-role player">Player</span>';
+    return `<div class="mr-card" id="mr-${r.code}">
+      <div class="mr-info">
+        <div class="mr-name">${escH(label)}</div>
+        <div class="mr-meta">${gameTag} · ${roleTag} · as <b>${escH(r.name)}</b> · ${ago}</div>
+        <div class="mr-code">Code: <b>${r.code}</b></div>
+      </div>
+      <div class="mr-actions">
+        <button class="btn btn-sm" style="background:linear-gradient(90deg,var(--accent),var(--accent2));color:#0f0e17" onclick="rejoinRoom('${r.code}','${escH(r.name)}','${r.type}','${r.role}')">↩ Rejoin</button>
+        <button class="btn btn-outline btn-sm" onclick="forgetRoom('${r.code}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function timeSince(ts){
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60)return 'just now';
+  if(s<3600)return Math.floor(s/60)+'m ago';
+  if(s<86400)return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+function forgetRoom(code){
+  removeRoomFromLocal(code);
+}
+
+async function rejoinRoom(code, name, type, role){
+  if(!db){alert('Firebase not connected');return}
+  const room=await dbGet('rooms/'+code);
+  if(!room){
+    if(confirm('This room no longer exists. Remove it from your list?')) forgetRoom(code);
+    return;
+  }
+  if(room.status==='closed'){
+    if(confirm('This room has been closed by the host. Remove it from your list?')) forgetRoom(code);
+    return;
+  }
+  myName=name; roomCode=code; myRole=role; gameType=room.type||type;
+  if(role==='host'){
+    await rejoinAsHost(room);
+  } else {
+    await rejoinAsPlayer(room, name);
+  }
+}
+
+async function rejoinAsHost(room){
+  const type=room.type;
+  saveRoomToLocal(room.code, myName, type, 'host', room.label||type);
+  if(type==='bingo'){
+    remainPool=Array.from({length:75},(_,i)=>i+1).filter(n=>!(room.drawn||[]).includes(n)).sort(()=>Math.random()-.5);
+    drawnNums=room.drawn||[];
+    document.getElementById('h-code').textContent=room.code;
+    document.getElementById('bingo-share-link').value=buildJoinURL(room.code);
+    buildPatGrid(); initSavedPats();
+    go('s-host-game'); startBingoHostListen(); startChatListen(); showChatFab();
+  } else if(type.startsWith('ln')){
+    lnRange=room.range||50; lnMaxPlayers=room.maxPlayers||20;
+    lnDrawn=room.drawn||[]; lnPool=Array.from({length:lnRange},(_,i)=>i+1).filter(n=>!lnDrawn.includes(n)).sort(()=>Math.random()-.5);
+    lnSecret=room.secret||null;
+    document.getElementById('ln-h-code').textContent=room.code;
+    document.getElementById('ln-share-link').value=buildJoinURL(room.code);
+    document.getElementById('ln-h-hint').innerHTML='Share this code · <span id="ln-h-pcount">0/'+lnMaxPlayers+' players</span>';
+    ['ln1-host-panel','ln2-host-panel','ln3-host-panel'].forEach(id=>document.getElementById(id).style.display='none');
+    const pt=type+'-host-panel'; if(document.getElementById(pt)) document.getElementById(pt).style.display='block';
+    if(type==='ln1'){renderLNTrack('ln1-h-track',lnDrawn);document.getElementById('ln1-rem').textContent=lnPool.length+' remaining';if(lnDrawn.length)document.getElementById('ln1-ball').textContent=lnDrawn[0]}
+    if(type==='ln2'){renderLNTrack('ln2-h-track',lnDrawn);document.getElementById('ln2-rem').textContent=lnPool.length+' remaining';if(lnDrawn.length)document.getElementById('ln2-ball').textContent=lnDrawn[0]}
+    if(type==='ln3'&&lnSecret){document.getElementById('ln3-set-phase').style.display='none';document.getElementById('ln3-reveal-phase').style.display='block';document.getElementById('ln3-secret-disp').textContent=lnSecret}
+    go('s-ln-host'); startLNHostListen(); startChatListen(); showChatFab();
+  } else {
+    alert('Rejoining as host for this game type is not yet supported. Please recreate the room.');
+  }
+}
+
+async function rejoinAsPlayer(room, name){
+  const type=room.type;
+  if(type.startsWith('ln')){
+    lnRange=room.range||50; gameType=type;
+    const pd=room.players&&room.players[name];
+    lnMyPick=pd&&pd.pick||null;
+    lnMyLucky=pd&&pd.lucky||null;
+    lnMyGuess=pd&&pd.guess||null;
+    document.getElementById('lnp-rlabel').textContent=room.label||'Lucky Numbers';
+    document.getElementById('lnp-name').textContent=name;
+    document.getElementById('lnp-code').textContent=room.code;
+    document.getElementById('lnp-game-label').textContent=type==='ln1'?'1️⃣ Pick & Draw':'2️⃣ Lucky Draw';
+    ['lnp1-panel','lnp2-panel','lnp3-panel'].forEach(id=>document.getElementById(id).style.display='none');
+    const ppt='lnp'+type.slice(2)+'-panel'; if(document.getElementById(ppt)) document.getElementById(ppt).style.display='block';
+    if(type==='ln1'){buildLN1PlayerGrid(room);if(lnMyPick){document.getElementById('lnp1-picked-display').style.display='block';document.getElementById('lnp1-picked-num').textContent=lnMyPick}}
+    if(type==='ln2'&&lnMyLucky) document.getElementById('lnp2-mynum').textContent=lnMyLucky;
+    if(type==='ln3'){document.getElementById('lnp3-slider').max=lnRange;document.getElementById('lnp3-slider').value=lnMyGuess||Math.floor(lnRange/2);document.getElementById('lnp3-range-val').textContent=lnMyGuess||Math.floor(lnRange/2);document.getElementById('lnp3-range-lbl').textContent='between 1 and '+lnRange;}
+    go('s-ln-player'); document.getElementById('sbar').style.display='flex';
+    startLNPlayerListen(); startChatListen(); showChatFab();
+  } else if(type==='bingo'){
+    gameType='bingo';
+    document.getElementById('lnp-rlabel')&&(document.getElementById('p-rlabel')||document.createElement('div'));
+    // Rebuild bingo card if we have one
+    const pd=room.players&&room.players[name];
+    if(pd&&pd.card){
+      myCard=pd.card; myMarked=new Set(pd.marked||[12]);
+      document.getElementById('p-rlabel').textContent=room.label||'MLT Bingo';
+      document.getElementById('p-name').textContent=name;
+      document.getElementById('p-code').textContent=room.code;
+      renderCard(); renderMarked();
+      go('s-player'); document.getElementById('sbar').style.display='flex';
+      startBingoPlayerListen(); startChatListen(); showChatFab();
+    } else {
+      alert('Could not restore your bingo card. Please rejoin via the room code.');
+    }
+  } else {
+    alert('Please use the regular join screen to rejoin this game type.');
+  }
+}
+
+// ════════════════════════════════════════
+//  CLOSE ROOM
+// ════════════════════════════════════════
+async function closeRoom(){
+  if(!confirm('Close this room? All players will be disconnected and the room will be deleted.'))return;
+  if(!roomCode||!db)return;
+  try{
+    await dbUpdate('rooms/'+roomCode,{status:'closed'});
+    // Small delay so players receive the status, then delete
+    setTimeout(async()=>{
+      try{await _remove(_ref(db,'rooms/'+roomCode))}catch(e){}
+    },2500);
+  }catch(e){}
+  removeRoomFromLocal(roomCode);
+  goHome();
+  addSystemMsg&&addSystemMsg('🔒 Room closed by host');
+}
+
+// Hook saveRoomToLocal into existing create functions
+const _origCreateRoom=createRoom;
+createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomCode)saveRoomToLocal(roomCode,myName,'bingo','host',document.getElementById('room-label')?.value||'MLT Bingo')};
+
+// ════════════════════════════════════════
 //  Init setup grids/dropdowns on page load
 if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',()=>{updateDuckWinnerRange();buildSqSetupGrid();});
+  document.addEventListener('DOMContentLoaded',()=>{
+    updateDuckWinnerRange();buildSqSetupGrid();
+    // Show My Rooms tab on home screen (no role set yet)
+    const rt=document.getElementById('rooms-tab-btn');
+    if(rt)rt.style.display='';
+  });
 } else {
   updateDuckWinnerRange(); buildSqSetupGrid();
+  const rt=document.getElementById('rooms-tab-btn');
+  if(rt)rt.style.display='';
 }
 </script>
 </body>
