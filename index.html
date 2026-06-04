@@ -2169,6 +2169,7 @@ function startLNPlayerListen(){
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
+    if(!$id('lnp-game-label'))return;
     document.getElementById('sright').textContent=Object.keys(room.players||{}).length+' players online';
     const drawn=room.drawn||[];
     // Update current draw display
@@ -2354,6 +2355,7 @@ function startBingoPlayerListen(){
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
+    if(!$id('p-num'))return;
     document.getElementById('sright').textContent=Object.keys(room.players||{}).length+' players online';
     // Detect card reset from host
     if(room.cardReset&&room.cardReset!==lastCardReset){
@@ -3065,6 +3067,7 @@ async function resetDuckGame(){
 function startDuckHostListen(){
   unsubDuck=dbListen('rooms/'+roomCode,room=>{
     if(!room)return;
+    if(!$id('duck-h-pcount'))return;
     const ps=Object.keys(room.players||{});
     document.getElementById('duck-h-pcount').textContent=ps.length+' players joined';
     document.getElementById('duck-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
@@ -3147,6 +3150,7 @@ function startDuckPlayerListen(){
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
+    if(!$id('duckp-grid'))return;
     document.getElementById('sright').textContent=Object.keys(room.players||{}).length+' players online';
     if(room.revealed&&room.duckNumbers&&duckMyPicks.length>0&&!document.getElementById('duckp-result').classList.contains('show')){
       const nums=duckMyPicks.map(idx=>room.duckNumbers[idx]);
@@ -3267,6 +3271,7 @@ async function resetSqGame(){
 function startSqHostListen(){
   unsubSq=dbListen('rooms/'+roomCode,room=>{
     if(!room)return;
+    if(!$id('sq-h-pcount'))return;
     const ps=Object.keys(room.players||{});
     document.getElementById('sq-h-pcount').textContent=ps.length+' players joined';
     document.getElementById('sq-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
@@ -3325,6 +3330,7 @@ function startSqPlayerListen(){
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
+    if(!$id('sqp-grid'))return;
     document.getElementById('sright').textContent=Object.keys(room.players||{}).length+' players online';
     if(room.revealed&&room.winnerCell!=null){
       const cells=document.getElementById('sqp-grid').querySelectorAll('.sq-cell');
@@ -3441,6 +3447,7 @@ async function resetMM(){
 function startMMHostListen(){
   unsubMM=dbListen('rooms/'+roomCode,room=>{
     if(!room)return;
+    if(!$id('mm-h-pcount'))return;
     const ps=Object.keys(room.players||{});
     document.getElementById('mm-h-pcount').textContent=ps.length+' players joined';
     document.getElementById('mm-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
@@ -3511,6 +3518,7 @@ function startMMPlayerListen(){
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
     if(!room){if(dot)dot.className='sdot err';if(stxt)stxt.textContent='Disconnected';return}
     if(dot)dot.className='sdot';if(stxt)stxt.textContent='Connected';
+    if(!$id('mmp-suspect-list'))return;
     document.getElementById('sright').textContent=Object.keys(room.players||{}).length+' players online';
     const myVote=(room.votes||{})[myName]||null;
     renderMMPlayerSuspects(room,myVote);
