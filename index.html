@@ -2225,20 +2225,24 @@ async function joinLNRoom(){
   if(!db){err.textContent='Firebase not connected';return}
   const room=await dbGet('rooms/'+code);
   if(!room||!room.type||!room.type.startsWith('ln')){err.textContent='Room not found or not a Lucky Numbers room';return}
+  const isLNRejoin=!!(room.players&&room.players[name]);
   const pc=Object.keys(room.players||{}).length;
-  if(pc>=(room.maxPlayers||20)){err.textContent='Room is full';return}
-  if(room.players&&room.players[name]){err.textContent='Name taken — choose another';return}
+  if(!isLNRejoin&&pc>=(room.maxPlayers||20)){err.textContent='Room is full';return}
   roomCode=code; myName=name; myRole='player'; gameType=room.type;
   lnRange=room.range||50;
-  // For LN2: assign a lucky number from room range, avoid already-taken lucky numbers
-  if(gameType==='ln2'){
-    const taken=Object.values(room.players||{}).map(p=>p.lucky).filter(Boolean);
-    const pool=Array.from({length:lnRange},(_,i)=>i+1).filter(n=>!taken.includes(n));
-    lnMyLucky=pool.length>0?pool[Math.floor(Math.random()*pool.length)]:Math.floor(Math.random()*lnRange)+1;
+  if(isLNRejoin){
+    const pd=room.players[name];
+    lnMyPick=pd.pick||null; lnMyLucky=pd.lucky||null; lnMyGuess=pd.guess||null;
+  } else {
+    if(gameType==='ln2'){
+      const taken=Object.values(room.players||{}).map(p=>p.lucky).filter(Boolean);
+      const pool=Array.from({length:lnRange},(_,i)=>i+1).filter(n=>!taken.includes(n));
+      lnMyLucky=pool.length>0?pool[Math.floor(Math.random()*pool.length)]:Math.floor(Math.random()*lnRange)+1;
+    }
+    const playerData={joined:Date.now()};
+    if(gameType==='ln2') playerData.lucky=lnMyLucky;
+    await dbUpdate('rooms/'+code+'/players',{[name]:playerData});
   }
-  const playerData={joined:Date.now()};
-  if(gameType==='ln2') playerData.lucky=lnMyLucky;
-  await dbUpdate('rooms/'+code+'/players',{[name]:playerData});
   document.getElementById('lnp-rlabel').textContent=room.label||'Lucky Numbers';
   document.getElementById('lnp-name').textContent=name;
   document.getElementById('lnp-code').textContent=code;
@@ -2246,12 +2250,14 @@ async function joinLNRoom(){
   ['lnp1-panel','lnp2-panel','lnp3-panel'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('lnp'+gameType.slice(2)+'-panel').style.display='block';
   if(gameType==='ln1') buildLN1PlayerGrid(room);
+  if(gameType==='ln1'&&lnMyPick){document.getElementById('lnp1-picked-display').style.display='block';document.getElementById('lnp1-picked-num').textContent=lnMyPick;}
   if(gameType==='ln2') document.getElementById('lnp2-mynum').textContent=lnMyLucky;
   if(gameType==='ln3'){
     document.getElementById('lnp3-slider').max=lnRange;
-    document.getElementById('lnp3-slider').value=Math.floor(lnRange/2);
-    document.getElementById('lnp3-range-val').textContent=Math.floor(lnRange/2);
+    document.getElementById('lnp3-slider').value=lnMyGuess||Math.floor(lnRange/2);
+    document.getElementById('lnp3-range-val').textContent=lnMyGuess||Math.floor(lnRange/2);
     document.getElementById('lnp3-range-lbl').textContent='between 1 and '+lnRange;
+    if(lnMyGuess) document.getElementById('lnp3-guess-submitted').style.display='block';
   }
   go('s-ln-player');
   document.getElementById('sbar').style.display='flex';
@@ -2259,7 +2265,7 @@ async function joinLNRoom(){
   startLNPlayerListen();
   startChatListen(); showChatFab();
   saveRoomToLocal(code, name, room.type, 'player', room.label||'Lucky Numbers');
-  addSystemMsg('👋 '+name+' joined the room');
+  if(!isLNRejoin) addSystemMsg('👋 '+name+' joined the room');
 }
 
 function buildLN1PlayerGrid(room){
@@ -2469,12 +2475,17 @@ async function joinRoom(){
   if(!db){err.textContent='Firebase not connected';return}
   const room=await dbGet('rooms/'+code);
   if(!room||room.type!=='bingo'){err.textContent='Bingo room not found — check the code!';return}
+  const isBingoRejoin=!!(room.players&&room.players[name]);
   const pc=Object.keys(room.players||{}).length;
-  if(pc>=50){err.textContent='Room is full (50 players max)';return}
-  if(room.players&&room.players[name]){err.textContent='Name taken';return}
+  if(!isBingoRejoin&&pc>=50){err.textContent='Room is full (50 players max)';return}
   roomCode=code; myName=name; myRole='player'; gameType='bingo';
-  myCard=genCard(); myMarked=new Set([12]); drawnNums=[]; winCellsP=new Set();
-  await dbUpdate('rooms/'+code+'/players',{[name]:{card:myCard,joined:Date.now()}});
+  if(isBingoRejoin){
+    const pd=room.players[name];
+    myCard=pd.card; myMarked=new Set(pd.marked||[12]); drawnNums=room.drawn||[]; winCellsP=new Set();
+  } else {
+    myCard=genCard(); myMarked=new Set([12]); drawnNums=[]; winCellsP=new Set();
+    await dbUpdate('rooms/'+code+'/players',{[name]:{card:myCard,joined:Date.now()}});
+  }
   document.getElementById('p-rlabel').textContent=room.label||'MLT Bingo';
   document.getElementById('p-name').textContent=name;
   document.getElementById('p-code').textContent=code;
@@ -2483,7 +2494,7 @@ async function joinRoom(){
   document.getElementById('sbar').style.display='flex';
   setPlayerUI();
   startBingoPlayerListen(); startChatListen(); showChatFab();
-  addSystemMsg('👋 '+name+' joined the bingo room');
+  if(!isBingoRejoin) addSystemMsg('👋 '+name+' joined the bingo room');
 }
 
 function renderPGrid(){
@@ -2760,11 +2771,12 @@ async function joinHLRoom(){
   if(!room||room.type!=='hl'){err.textContent='Higher or Lower room not found';return}
   const pc=Object.keys(room.players||{}).length;
   if(pc>=(room.maxPlayers||20)){err.textContent='Room is full';return}
-  if(room.players&&room.players[name]){err.textContent='Name taken — choose another';return}
+  const isHLRejoin=!!(room.players&&room.players[name]);
   roomCode=code; myName=name; myRole='player'; gameType='hl';
   hlRange=room.range||50; hlTotalRounds=room.totalRounds||10;
-  hlMyScore=0; hlVotedThisRound=false;
-  await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now()}});
+  hlMyScore=(room.scores&&room.scores[name])||0; hlVotedThisRound=!!(room.votes&&room.votes[name]);
+  hlLastRound=room.round||0;
+  if(!isHLRejoin) await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now()}});
   document.getElementById('hlp-rlabel').textContent=room.label||'Higher or Lower';
   document.getElementById('hlp-name').textContent=name;
   document.getElementById('hlp-code').textContent=code;
@@ -2775,7 +2787,7 @@ async function joinHLRoom(){
   startHLPlayerListen();
   startChatListen(); showChatFab();
   saveRoomToLocal(code,name,'hl','player',room.label||'Higher or Lower');
-  addSystemMsg('👋 '+name+' joined the room');
+  if(!isHLRejoin) addSystemMsg('👋 '+name+' joined the room');
 }
 
 async function castVote(v){
@@ -2914,19 +2926,34 @@ async function joinLastNRoom(){
   if(!room||room.type!=='lastn'){err.textContent='Room not found';return}
   const pc=Object.keys(room.players||{}).length;
   if(pc>=(room.maxPlayers||20)){err.textContent='Room is full';return}
-  if(room.players&&room.players[name]){err.textContent='Name taken';return}
+  const isLastNRejoin=!!(room.players&&room.players[name]);
   roomCode=code;myName=name;myRole='player';gameType='lastn';
-  lastNRange=room.range||50;lastNMyPicks=[];lastNDrawn=[];
-  await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now(),picks:[]}});
+  lastNRange=room.range||50;lastNDrawn=[];
+  if(isLastNRejoin){
+    lastNMyPicks=room.players[name].picks||[];
+  } else {
+    lastNMyPicks=[];
+    await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now(),picks:[]}});
+  }
   document.getElementById('lastnp-rlabel').textContent=room.label||'Last Number';
   document.getElementById('lastnp-name').textContent=name;
   document.getElementById('lastnp-code').textContent=code;
   buildLastNPlayerGrid();
+  lastNMyPicks.forEach(n=>{
+    const el=document.querySelector('#lastnp-grid [data-n="'+n+'"]');
+    if(el){el.classList.add('np-picked');el.onclick=null;}
+  });
+  if(lastNMyPicks.length===3){
+    document.getElementById('lastnp-picks-display').style.display='block';
+    document.getElementById('lastnp-picks-text').textContent=lastNMyPicks.join(', ');
+    document.getElementById('lastnp-pick-label').innerHTML='Your picks are locked! Waiting for host to draw…';
+    document.querySelectorAll('#lastnp-grid .np-cell').forEach(c=>c.onclick=null);
+  }
   go('s-lastn-player');document.getElementById('sbar').style.display='flex';
   setPlayerUI();
   startLastNPlayerListen();startChatListen();showChatFab();
   saveRoomToLocal(code,name,'lastn','player',room.label||'Last Number');
-  addSystemMsg('👋 '+name+' joined the room');
+  if(!isLastNRejoin) addSystemMsg('👋 '+name+' joined the room');
 }
 function buildLastNPlayerGrid(){
   const g=document.getElementById('lastnp-grid');g.innerHTML='';
@@ -3105,10 +3132,10 @@ async function joinOERoom(){
   if(!room||room.type!=='oe'){err.textContent='Room not found';return}
   const pc=Object.keys(room.players||{}).length;
   if(pc>=(room.maxPlayers||20)){err.textContent='Room is full';return}
-  if(room.players&&room.players[name]){err.textContent='Name taken';return}
+  const isOERejoin=!!(room.players&&room.players[name]);
   roomCode=code;myName=name;myRole='player';gameType='oe';
-  oeTotalRounds=room.totalRounds||10;oeLastRound=-1;
-  await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now()}});
+  oeTotalRounds=room.totalRounds||10;oeLastRound=room.round||0;
+  if(!isOERejoin) await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now()}});
   document.getElementById('oep-rlabel').textContent=room.label||'Odd or Even';
   document.getElementById('oep-name').textContent=name;
   document.getElementById('oep-code').textContent=code;
@@ -3117,7 +3144,7 @@ async function joinOERoom(){
   setPlayerUI();
   startOEPlayerListen();startChatListen();showChatFab();
   saveRoomToLocal(code,name,'oe','player',room.label||'Odd or Even');
-  addSystemMsg('👋 '+name+' joined the room');
+  if(!isOERejoin) addSystemMsg('👋 '+name+' joined the room');
 }
 async function castOEVote(v){
   document.getElementById('oep-btn-odd').disabled=true;
@@ -3295,8 +3322,14 @@ async function joinDuckRoom(code,name){
   duckCount=room.duckCount||20;
   duckPicksAllowed=room.duckPicksAllowed||2;
   duckNumbers=room.duckNumbers||[];
-  duckMyPicks=[];duckRevealed=false;
-  await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now(),picks:[]}});
+  duckRevealed=room.revealed||false;
+  const isDuckRejoin=!!(room.players&&room.players[name]);
+  if(isDuckRejoin){
+    duckMyPicks=room.players[name].picks||[];
+  } else {
+    duckMyPicks=[];
+    await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now(),picks:[]}});
+  }
   document.getElementById('duckp-rlabel').textContent=room.label||'Lucky Duck';
   document.getElementById('duckp-name').textContent=name;
   document.getElementById('duckp-code').textContent=code;
@@ -3305,7 +3338,7 @@ async function joinDuckRoom(code,name){
   go('s-duck-player');document.getElementById('sbar').style.display='flex';
   setPlayerUI();
   startDuckPlayerListen();startChatListen();showChatFab();
-  addSystemMsg('👋 '+name+' joined the Lucky Duck room');
+  if(!isDuckRejoin) addSystemMsg('👋 '+name+' joined the Lucky Duck room');
   return true;
 }
 
@@ -3667,7 +3700,8 @@ async function joinMMRoom(code,name){
   const room=await dbGet('rooms/'+code);
   if(!room||room.type!=='mm')return false;
   mmSuspects=room.suspects||[];
-  await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now()}});
+  const isMMRejoin=!!(room.players&&room.players[name]);
+  if(!isMMRejoin) await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now()}});
   document.getElementById('mmp-rlabel').textContent=room.label||'Murder Mystery';
   document.getElementById('mmp-name').textContent=name;
   document.getElementById('mmp-code').textContent=code;
@@ -3688,7 +3722,7 @@ async function joinMMRoom(code,name){
   go('s-mm-player');document.getElementById('sbar').style.display='flex';
   setPlayerUI();
   startMMPlayerListen();startChatListen();showChatFab();
-  addSystemMsg('👋 '+name+' joined the Mystery room');
+  if(!isMMRejoin) addSystemMsg('👋 '+name+' joined the Mystery room');
   return true;
 }
 
@@ -4785,6 +4819,63 @@ async function rejoinAsHost(room){
     if(type==='ln2'){renderLNTrack('ln2-h-track',lnDrawn);document.getElementById('ln2-rem').textContent=lnPool.length+' remaining';if(lnDrawn.length)document.getElementById('ln2-ball').textContent=lnDrawn[0]}
     if(type==='ln3'&&lnSecret){document.getElementById('ln3-set-phase').style.display='none';document.getElementById('ln3-reveal-phase').style.display='block';document.getElementById('ln3-secret-disp').textContent=lnSecret}
     go('s-ln-host'); startLNHostListen(); startChatListen(); showChatFab();
+  } else if(type==='hl'){
+    hlRange=room.range||50; hlTotalRounds=room.totalRounds||10;
+    hlRound=room.round||0; hlCurrentNum=room.currentNum||null; hlHistory=room.history||[];
+    hlPool=Array.from({length:hlRange},(_,i)=>i+1).filter(n=>!hlHistory.map(h=>h.n).includes(n)&&n!==hlCurrentNum).sort(()=>Math.random()-.5);
+    document.getElementById('hl-h-code').textContent=room.code;
+    document.getElementById('hl-share-link').value=buildJoinURL(room.code);
+    document.getElementById('hl-total-rounds').textContent=hlTotalRounds;
+    if(hlCurrentNum!=null){renderHLBall(hlCurrentNum);renderHLHostHistory();}
+    go('s-hl-host'); setHostUI(); startHLHostListen(); startChatListen(); showChatFab();
+  } else if(type==='lastn'){
+    lastNRange=room.range||50;
+    lastNDrawn=room.drawn||[];
+    lastNPool=Array.from({length:lastNRange},(_,i)=>i+1).filter(n=>!lastNDrawn.includes(n)).sort(()=>Math.random()-.5);
+    document.getElementById('lastn-h-code').textContent=room.code;
+    document.getElementById('lastn-share-link').value=buildJoinURL(room.code);
+    document.getElementById('lastn-rem').textContent=lastNPool.length+' remaining';
+    if(lastNDrawn.length){
+      const b=document.getElementById('lastn-ball'); b.textContent=lastNDrawn[0];
+      document.getElementById('lastn-h-track').innerHTML=lastNDrawn.map((x,i)=>`<div class="bc${i===0?' lat':''}">${x}</div>`).join('');
+    }
+    go('s-lastn-host'); setHostUI(); startLastNHostListen(); startChatListen(); showChatFab();
+  } else if(type==='oe'){
+    oeRange=room.range||50; oeTotalRounds=room.totalRounds||10;
+    oeRound=room.round||0; oeDrawn=room.drawn||[];
+    oePool=Array.from({length:oeRange},(_,i)=>i+1).filter(n=>!oeDrawn.includes(n)).sort(()=>Math.random()-.5);
+    document.getElementById('oe-h-code').textContent=room.code;
+    document.getElementById('oe-share-link').value=buildJoinURL(room.code);
+    document.getElementById('oe-total-rounds').textContent=oeTotalRounds;
+    document.getElementById('oe-round-rem').innerHTML='Round '+oeRound+' / <span id="oe-total-rounds">'+oeTotalRounds+'</span>';
+    if(oeDrawn.length){document.getElementById('oe-ball').textContent=oeDrawn[0];document.getElementById('oe-h-track').innerHTML=oeDrawn.map((x,i)=>`<div class="bc${i===0?' lat':''}">${x}</div>`).join('');}
+    go('s-oe-host'); setHostUI(); startOEHostListen(); startChatListen(); showChatFab();
+  } else if(type==='duck'){
+    duckCount=room.duckCount||20; duckPicksAllowed=room.duckPicksAllowed||2;
+    duckNumbers=room.duckNumbers||[]; duckWinnerNum=room.winnerNum||null; duckRevealed=room.revealed||false;
+    document.getElementById('duck-h-code').textContent=room.code;
+    document.getElementById('duck-share-link').value=buildJoinURL(room.code);
+    document.getElementById('duck-h-winner-num').textContent=duckWinnerNum;
+    buildDuckHostGrid();
+    go('s-duck-host'); setHostUI(); startDuckHostListen(); startChatListen(); showChatFab();
+  } else if(type==='mm'){
+    mmSuspects=room.suspects||[]; mmKiller=room.killer||'';
+    document.getElementById('mm-h-code').textContent=room.code;
+    document.getElementById('mm-share-link').value=buildJoinURL(room.code);
+    document.getElementById('mm-h-victim').textContent=room.victim||'—';
+    document.getElementById('mm-h-weapon').textContent=(room.weapons||[room.weapon||'—']).join(', ');
+    document.getElementById('mm-h-location').textContent=(room.locations||[room.location||'—']).join(', ');
+    const ww=room.winnerWeapon||''; const wl=room.winnerLocation||'';
+    document.getElementById('mm-h-killer').textContent=mmKiller+(ww?' with '+ww:'')+(wl?' in '+wl:'')+' (only you see this)';
+    renderMMHostVotes(room.votes||{});
+    if(room.revealed){
+      document.getElementById('mm-h-reveal').classList.add('show');
+      let revName=mmKiller; if(ww)revName+=' · '+ww; if(wl)revName+=' · '+wl;
+      document.getElementById('mm-h-reveal-name').textContent=revName;
+      const winners=room.winners||[];
+      document.getElementById('mm-h-reveal-detail').textContent=winners.length?winners.join(', ')+' got it right!':'Nobody guessed correctly!';
+    }
+    go('s-mm-host'); setHostUI(); startMMHostListen(); startChatListen(); showChatFab();
   } else {
     alert('Rejoining as host for this game type is not yet supported. Please recreate the room.');
   }
@@ -4825,6 +4916,79 @@ async function rejoinAsPlayer(room, name){
     } else {
       alert('Could not restore your bingo card. Please rejoin via the room code.');
     }
+  } else if(type==='hl'){
+    hlRange=room.range||50; hlTotalRounds=room.totalRounds||10; gameType='hl';
+    hlMyScore=(room.scores&&room.scores[name])||0;
+    hlVotedThisRound=!!(room.votes&&room.votes[name]);
+    hlLastRound=room.round||0;
+    document.getElementById('hlp-rlabel').textContent=room.label||'Higher or Lower';
+    document.getElementById('hlp-name').textContent=name;
+    document.getElementById('hlp-code').textContent=code;
+    document.getElementById('hlp-total-rounds').textContent=hlTotalRounds;
+    go('s-hl-player'); document.getElementById('sbar').style.display='flex';
+    startHLPlayerListen(); startChatListen(); showChatFab();
+  } else if(type==='lastn'){
+    lastNRange=room.range||50; gameType='lastn';
+    const pd=room.players&&room.players[name];
+    lastNMyPicks=pd&&pd.picks||[];
+    lastNDrawn=room.drawn||[];
+    document.getElementById('lastnp-rlabel').textContent=room.label||'Last Number';
+    document.getElementById('lastnp-name').textContent=name;
+    document.getElementById('lastnp-code').textContent=code;
+    buildLastNPlayerGrid();
+    // Re-mark picks on grid
+    lastNMyPicks.forEach(n=>{
+      const el=document.querySelector('#lastnp-grid [data-n="'+n+'"]');
+      if(el){el.classList.add('np-picked');el.onclick=null;}
+    });
+    if(lastNMyPicks.length===3){
+      document.getElementById('lastnp-picks-display').style.display='block';
+      document.getElementById('lastnp-picks-text').textContent=lastNMyPicks.join(', ');
+      document.getElementById('lastnp-pick-label').innerHTML='Your picks are locked! Waiting for host to draw…';
+      document.querySelectorAll('#lastnp-grid .np-cell').forEach(c=>c.onclick=null);
+    }
+    go('s-lastn-player'); document.getElementById('sbar').style.display='flex';
+    startLastNPlayerListen(); startChatListen(); showChatFab();
+  } else if(type==='oe'){
+    oeTotalRounds=room.totalRounds||10; gameType='oe';
+    oeLastRound=room.round||0;
+    document.getElementById('oep-rlabel').textContent=room.label||'Odd or Even';
+    document.getElementById('oep-name').textContent=name;
+    document.getElementById('oep-code').textContent=code;
+    document.getElementById('oep-total-rounds').textContent=oeTotalRounds;
+    go('s-oe-player'); document.getElementById('sbar').style.display='flex';
+    startOEPlayerListen(); startChatListen(); showChatFab();
+  } else if(type==='duck'){
+    duckCount=room.duckCount||20; duckPicksAllowed=room.duckPicksAllowed||2;
+    duckNumbers=room.duckNumbers||[]; duckRevealed=room.revealed||false; gameType='duck';
+    const pd=room.players&&room.players[name];
+    duckMyPicks=pd&&pd.picks||[];
+    document.getElementById('duckp-rlabel').textContent=room.label||'Lucky Duck';
+    document.getElementById('duckp-name').textContent=name;
+    document.getElementById('duckp-code').textContent=code;
+    document.getElementById('duckp-pick-label').textContent=duckMyPicks.length>=duckPicksAllowed?'✓ Ducks picked! Waiting for host to reveal…':'Pick '+duckPicksAllowed+' duck'+(duckPicksAllowed>1?'s':'')+'! Tap to select.';
+    buildDuckPlayerGrid(room);
+    go('s-duck-player'); document.getElementById('sbar').style.display='flex';
+    startDuckPlayerListen(); startChatListen(); showChatFab();
+  } else if(type==='mm'){
+    mmSuspects=room.suspects||[]; gameType='mm';
+    const myVote=room.votes&&room.votes[name]||null;
+    const myTheory=room.theories&&room.theories[name]||{};
+    document.getElementById('mmp-rlabel').textContent=room.label||'Murder Mystery';
+    document.getElementById('mmp-name').textContent=name;
+    document.getElementById('mmp-code').textContent=code;
+    document.getElementById('mmp-victim').textContent=room.victim||'—';
+    document.getElementById('mmp-weapon-disp').textContent=room.weapon||'—';
+    document.getElementById('mmp-location-disp').textContent=room.location||'—';
+    const weapSel=document.getElementById('mmp-weapon-pick'); weapSel.innerHTML='';
+    const weapons=room.weapons&&room.weapons.length?room.weapons:[room.weapon||'Unknown'];
+    weapons.forEach(w=>{const o=document.createElement('option');o.value=w;o.textContent=w;weapSel.appendChild(o)});
+    const locSel=document.getElementById('mmp-location-pick'); locSel.innerHTML='';
+    const locations=room.locations&&room.locations.length?room.locations:[room.location||'Unknown'];
+    locations.forEach(l=>{const o=document.createElement('option');o.value=l;o.textContent=l;locSel.appendChild(o)});
+    renderMMPlayerSuspects(room,myVote);
+    go('s-mm-player'); document.getElementById('sbar').style.display='flex';
+    startMMPlayerListen(); startChatListen(); showChatFab();
   } else {
     alert('Please use the regular join screen to rejoin this game type.');
   }
