@@ -604,18 +604,30 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
   <!-- MY ROOMS TAB -->
   <div class="tab-panel" id="tab-rooms" style="width:100%;max-width:760px">
 
-    <!-- All open rooms -->
-    <div style="margin-bottom:26px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:1px">🌐 Open Rooms</div>
-        <button class="btn btn-outline btn-sm" onclick="loadOpenRooms()" id="open-rooms-refresh-btn">↻ Refresh</button>
+    <!-- Join by code (new device) -->
+    <div style="background:var(--surface);border:1.5px solid rgba(255,255,255,.08);border-radius:14px;padding:18px 20px;margin-bottom:22px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:1px;margin-bottom:4px">🔍 Rejoin a Room</div>
+      <p style="color:var(--muted);font-size:.8rem;margin-bottom:12px">On a new device? Enter the room code and your name to jump straight back in.</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="rejoin-code-input" placeholder="Room code" maxlength="8"
+          style="flex:1;background:var(--surface2);border:1.5px solid rgba(255,255,255,.1);border-radius:11px;padding:11px 14px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:3px;outline:none;text-transform:uppercase"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')document.getElementById('rejoin-name-input').focus()"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"/>
       </div>
-      <div id="open-rooms-list"><div class="mr-empty" style="font-size:.82rem">Loading…</div></div>
+      <div style="display:flex;gap:8px">
+        <input id="rejoin-name-input" placeholder="Your name" maxlength="20"
+          style="flex:1;background:var(--surface2);border:1.5px solid rgba(255,255,255,.1);border-radius:11px;padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none"
+          onkeydown="if(event.key==='Enter')rejoinByCode()"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"/>
+        <button class="btn btn-accent" onclick="rejoinByCode()" id="rejoin-code-btn">Go →</button>
+      </div>
+      <div id="rejoin-code-result" style="margin-top:10px;font-size:.83rem;min-height:18px"></div>
     </div>
 
     <!-- This device's saved rooms -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:1px">📱 This Device</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:1px">📱 Recent Rooms</div>
       <button class="btn btn-outline btn-sm" onclick="if(confirm('Clear all saved rooms?')){localStorage.removeItem('mlt_my_rooms');renderMyRooms()}">🗑 Clear</button>
     </div>
     <div id="my-rooms-list"><div class="mr-empty">No recent rooms saved on this device.</div></div>
@@ -3848,7 +3860,7 @@ function switchTab(tab) {
   const panel = document.getElementById('tab-' + t.panel);
   if (btn) btn.classList.add('active');
   if (panel) panel.classList.add('active');
-  if (tab === 'rooms') { renderMyRooms(); loadOpenRooms(); }
+  if (tab === 'rooms') renderMyRooms();
 }
 
 document.getElementById('j-code').addEventListener('input',function(){this.value=this.value.toUpperCase()});
@@ -4722,77 +4734,47 @@ function buildColour() {
 //  MY ROOMS — localStorage persistence
 // ════════════════════════════════════════
 // ════════════════════════════════════════
-//  OPEN ROOMS — live list from Firebase
+//  REJOIN BY CODE (cross-device)
 // ════════════════════════════════════════
-const TYPE_ICONS={bingo:'🎱',ln1:'1️⃣',ln2:'2️⃣',ln3:'3️⃣',hl:'🔢',lastn:'🏁',oe:'🎲',duck:'🦆',sq:'🟦',mm:'🔍',fg:'🔎'};
-
-async function loadOpenRooms(){
-  const el=document.getElementById('open-rooms-list');
-  const btn=document.getElementById('open-rooms-refresh-btn');
-  if(!el)return;
-  el.innerHTML='<div class="mr-empty" style="font-size:.82rem">Loading…</div>';
-  if(btn){btn.disabled=true;btn.textContent='Loading…';}
-  if(!db){
-    el.innerHTML='<div class="mr-empty" style="color:var(--pink);font-size:.82rem">Firebase not connected.</div>';
-    if(btn){btn.disabled=false;btn.textContent='↻ Refresh';}
-    return;
-  }
+async function rejoinByCode(){
+  const code=document.getElementById('rejoin-code-input').value.trim().toUpperCase();
+  const name=document.getElementById('rejoin-name-input').value.trim();
+  const btn=document.getElementById('rejoin-code-btn');
+  const res=document.getElementById('rejoin-code-result');
+  res.textContent=''; res.style.color='var(--muted)';
+  if(!code){res.textContent='Enter a room code.';res.style.color='var(--pink)';return}
+  if(!name){res.textContent='Enter your name.';res.style.color='var(--pink)';return}
+  if(!db){res.textContent='Firebase not connected.';res.style.color='var(--pink)';return}
+  btn.disabled=true; btn.textContent='…';
   try{
-    const snap=await _get(_ref(db,'rooms'));
-    if(!snap.exists()){
-      el.innerHTML='<div class="mr-empty" style="font-size:.82rem">No open rooms right now.</div>';
-      if(btn){btn.disabled=false;btn.textContent='↻ Refresh';}
+    const room=await dbGet('rooms/'+code);
+    if(!room){
+      res.textContent='Room "'+code+'" not found or already closed.';
+      res.style.color='var(--pink)';
+      btn.disabled=false; btn.textContent='Go →';
       return;
     }
-    const all=snap.val();
-    const open=Object.values(all).filter(r=>r&&r.status!=='closed').sort((a,b)=>(b.created||0)-(a.created||0));
-    if(!open.length){
-      el.innerHTML='<div class="mr-empty" style="font-size:.82rem">No open rooms right now.</div>';
-      if(btn){btn.disabled=false;btn.textContent='↻ Refresh';}
+    if(room.status==='closed'){
+      res.textContent='That room has been closed.';
+      res.style.color='var(--pink)';
+      btn.disabled=false; btn.textContent='Go →';
       return;
     }
-    el.innerHTML=open.map(r=>{
-      const icon=TYPE_ICONS[r.type]||'🎮';
-      const typeLabel=TYPE_LABELS[r.type]||r.type;
-      const pCount=Object.keys(r.players||{}).length;
-      const ago=timeSince(r.created||Date.now());
-      return `<div class="mr-card">
-        <div class="mr-info">
-          <div class="mr-name">${icon} ${escH(r.label||typeLabel)}</div>
-          <div class="mr-meta">${typeLabel} · Host: <b>${escH(r.hostName||'—')}</b> · ${pCount} player${pCount!==1?'s':''} · ${ago}</div>
-          <div class="mr-code">Code: <b>${r.code}</b></div>
-        </div>
-        <div class="mr-actions">
-          <button class="btn btn-sm btn-purple" onclick="promptJoinOpenRoom('${r.code}','${r.type}','${escH(r.label||typeLabel)}','${escH(r.hostName||'')}')">Join →</button>
-        </div>
-      </div>`;
-    }).join('');
-  }catch(e){
-    el.innerHTML='<div class="mr-empty" style="color:var(--pink);font-size:.82rem">Could not load rooms. Check your connection.</div>';
-  }
-  if(btn){btn.disabled=false;btn.textContent='↻ Refresh';}
-}
-
-function promptJoinOpenRoom(code, type, label, hostName){
-  // If user is the host, ask for host name to rejoin as host; otherwise join as player
-  const name=prompt('Enter your name to join "'+label+'" (host: '+hostName+'):');
-  if(!name||!name.trim())return;
-  const trimmed=name.trim();
-  // Check if this person is the host
-  dbGet('rooms/'+code).then(room=>{
-    if(!room){alert('This room no longer exists.');return;}
-    if(room.hostName===trimmed){
-      // Rejoin as host
-      myName=trimmed; roomCode=code; myRole='host'; gameType=room.type;
-      saveRoomToLocal(code,trimmed,room.type,'host',room.label||room.type);
-      rejoinAsHost(room);
+    // Determine role: host name match → host, otherwise player
+    const isHost=room.hostName===name;
+    const role=isHost?'host':'player';
+    myName=name; roomCode=code; myRole=role; gameType=room.type;
+    saveRoomToLocal(code,name,room.type,role,room.label||room.type);
+    if(isHost){
+      await rejoinAsHost(room);
     } else {
-      // Join or rejoin as player
-      myName=trimmed; roomCode=code; myRole='player'; gameType=room.type;
-      saveRoomToLocal(code,trimmed,room.type,'player',room.label||room.type);
-      rejoinAsPlayer(room,trimmed);
+      await rejoinAsPlayer(room,name);
     }
-  });
+  }catch(e){
+    res.textContent='Something went wrong. Try again.';
+    res.style.color='var(--pink)';
+  }
+  btn.disabled=false; btn.textContent='Go →';
 }
 
 const MY_ROOMS_KEY='mlt_my_rooms';
