@@ -676,29 +676,30 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <div class="ig"><label>Your Name</label><input id="ln-host-name" placeholder="e.g. Sarah" maxlength="20"/></div>
     <div class="ig"><label>Room Name (optional)</label><input id="ln-room-label" placeholder="e.g. Lucky Night" maxlength="30"/></div>
 
-    <!-- LN1: range + max players are linked -->
+    <!-- LN1: range = max players (always in sync) -->
     <div id="ln-game1-opts" style="display:none">
       <div class="ig">
-        <label>Number Range <span style="color:var(--muted);font-size:.78rem">(sets how many unique numbers players can pick from)</span></label>
+        <label>Players &amp; Numbers <span style="color:var(--muted);font-size:.78rem">(each player gets one unique number from 1 to this value)</span></label>
         <select id="ln1-range" onchange="lnSyncRange()">
-          <option value="10">1 – 10</option>
-          <option value="20">1 – 20</option>
-          <option value="25">1 – 25</option>
-          <option value="50" selected>1 – 50</option>
-          <option value="75">1 – 75</option>
-          <option value="100">1 – 100</option>
+          <option value="5">5 players · 1 – 5</option>
+          <option value="10">10 players · 1 – 10</option>
+          <option value="15">15 players · 1 – 15</option>
+          <option value="20" selected>20 players · 1 – 20</option>
+          <option value="25">25 players · 1 – 25</option>
+          <option value="30">30 players · 1 – 30</option>
+          <option value="40">40 players · 1 – 40</option>
+          <option value="50">50 players · 1 – 50</option>
         </select>
-      </div>
-      <div class="ig">
-        <label>Max Players <span id="ln1-max-hint" style="color:var(--accent2);font-size:.78rem">(max 50 — limited by range)</span></label>
-        <select id="ln1-max-players">
-          <option value="5">5 players</option>
-          <option value="10">10 players</option>
-          <option value="15">15 players</option>
-          <option value="20" selected>20 players</option>
-          <option value="25">25 players</option>
-          <option value="30">30 players</option>
-          <option value="50">50 players</option>
+        <!-- Hidden select mirrors the value so createLNRoom() still reads ln1-max-players -->
+        <select id="ln1-max-players" style="display:none">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="20" selected>20</option>
+          <option value="25">25</option>
+          <option value="30">30</option>
+          <option value="40">40</option>
+          <option value="50">50</option>
         </select>
       </div>
     </div>
@@ -709,8 +710,11 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <select id="ln2-max-players">
           <option value="5">5 players</option>
           <option value="10">10 players</option>
+          <option value="15">15 players</option>
           <option value="20" selected>20 players</option>
+          <option value="25">25 players</option>
           <option value="30">30 players</option>
+          <option value="40">40 players</option>
           <option value="50">50 players</option>
         </select>
       </div>
@@ -720,18 +724,22 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <div id="ln-game3-opts" style="display:none">
       <div class="ig"><label>Number Range for Guessing</label>
         <select id="ln3-range">
-          <option value="50">1 – 50</option>
-          <option value="100" selected>1 – 100</option>
-          <option value="500">1 – 500</option>
-          <option value="1000">1 – 1000</option>
+          <option value="20">1 – 20</option>
+          <option value="25">1 – 25</option>
+          <option value="30">1 – 30</option>
+          <option value="40">1 – 40</option>
+          <option value="50" selected>1 – 50</option>
         </select>
       </div>
       <div class="ig"><label>Max Players</label>
         <select id="ln3-max-players">
           <option value="5">5 players</option>
           <option value="10">10 players</option>
+          <option value="15">15 players</option>
           <option value="20" selected>20 players</option>
+          <option value="25">25 players</option>
           <option value="30">30 players</option>
+          <option value="40">40 players</option>
           <option value="50">50 players</option>
         </select>
       </div>
@@ -931,10 +939,11 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <div class="ig"><label>Room Name (optional)</label><input id="hl-room-label" placeholder="e.g. Game Night" maxlength="30"/></div>
     <div class="ig"><label>Number Range</label>
       <select id="hl-range">
-        <option value="10">1 – 10</option>
         <option value="20">1 – 20</option>
+        <option value="25">1 – 25</option>
+        <option value="30">1 – 30</option>
+        <option value="40">1 – 40</option>
         <option value="50" selected>1 – 50</option>
-        <option value="100">1 – 100</option>
       </select>
     </div>
     <div class="ig"><label>Rounds</label>
@@ -947,9 +956,13 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     </div>
     <div class="ig"><label>Max Players</label>
       <select id="hl-max-players">
+        <option value="5">5 players</option>
         <option value="10">10 players</option>
+        <option value="15">15 players</option>
         <option value="20" selected>20 players</option>
+        <option value="25">25 players</option>
         <option value="30">30 players</option>
+        <option value="40">40 players</option>
         <option value="50">50 players</option>
       </select>
     </div>
@@ -1077,20 +1090,28 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <p class="sub">Each player picks 3 numbers. Host draws — first with all 3 crossed off wins!</p>
     <div class="ig"><label>Your Name</label><input id="lastn-host-name" placeholder="e.g. Sarah" maxlength="20"/></div>
     <div class="ig"><label>Room Name (optional)</label><input id="lastn-room-label" placeholder="e.g. Game Night" maxlength="30"/></div>
-    <div class="ig"><label>Number Range</label>
-      <select id="lastn-range">
-        <option value="20">1 – 20</option>
-        <option value="30">1 – 30</option>
-        <option value="50" selected>1 – 50</option>
-        <option value="75">1 – 75</option>
+    <div class="ig">
+      <label>Players &amp; Numbers <span style="color:var(--muted);font-size:.78rem">(each player picks 3 numbers from 1 to this value)</span></label>
+      <select id="lastn-range" onchange="lastNSyncRange()">
+        <option value="5">5 players · 1 – 5</option>
+        <option value="10">10 players · 1 – 10</option>
+        <option value="15">15 players · 1 – 15</option>
+        <option value="20" selected>20 players · 1 – 20</option>
+        <option value="25">25 players · 1 – 25</option>
+        <option value="30">30 players · 1 – 30</option>
+        <option value="40">40 players · 1 – 40</option>
+        <option value="50">50 players · 1 – 50</option>
       </select>
-    </div>
-    <div class="ig"><label>Max Players</label>
-      <select id="lastn-max-players">
-        <option value="10">10 players</option>
-        <option value="20" selected>20 players</option>
-        <option value="30">30 players</option>
-        <option value="50">50 players</option>
+      <!-- Hidden mirror so createLastNRoom() still reads lastn-max-players -->
+      <select id="lastn-max-players" style="display:none">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="20" selected>20</option>
+        <option value="25">25</option>
+        <option value="30">30</option>
+        <option value="40">40</option>
+        <option value="50">50</option>
       </select>
     </div>
     <button class="btn" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#0f0e17" onclick="createLastNRoom()">Create Room →</button>
@@ -1189,8 +1210,10 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <div class="ig"><label>Number Range</label>
       <select id="oe-range">
         <option value="20">1 – 20</option>
+        <option value="25">1 – 25</option>
+        <option value="30">1 – 30</option>
+        <option value="40">1 – 40</option>
         <option value="50" selected>1 – 50</option>
-        <option value="100">1 – 100</option>
       </select>
     </div>
     <div class="ig"><label>Rounds</label>
@@ -1203,9 +1226,13 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     </div>
     <div class="ig"><label>Max Players</label>
       <select id="oe-max-players">
+        <option value="5">5 players</option>
         <option value="10">10 players</option>
+        <option value="15">15 players</option>
         <option value="20" selected>20 players</option>
+        <option value="25">25 players</option>
         <option value="30">30 players</option>
+        <option value="40">40 players</option>
         <option value="50">50 players</option>
       </select>
     </div>
@@ -1325,11 +1352,10 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <div class="ig"><label>Room Name (optional)</label><input id="duck-room-label" placeholder="e.g. Lucky Duck Night" maxlength="30"/></div>
     <div class="ig"><label>Number of Ducks</label>
       <select id="duck-count" onchange="updateDuckWinnerRange()">
-        <option value="10">10 ducks</option>
-        <option value="15">15 ducks</option>
         <option value="20" selected>20 ducks</option>
         <option value="25">25 ducks</option>
         <option value="30">30 ducks</option>
+        <option value="40">40 ducks</option>
         <option value="50">50 ducks</option>
       </select>
     </div>
@@ -1344,9 +1370,13 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     </div>
     <div class="ig"><label>Max Players</label>
       <select id="duck-max">
+        <option value="5">5</option>
         <option value="10">10</option>
+        <option value="15">15</option>
         <option value="20" selected>20</option>
+        <option value="25">25</option>
         <option value="30">30</option>
+        <option value="40">40</option>
         <option value="50">50</option>
       </select>
     </div>
@@ -1444,9 +1474,13 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     </div>
     <div class="ig"><label>Max Players</label>
       <select id="sq-max">
+        <option value="5">5</option>
         <option value="10">10</option>
+        <option value="15">15</option>
         <option value="20" selected>20</option>
+        <option value="25">25</option>
         <option value="30">30</option>
+        <option value="40">40</option>
         <option value="50">50</option>
       </select>
     </div>
@@ -2069,25 +2103,55 @@ function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from(
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 // ════════════════════════════════════════
+//  HOST WINNER ALERT — prominent banner shown to host when a winner is found
+// ════════════════════════════════════════
+let _hostAlertTimer=null;
+function showHostWinnerAlert(msg, nearElId){
+  // Remove any existing alert
+  const old=document.getElementById('host-winner-alert');
+  if(old)old.remove();
+  if(_hostAlertTimer)clearTimeout(_hostAlertTimer);
+  const el=document.createElement('div');
+  el.id='host-winner-alert';
+  el.innerHTML=`<span style="font-size:1.6rem">🏆</span><span style="flex:1">${escH(msg)}</span><button onclick="document.getElementById('host-winner-alert').remove()" style="background:none;border:none;color:#0f0e17;font-size:1.1rem;cursor:pointer;flex-shrink:0">✕</button>`;
+  Object.assign(el.style,{
+    position:'fixed',top:'70px',left:'50%',transform:'translateX(-50%)',
+    background:'linear-gradient(135deg,#ffd166,#ff6b35)',color:'#0f0e17',
+    borderRadius:'14px',padding:'14px 20px',fontWeight:'700',fontSize:'.95rem',
+    boxShadow:'0 6px 32px rgba(255,107,53,.45)',zIndex:'400',
+    display:'flex',alignItems:'center',gap:'12px',maxWidth:'480px',width:'90%',
+    animation:'slideDown .35s ease'
+  });
+  // Add animation keyframe once
+  if(!document.getElementById('_hwa_style')){
+    const s=document.createElement('style');s.id='_hwa_style';
+    s.textContent='@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(el);
+  _hostAlertTimer=setTimeout(()=>{if(document.getElementById('host-winner-alert'))el.remove()},8000);
+}
+
+// ════════════════════════════════════════
 //  LUCKY NUMBERS — HOST
 // ════════════════════════════════════════
-// Sync LN1 max-players cap to the number range
+// LN1: keep hidden max-players mirror in sync with the combined dropdown
 function lnSyncRange(){
   const rangeEl=document.getElementById('ln1-range');
   const maxEl=document.getElementById('ln1-max-players');
-  const hint=document.getElementById('ln1-max-hint');
   if(!rangeEl||!maxEl)return;
-  const range=parseInt(rangeEl.value);
-  Array.from(maxEl.options).forEach(o=>{
-    const v=parseInt(o.value);
-    o.disabled=v>range;
-    o.textContent=v>range?v+' players (exceeds range)':v+' players';
-  });
-  if(parseInt(maxEl.value)>range){
-    const valid=Array.from(maxEl.options).filter(o=>!o.disabled);
-    if(valid.length)maxEl.value=valid[valid.length-1].value;
-  }
-  if(hint)hint.textContent='(max '+range+' — limited by range)';
+  const v=rangeEl.value;
+  // Mirror value into hidden select so createLNRoom() reads correctly
+  if(maxEl.querySelector('option[value="'+v+'"]')) maxEl.value=v;
+}
+
+// Last Number: keep hidden max-players mirror in sync
+function lastNSyncRange(){
+  const rangeEl=document.getElementById('lastn-range');
+  const maxEl=document.getElementById('lastn-max-players');
+  if(!rangeEl||!maxEl)return;
+  const v=rangeEl.value;
+  if(maxEl.querySelector('option[value="'+v+'"]')) maxEl.value=v;
 }
 
 let lnPool=[], lnDrawn=[], lnMaxPlayers=20, lnRange=50, lnSecret=null;
@@ -2140,6 +2204,21 @@ async function ln1Draw(){
   renderLNTrack('ln1-h-track',lnDrawn);
   await dbUpdate('rooms/'+roomCode,{drawn:lnDrawn});
   addSystemMsg('🎲 Number '+n+' was drawn');
+  // Check if a player held this number
+  const room=await dbGet('rooms/'+roomCode);
+  if(room&&room.players){
+    const match=Object.entries(room.players).find(([,p])=>p.pick===n);
+    if(match){
+      const winner=match[0];
+      const wins=room.winners||[];
+      if(!wins.includes(winner)){
+        wins.push(winner);
+        await dbUpdate('rooms/'+roomCode,{winners:wins});
+      }
+      showHostWinnerAlert('🏆 '+winner+' had number '+n+' — eliminated!','ln1-label');
+      addSystemMsg('🏆 '+winner+' had number '+n+' — eliminated!');
+    }
+  }
 }
 async function ln1Undo(){if(!lnDrawn.length)return;lnPool.push(lnDrawn.shift());renderLNTrack('ln1-h-track',lnDrawn);document.getElementById('ln1-rem').textContent=lnPool.length+' remaining';await dbUpdate('rooms/'+roomCode,{drawn:lnDrawn})}
 async function ln1Reset(){if(!confirm('Reset draw?'))return;lnPool=Array.from({length:lnRange},(_,i)=>i+1).sort(()=>Math.random()-.5);lnDrawn=[];renderLNTrack('ln1-h-track',lnDrawn);document.getElementById('ln1-rem').textContent=lnPool.length+' remaining';document.getElementById('ln1-ball').textContent='—';await dbUpdate('rooms/'+roomCode,{drawn:[],winners:[]})}
@@ -2154,6 +2233,21 @@ async function ln2Draw(){
   renderLNTrack('ln2-h-track',lnDrawn);
   await dbUpdate('rooms/'+roomCode,{drawn:lnDrawn});
   addSystemMsg('🎲 Number '+n+' was drawn');
+  // Check if a player's lucky number was just drawn
+  const room=await dbGet('rooms/'+roomCode);
+  if(room&&room.players){
+    const match=Object.entries(room.players).find(([,p])=>p.lucky===n);
+    if(match){
+      const winner=match[0];
+      const wins=room.winners||[];
+      if(!wins.includes(winner)){
+        wins.push(winner);
+        await dbUpdate('rooms/'+roomCode,{winners:wins});
+      }
+      showHostWinnerAlert('🍀 '+winner+'\'s lucky number '+n+' was drawn — they win!','ln2-label');
+      addSystemMsg('🍀 '+winner+'\'s lucky number '+n+' hit — WINNER!');
+    }
+  }
 }
 async function ln2Undo(){if(!lnDrawn.length)return;lnPool.push(lnDrawn.shift());renderLNTrack('ln2-h-track',lnDrawn);document.getElementById('ln2-rem').textContent=lnPool.length+' remaining';await dbUpdate('rooms/'+roomCode,{drawn:lnDrawn})}
 async function ln2Reset(){if(!confirm('Reset draw?'))return;lnPool=Array.from({length:lnRange},(_,i)=>i+1).sort(()=>Math.random()-.5);lnDrawn=[];renderLNTrack('ln2-h-track',lnDrawn);document.getElementById('ln2-rem').textContent=lnPool.length+' remaining';document.getElementById('ln2-ball').textContent='—';await dbUpdate('rooms/'+roomCode,{drawn:[],winners:[]})}
@@ -2905,6 +2999,27 @@ async function lastNDraw(){
   document.getElementById('lastn-h-track').innerHTML=lastNDrawn.map((x,i)=>`<div class="bc${i===0?' lat':''}">${x}</div>`).join('');
   await dbUpdate('rooms/'+roomCode,{drawn:lastNDrawn});
   addSystemMsg('🎲 '+n+' was drawn');
+  // Check if any player now has all 3 picks drawn
+  const room=await dbGet('rooms/'+roomCode);
+  if(room&&room.players){
+    const wins=room.winners||[];
+    let newWinners=[];
+    Object.entries(room.players).forEach(([pname,p])=>{
+      const picks=p.picks||[];
+      if(picks.length===3&&picks.every(x=>lastNDrawn.includes(x))&&!wins.includes(pname)){
+        newWinners.push(pname);
+      }
+    });
+    if(newWinners.length){
+      const allWins=[...wins,...newWinners];
+      await dbUpdate('rooms/'+roomCode,{winners:allWins});
+      newWinners.forEach(winner=>{
+        const picks=room.players[winner].picks;
+        showHostWinnerAlert('🏁 '+winner+' got all 3 numbers ('+picks.join(', ')+') — WINNER!','lastn-label');
+        addSystemMsg('🏁 '+winner+' wins! All picks drawn: '+picks.join(', '));
+      });
+    }
+  }
 }
 async function lastNUndo(){
   if(!lastNDrawn.length)return;
