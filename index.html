@@ -153,6 +153,8 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .np-cell:hover:not(.np-picked):not(.np-drawn){border-color:var(--purple);background:rgba(168,85,247,.1)}
 .np-cell.np-picked{background:linear-gradient(135deg,var(--purple),var(--purple2));border-color:transparent;color:#fff}
 .np-cell.np-drawn{background:var(--surface2);border-color:rgba(255,255,255,.08);color:var(--muted);text-decoration:line-through;cursor:default}
+.np-cell.np-taken{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.06);color:var(--muted);opacity:.38;cursor:not-allowed;position:relative}
+.np-cell.np-taken::after{content:'✗';position:absolute;font-size:.6rem;bottom:2px;right:3px;opacity:.6}
 .np-cell.np-win{background:linear-gradient(135deg,var(--accent2),var(--green)) !important;color:#0f0e17 !important;animation:pulse .6s infinite alternate}
 
 /* Game 2 — Lucky Draw */
@@ -909,14 +911,12 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <!-- GAME 3 PLAYER: submit a guess -->
     <div id="lnp3-panel" style="display:none">
       <div id="lnp3-guess-phase">
-        <p style="color:var(--muted);font-size:.85rem;margin-bottom:12px">Guess the host's secret number:</p>
-        <div class="closest-input" style="margin:0 auto">
-          <div class="range-val" id="lnp3-range-val">50</div>
-          <div class="range-lbl" id="lnp3-range-lbl">between 1 and 100</div>
-          <input type="range" id="lnp3-slider" min="1" max="100" value="50"
-            oninput="document.getElementById('lnp3-range-val').textContent=this.value"/>
-          <button class="btn btn-purple" style="width:100%;justify-content:center;margin-top:10px" onclick="submitGuess()">Lock in Guess →</button>
+        <p style="color:var(--muted);font-size:.85rem;margin-bottom:10px">Pick the host's secret number — closest wins!</p>
+        <div id="lnp3-picked-display" style="display:none;text-align:center;margin-bottom:10px">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--accent2)" id="lnp3-picked-num"></span>
+          <span style="color:var(--green);font-weight:700;margin-left:8px">✓ Locked in!</span>
         </div>
+        <div id="lnp3-grid" class="number-pick-grid"></div>
         <p id="lnp3-guess-submitted" style="display:none;text-align:center;color:var(--green);margin-top:12px;font-weight:700">✓ Guess locked in! Waiting for reveal…</p>
       </div>
       <div id="lnp3-result-phase" style="display:none;text-align:center;margin-top:14px">
@@ -2370,11 +2370,12 @@ async function joinLNRoom(){
   if(gameType==='ln1'&&lnMyPick){document.getElementById('lnp1-picked-display').style.display='block';document.getElementById('lnp1-picked-num').textContent=lnMyPick;}
   if(gameType==='ln2') document.getElementById('lnp2-mynum').textContent=lnMyLucky;
   if(gameType==='ln3'){
-    document.getElementById('lnp3-slider').max=lnRange;
-    document.getElementById('lnp3-slider').value=lnMyGuess||Math.floor(lnRange/2);
-    document.getElementById('lnp3-range-val').textContent=lnMyGuess||Math.floor(lnRange/2);
-    document.getElementById('lnp3-range-lbl').textContent='between 1 and '+lnRange;
-    if(lnMyGuess) document.getElementById('lnp3-guess-submitted').style.display='block';
+    buildLN3PlayerGrid(room);
+    if(lnMyGuess){
+      document.getElementById('lnp3-picked-num').textContent=lnMyGuess;
+      document.getElementById('lnp3-picked-display').style.display='block';
+      document.getElementById('lnp3-guess-submitted').style.display='block';
+    }
   }
   go('s-ln-player');
   document.getElementById('sbar').style.display='flex';
@@ -2413,12 +2414,39 @@ async function pickLN1Number(n,el){
   addSystemMsg('🎯 '+myName+' picked number '+n);
 }
 
-async function submitGuess(){
-  const v=parseInt(document.getElementById('lnp3-slider').value);
-  lnMyGuess=v;
-  await dbUpdate('rooms/'+roomCode+'/players/'+myName,{guess:v});
-  document.getElementById('lnp3-guess-phase').querySelector('button').disabled=true;
+function buildLN3PlayerGrid(room){
+  const g=document.getElementById('lnp3-grid'); if(!g)return; g.innerHTML='';
+  const takenMap={};
+  if(room&&room.players){
+    Object.entries(room.players).forEach(([pn,p])=>{
+      if(pn!==myName&&p.guess!=null) takenMap[p.guess]=pn;
+    });
+  }
+  for(let i=1;i<=lnRange;i++){
+    const d=document.createElement('div');
+    d.className='np-cell'; d.textContent=i; d.dataset.n=i;
+    if(takenMap[i]){
+      d.classList.add('np-taken');
+      d.title=takenMap[i]+' picked this';
+    } else if(lnMyGuess===i){
+      d.classList.add('np-picked');
+      d.onclick=null;
+    } else {
+      d.onclick=()=>pickLN3Number(i,d);
+    }
+    g.appendChild(d);
+  }
+}
+
+async function pickLN3Number(n,el){
+  if(lnMyGuess)return;
+  lnMyGuess=n;
+  document.querySelectorAll('#lnp3-grid .np-cell').forEach(c=>c.onclick=null);
+  el.classList.add('np-picked');
+  document.getElementById('lnp3-picked-num').textContent=n;
+  document.getElementById('lnp3-picked-display').style.display='block';
   document.getElementById('lnp3-guess-submitted').style.display='block';
+  await dbUpdate('rooms/'+roomCode+'/players/'+myName,{guess:n});
   addSystemMsg('🤔 '+myName+' submitted a guess');
 }
 
@@ -2458,6 +2486,10 @@ function startLNPlayerListen(){
     if(gameType==='ln1'&&lnMyPick&&drawn.includes(lnMyPick)){
       document.querySelector('[data-n="'+lnMyPick+'"]')?.classList.add('np-drawn');
     }
+    // Game 3: live grid update — show taken numbers from other players
+    if(gameType==='ln3'&&!room.revealed&&!lnMyGuess){
+      buildLN3PlayerGrid(room);
+    }
     // Game 3: reveal
     if(gameType==='ln3'&&room.revealed&&room.secret){
       document.getElementById('lnp3-guess-phase').style.display='none';
@@ -2473,6 +2505,8 @@ function startLNPlayerListen(){
         if(isWinner) showWin('🏆 You Win!','Closest guess! Secret was '+room.secret+', you guessed '+lnMyGuess);
       }
     }
+    // Winner banner for all players
+    if(room.winners&&room.winners.length) showWinnerBanner(room.winners);
     // Winners
     if(room.winners&&room.winners.length&&room.winners.includes(myName)){
       if(gameType!=='ln3') showWin('🍀 You Win!','Congratulations '+myName+'!');
@@ -2504,6 +2538,38 @@ function showWin(title,msg){
   document.getElementById('win-title').textContent=title;
   document.getElementById('win-msg').textContent=msg;
   document.getElementById('win-ov').classList.add('show');
+}
+
+// Banner shown to ALL other players when someone wins
+let _lastBannerWinners='';
+function showWinnerBanner(winners){
+  if(!winners||!winners.length)return;
+  const key=winners.join(',');
+  if(key===_lastBannerWinners)return; // don't re-show same winner
+  _lastBannerWinners=key;
+  // If I'm the winner, showWin handles it — show banner only to non-winners
+  const others=winners.filter(w=>w!==myName);
+  if(!others.length)return;
+  let el=document.getElementById('winner-banner');
+  if(!el){
+    el=document.createElement('div');
+    el.id='winner-banner';
+    el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:190;padding:14px 20px;text-align:center;font-family:"Bebas Neue",sans-serif;font-size:1.35rem;letter-spacing:2px;background:linear-gradient(90deg,#7c3aed,#a855f7,#ec4899);color:#fff;box-shadow:0 4px 24px rgba(0,0,0,.4);cursor:pointer;animation:slideDown .4s ease';
+    el.onclick=()=>el.style.display='none';
+    if(!document.getElementById('banner-slide-style')){
+      const s=document.createElement('style');
+      s.id='banner-slide-style';
+      s.textContent='@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}';
+      document.head.appendChild(s);
+    }
+    document.body.appendChild(el);
+  }
+  el.style.display='block';
+  const names=others.length===1?others[0]:others.slice(0,-1).join(', ')+' & '+others[others.length-1];
+  el.innerHTML='🏆 '+escH(names)+' WON! &nbsp;<span style="font-size:.9rem;opacity:.7">(tap to dismiss)</span>';
+  // Auto-hide after 12s
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>{el.style.display='none'},12000);
 }
 
 // ════════════════════════════════════════
@@ -2671,7 +2737,10 @@ function startBingoPlayerListen(){
       activePatCells=new Set(room.pattern.cells);curPatName=room.pattern.name||'Custom';
       const ph=document.getElementById('p-ph');ph.style.display='block';document.getElementById('p-ph-name').textContent=curPatName;
     }
-    renderPGrid();    // Room closed by host
+    renderPGrid();
+    // Winner banner for all bingo players
+    if(room.winners&&room.winners.length) showWinnerBanner(room.winners);
+    // Room closed by host
     if(room.status==='closed'){
       showRoomClosed();
     }
@@ -2948,6 +3017,7 @@ function startHLPlayerListen(){
       }
     }
     if(room.status==='finished'&&room.winners&&room.winners.length){
+      showWinnerBanner(room.winners);
       const isWinner=room.winners.includes(myName);
       if(isWinner)showWin('🏆 You Win!',myName+' wins Higher or Lower with '+myS+' points!');
       safeAttr('hlp-btn-higher','disabled',true);
@@ -3076,16 +3146,16 @@ async function joinLastNRoom(){
   document.getElementById('lastnp-rlabel').textContent=room.label||'Last Number';
   document.getElementById('lastnp-name').textContent=name;
   document.getElementById('lastnp-code').textContent=code;
-  buildLastNPlayerGrid();
+  buildLastNPlayerGrid(room);
   lastNMyPicks.forEach(n=>{
     const el=document.querySelector('#lastnp-grid [data-n="'+n+'"]');
-    if(el){el.classList.add('np-picked');el.onclick=null;}
+    if(el){el.classList.add('np-picked');el.classList.remove('np-taken');el.style.opacity='';el.style.cursor='';el.onclick=null;}
   });
   if(lastNMyPicks.length===3){
     document.getElementById('lastnp-picks-display').style.display='block';
     document.getElementById('lastnp-picks-text').textContent=lastNMyPicks.join(', ');
     document.getElementById('lastnp-pick-label').innerHTML='Your picks are locked! Waiting for host to draw…';
-    document.querySelectorAll('#lastnp-grid .np-cell').forEach(c=>c.onclick=null);
+    document.querySelectorAll('#lastnp-grid .np-cell').forEach(c=>{if(!c.classList.contains('np-picked'))c.onclick=null;});
   }
   go('s-lastn-player');document.getElementById('sbar').style.display='flex';
   setPlayerUI();
@@ -3093,12 +3163,25 @@ async function joinLastNRoom(){
   saveRoomToLocal(code,name,'lastn','player',room.label||'Last Number');
   if(!isLastNRejoin) addSystemMsg('👋 '+name+' joined the room');
 }
-function buildLastNPlayerGrid(){
+function buildLastNPlayerGrid(room){
   const g=document.getElementById('lastnp-grid');g.innerHTML='';
+  // Build map of taken numbers -> player name
+  const takenMap={};
+  if(room&&room.players){
+    Object.entries(room.players).forEach(([pn,p])=>{
+      (p.picks||[]).forEach(n=>{if(pn!==myName)takenMap[n]=pn;});
+    });
+  }
   for(let i=1;i<=lastNRange;i++){
     const d=document.createElement('div');
     d.className='np-cell';d.textContent=i;d.dataset.n=i;
-    d.onclick=()=>pickLastNNumber(i,d);
+    if(takenMap[i]){
+      d.classList.add('np-taken');
+      d.title=takenMap[i]+' picked this';
+      d.style.opacity='.35';d.style.cursor='not-allowed';
+    } else {
+      d.onclick=()=>pickLastNNumber(i,d);
+    }
     g.appendChild(d);
   }
 }
@@ -3137,11 +3220,20 @@ function startLastNPlayerListen(){
     const drawn=room.drawn||[];
     if(drawn.length>0) safeText('lastnp-cur',drawn[0]);
     safeHTML('lastnp-track',drawn.map((x,i)=>`<div class="dn-chip${i===0?' latest':''}${lastNMyPicks.includes(x)?' hit':''}">${x}</div>`).join(''));
-    // Update grid
+    // Keep grid live: show which numbers other players have taken
+    buildLastNPlayerGrid(room);
+    // Re-apply my own picks on top
+    lastNMyPicks.forEach(n=>{
+      const el=document.querySelector('#lastnp-grid [data-n="'+n+'"]');
+      if(el){el.classList.add('np-picked');el.classList.remove('np-taken');el.style.opacity='';el.style.cursor='';el.onclick=null;}
+    });
+    // Update grid: mark drawn numbers
     drawn.forEach(x=>{
       const el=document.querySelector('#lastnp-grid [data-n="'+x+'"]');
       if(el)el.classList.add('np-drawn');
     });
+    // Winner banner for all players
+    if(room.winners&&room.winners.length) showWinnerBanner(room.winners);
     // Check if I won
     if(lastNMyPicks.length===3&&lastNMyPicks.every(x=>drawn.includes(x))&&!document.getElementById('win-ov').classList.contains('show')){
       // Register win
@@ -3320,6 +3412,7 @@ function startOEPlayerListen(){
     }
     safeHTML('oep-track',(room.drawn||[]).map((x,i)=>`<div class="bc${i===0?' lat':''}">${x}</div>`).join(''));
     if(room.status==='finished'&&room.winners&&room.winners.length){
+      showWinnerBanner(room.winners);
       const isWinner=room.winners.includes(myName);
       if(isWinner)showWin('🏆 You Win!',myName+' wins Odd or Even with '+myS+' points!');
       safeAttr('oep-btn-odd','disabled',true);
@@ -3528,6 +3621,8 @@ function startDuckPlayerListen(){
         if(duckMyPicks.includes(i))c.style.background='linear-gradient(135deg,#f59e0b,#fbbf24)';
         if(room.duckNumbers[i]===winNum)c.style.outline='3px solid #22c55e';
       });
+      // Banner for all players
+      if(room.winners&&room.winners.length) showWinnerBanner(room.winners);
       if(won)showWin('🦆 Lucky Duck!','Your duck had the winning number '+winNum+'!');
       addSystemMsg('🦆 '+myName+'\'s ducks: '+nums.join(' & ')+(won?' 🏆 WINNER!':''));
     }    // Room closed by host
@@ -3710,6 +3805,7 @@ function startSqPlayerListen(){
       const res=document.getElementById('sqp-result');res.style.display='block';
       res.style.cssText='display:block;margin-top:14px;border-radius:12px;padding:16px;text-align:center;background:'+(won?'rgba(251,191,36,.1)':'rgba(239,68,68,.08)')+';border:1.5px solid '+(won?'#fbbf24':'#ef4444');
       res.innerHTML=won?'<b style="color:#fbbf24;font-size:1.1rem">🏆 You picked the winning square!</b>':'<b style="color:#ef4444">❌ Not your square this time!</b><br><span style="color:var(--muted);font-size:.82rem">The winning square was '+(room.winnerCell+1)+'</span>';
+      if(room.winners&&room.winners.length) showWinnerBanner(room.winners);
       if(won&&!document.getElementById('win-ov').classList.contains('show'))showWin('🟦 You Win!','You picked square '+(room.winnerCell+1)+'!');
     }    // Room closed by host
     if(room.status==='closed'){
@@ -3925,6 +4021,7 @@ function startMMPlayerListen(){
         detail+=wrongs.join(' · ');
       }
       safeText('mmp-reveal-result',detail);
+      if(room.winners&&room.winners.length) showWinnerBanner(room.winners);
       if(correct&&!document.getElementById('win-ov').classList.contains('show'))showWin('🔍 Correct!','You cracked the case!');
     }    // Room closed by host
     if(room.status==='closed'){
@@ -4352,6 +4449,7 @@ function startFGPlayerListen(){
     safeHTML('fgp-leaderboard',sorted.map(([n,s],i)=>`<div class="player-score-row" style="${n===myName?'border-color:var(--accent2)':''}">${i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':''}<span class="ps-name">${escH(n)}</span><span class="ps-score" style="color:var(--accent2)">${s}</span></div>`).join(''));
     // Game over
     if(room.status==='finished'&&room.winners&&room.winners.length){
+      showWinnerBanner(room.winners);
       const won=room.winners[0]===myName;
       if(won&&!document.getElementById('win-ov').classList.contains('show'))showWin('🔎 You Win!','You topped the Find Games leaderboard! 🏆');
     }    // Room closed by host
@@ -5079,7 +5177,14 @@ async function rejoinAsPlayer(room, name){
     const ppt='lnp'+type.slice(2)+'-panel'; if(document.getElementById(ppt)) document.getElementById(ppt).style.display='block';
     if(type==='ln1'){buildLN1PlayerGrid(room);if(lnMyPick){document.getElementById('lnp1-picked-display').style.display='block';document.getElementById('lnp1-picked-num').textContent=lnMyPick}}
     if(type==='ln2'&&lnMyLucky) document.getElementById('lnp2-mynum').textContent=lnMyLucky;
-    if(type==='ln3'){document.getElementById('lnp3-slider').max=lnRange;document.getElementById('lnp3-slider').value=lnMyGuess||Math.floor(lnRange/2);document.getElementById('lnp3-range-val').textContent=lnMyGuess||Math.floor(lnRange/2);document.getElementById('lnp3-range-lbl').textContent='between 1 and '+lnRange;}
+    if(type==='ln3'){
+      buildLN3PlayerGrid(room);
+      if(lnMyGuess){
+        document.getElementById('lnp3-picked-num').textContent=lnMyGuess;
+        document.getElementById('lnp3-picked-display').style.display='block';
+        document.getElementById('lnp3-guess-submitted').style.display='block';
+      }
+    }
     go('s-ln-player'); document.getElementById('sbar').style.display='flex';
     startLNPlayerListen(); startChatListen(); showChatFab();
   } else if(type==='bingo'){
@@ -5117,11 +5222,11 @@ async function rejoinAsPlayer(room, name){
     document.getElementById('lastnp-rlabel').textContent=room.label||'Last Number';
     document.getElementById('lastnp-name').textContent=name;
     document.getElementById('lastnp-code').textContent=code;
-    buildLastNPlayerGrid();
+    buildLastNPlayerGrid(room);
     // Re-mark picks on grid
     lastNMyPicks.forEach(n=>{
       const el=document.querySelector('#lastnp-grid [data-n="'+n+'"]');
-      if(el){el.classList.add('np-picked');el.onclick=null;}
+      if(el){el.classList.add('np-picked');el.classList.remove('np-taken');el.style.opacity='';el.style.cursor='';el.onclick=null;}
     });
     if(lastNMyPicks.length===3){
       document.getElementById('lastnp-picks-display').style.display='block';
