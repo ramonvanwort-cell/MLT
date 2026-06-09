@@ -2018,7 +2018,8 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <div class="join-room-sub" id="dj-room-sub">Enter your name to join</div>
     <div id="dj-loading" style="text-align:center;color:var(--muted);font-size:.88rem;padding:16px">Fetching room info…</div>
     <div id="dj-form" style="display:none">
-      <div class="ig"><label>Your Name</label><input id="dj-name" placeholder="e.g. Alex" maxlength="20"/></div>
+      <div id="dj-returning-hint" style="display:none;background:rgba(168,85,247,.12);border:1.5px solid rgba(168,85,247,.3);border-radius:10px;padding:10px 14px;font-size:.85rem;color:var(--accent2);margin-bottom:12px;text-align:center"></div>
+      <div class="ig"><label>Your Name</label><input id="dj-name" placeholder="e.g. Alex" maxlength="20" onkeydown="if(event.key==='Enter')directJoin()" oninput="updateDJHint()"/></div>
       <button class="btn" id="dj-join-btn" style="width:100%;justify-content:center" onclick="directJoin()">Join Room →</button>
       <p class="err-txt" id="dj-err"></p>
     </div>
@@ -4142,9 +4143,54 @@ async function checkURLJoin() {
       document.getElementById('dj-full').style.display = 'block';
     } else {
       document.getElementById('dj-form').style.display = 'block';
+      // Pre-fill name from localStorage if we've been in this room before
+      try {
+        const saved = getMyRooms().find(r => r.code === directJoinCode);
+        if (saved && saved.name) {
+          const nameInput = document.getElementById('dj-name');
+          nameInput.value = saved.name;
+          const isReturning = room.players && room.players[saved.name];
+          const isHost = room.hostName === saved.name;
+          const hint = document.getElementById('dj-returning-hint');
+          if (hint) {
+            if (isHost) {
+              hint.textContent = '👋 Welcome back, ' + saved.name + '! You\'ll rejoin as host.';
+              hint.style.display = 'block';
+              document.getElementById('dj-join-btn').textContent = 'Rejoin as Host →';
+            } else if (isReturning) {
+              hint.textContent = '👋 Welcome back, ' + saved.name + '! Tap to rejoin.';
+              hint.style.display = 'block';
+              document.getElementById('dj-join-btn').textContent = 'Rejoin →';
+            }
+          }
+        }
+      } catch(e) {}
     }
   };
   tryLoad(10);
+}
+
+function updateDJHint() {
+  if (!directJoinCode || !window._djRoom) return;
+  const name = document.getElementById('dj-name').value.trim();
+  const hint = document.getElementById('dj-returning-hint');
+  const btn = document.getElementById('dj-join-btn');
+  if (!hint || !btn) return;
+  const room = window._djRoom;
+  const isHost = room.hostName === name;
+  const isPlayer = !!(room.players && room.players[name]);
+  if (isHost) {
+    hint.textContent = '👋 Welcome back, ' + name + '! You\'ll rejoin as host.';
+    hint.style.display = 'block';
+    btn.textContent = 'Rejoin as Host →';
+  } else if (isPlayer) {
+    hint.textContent = '👋 Welcome back, ' + name + '! Tap to rejoin.';
+    hint.style.display = 'block';
+    btn.textContent = 'Rejoin →';
+  } else {
+    hint.style.display = 'none';
+    btn.textContent = 'Join Room →';
+  }
 }
 
 async function directJoin() {
@@ -4154,11 +4200,26 @@ async function directJoin() {
   if (!db) { err.textContent = 'Connection error — try refreshing'; return; }
   const room = await dbGet('rooms/' + directJoinCode);
   if (!room) { err.textContent = 'Room no longer exists'; return; }
+  const isReturningPlayer = !!(room.players && room.players[name]);
+  const isReturningHost = room.hostName === name;
   const pc = Object.keys(room.players || {}).length;
   const max = room.maxPlayers || 50;
-  if (pc >= max) { err.textContent = 'Room is full'; return; }
-  if (room.players && room.players[name]) { err.textContent = 'Name taken — choose another'; return; }
-  // Route to the right join flow
+  if (!isReturningPlayer && !isReturningHost && pc >= max) { err.textContent = 'Room is full'; return; }
+  // If returning as host, skip the join flow and rejoin directly
+  if (isReturningHost) {
+    myName = name; roomCode = directJoinCode; myRole = 'host'; gameType = room.type;
+    saveRoomToLocal(directJoinCode, name, room.type, 'host', room.label || room.type);
+    await rejoinAsHost(room);
+    return;
+  }
+  // If returning player, rejoin directly
+  if (isReturningPlayer) {
+    myName = name; roomCode = directJoinCode; myRole = 'player'; gameType = room.type;
+    saveRoomToLocal(directJoinCode, name, room.type, 'player', room.label || room.type);
+    await rejoinAsPlayer(room, name);
+    return;
+  }
+  // Route to the right join flow (new player)
   if (directJoinType === 'bingo') {
     document.getElementById('j-name').value = name;
     document.getElementById('j-code').value = directJoinCode;
