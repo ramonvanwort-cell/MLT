@@ -517,7 +517,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <div class="ic">🦆</div>
         <div class="game-tag fb-game-tag">Host</div>
         <h3>Lucky Duck</h3>
-        <p>Players pick 1 or 2 ducks with numbers on their chest. Host ends the game and reveals every duck's number!</p>
+        <p>Players pick 1 or 2 ducks with hidden numbers on their chest. Host reveals all numbers — whoever's ducks add up to the highest total wins!</p>
       </div>
       <div class="hcard fb" onclick="go('s-sq-setup')">
         <div class="ic">🟦</div>
@@ -1347,20 +1347,17 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 <div class="screen" id="s-duck-setup">
   <div class="card">
     <h2>🦆 Lucky Duck — Host Setup</h2>
-    <p class="sub">Pick the winning number first, then players choose their ducks. Whoever holds the winning number wins!</p>
+    <p class="sub">Every duck gets a hidden number. Players pick their ducks, then you reveal — whoever's picked ducks add up to the highest total wins!</p>
     <div class="ig"><label>Your Name</label><input id="duck-host-name" placeholder="e.g. Sarah" maxlength="20"/></div>
     <div class="ig"><label>Room Name (optional)</label><input id="duck-room-label" placeholder="e.g. Lucky Duck Night" maxlength="30"/></div>
     <div class="ig"><label>Number of Ducks</label>
-      <select id="duck-count" onchange="updateDuckWinnerRange()">
+      <select id="duck-count">
         <option value="20" selected>20 ducks</option>
         <option value="25">25 ducks</option>
         <option value="30">30 ducks</option>
         <option value="40">40 ducks</option>
         <option value="50">50 ducks</option>
       </select>
-    </div>
-    <div class="ig"><label>🏆 Winning Number (secret — players won't see this)</label>
-      <select id="duck-winner-num" style="border-color:rgba(245,158,11,.4)"></select>
     </div>
     <div class="ig"><label>Picks per player</label>
       <select id="duck-picks">
@@ -1403,7 +1400,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <h2>🦆 Lucky Duck</h2>
     <p class="sub" id="duck-h-sub">Players are picking their ducks. When ready, press Reveal to show everyone their numbers!</p>
     <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.88rem;color:#fbbf24">
-      🏆 Winning number: <b id="duck-h-winner-num" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem">—</b> <span style="color:var(--muted);font-size:.75rem">(only you see this)</span>
+      🏆 Whoever's picked ducks add up to the <b>highest total</b> wins! Numbers stay hidden until you reveal.
     </div>
     <div class="duck-grid" id="duck-h-grid"></div>
     <div class="fr" style="margin-top:14px">
@@ -1435,7 +1432,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <div class="duck-result" id="duckp-result">
       <div class="dr-title">🦆 Your Ducks!</div>
       <div class="dr-ducks" id="duckp-result-emojis">🦆 🦆</div>
-      <div style="color:var(--muted);font-size:.82rem;margin-bottom:4px">Your duck numbers were</div>
+      <div style="color:var(--muted);font-size:.82rem;margin-bottom:4px">Your duck numbers added up to</div>
       <div class="dr-nums" id="duckp-result-nums">— —</div>
     </div>
   </div>
@@ -3431,23 +3428,8 @@ function startOEPlayerListen(){
 //  LUCKY DUCK
 // ════════════════════════════════════════
 let duckCount=20, duckPicksAllowed=2, duckNumbers=[], duckMyPicks=[], duckRevealed=false;
-let duckWinnerNum=null;
 
 function shuffleArray(a){return a.sort(()=>Math.random()-.5)}
-
-function updateDuckWinnerRange(){
-  const count=parseInt(document.getElementById('duck-count').value)||20;
-  const sel=document.getElementById('duck-winner-num');
-  if(!sel)return;
-  const prev=parseInt(sel.value)||1;
-  sel.innerHTML='';
-  for(let i=1;i<=count;i++){
-    const o=document.createElement('option');
-    o.value=i;o.textContent='Number '+i;
-    sel.appendChild(o);
-  }
-  sel.value=Math.min(prev,count);
-}
 
 async function createDuckRoom(){
   const name=document.getElementById('duck-host-name').value.trim();
@@ -3458,22 +3440,19 @@ async function createDuckRoom(){
   duckCount=parseInt(document.getElementById('duck-count').value);
   duckPicksAllowed=parseInt(document.getElementById('duck-picks').value);
   const maxP=parseInt(document.getElementById('duck-max').value);
-  const winnerNumSel=document.getElementById('duck-winner-num');
-  duckWinnerNum=winnerNumSel?parseInt(winnerNumSel.value):1;
   // Assign random numbers to ducks (shuffled so duck #1 might have number 17)
   duckNumbers=shuffleArray(Array.from({length:duckCount},(_,i)=>i+1));
   const code=genCode();
   roomCode=code;myName=name;myRole='host';gameType='duck';
   await dbSet('rooms/'+code,{code,type:'duck',hostName:name,label,maxPlayers:maxP,
-    duckCount,duckPicksAllowed,duckNumbers,winnerNum:duckWinnerNum,players:{},revealed:false,winners:[],created:Date.now()});
+    duckCount,duckPicksAllowed,duckNumbers,players:{},revealed:false,winners:[],scores:{},created:Date.now()});
   document.getElementById('duck-h-code').textContent=code;
   document.getElementById('duck-share-link').value=buildJoinURL(code);
-  document.getElementById('duck-h-winner-num').textContent=duckWinnerNum;
   buildDuckHostGrid();
   go('s-duck-host');setHostUI();
   startDuckHostListen();startChatListen();showChatFab();
   saveRoomToLocal(code,name,'duck','host',label);
-  addSystemMsg('🦆 Lucky Duck room '+code+' created — '+duckCount+' ducks, pick '+duckPicksAllowed+'!');
+  addSystemMsg('🦆 Lucky Duck room '+code+' created — '+duckCount+' ducks, pick '+duckPicksAllowed+'! Highest total wins.');
 }
 
 function buildDuckHostGrid(){
@@ -3493,23 +3472,26 @@ async function revealDucks(){
   // Update host grid to show numbers
   const cells=document.querySelectorAll('#duck-h-grid .duck');
   cells.forEach((c,i)=>{c.querySelector('.duck-num').textContent=duckNumbers[i];c.style.background='linear-gradient(135deg,#f59e0b,#fbbf24)';c.querySelector('.duck-emoji').style.fontSize='1.3rem'});
-  // Find winners (players who picked the duck with the winning number)
+  // Find winners: player(s) whose picked ducks add up to the highest total
   const room=await dbGet('rooms/'+roomCode);
-  const winners=[];
+  const scores={};
   Object.entries(room.players||{}).forEach(([pname,p])=>{
     const nums=(p.picks||[]).map(idx=>duckNumbers[idx]);
-    if(nums.includes(duckWinnerNum))winners.push(pname);
+    scores[pname]=nums.reduce((a,b)=>a+b,0);
   });
-  await dbUpdate('rooms/'+roomCode,{winners});
-  if(winners.length) addSystemMsg('🎉 Duck numbers revealed! Winning number: '+duckWinnerNum+'. Winner(s): '+winners.join(', ')+'!');
-  else addSystemMsg('🎉 Duck numbers revealed! Winning number: '+duckWinnerNum+'. Nobody had the lucky duck!');
+  const contenders=Object.keys(scores).filter(pname=>(room.players[pname].picks||[]).length>0);
+  const topScore=contenders.length?Math.max(...contenders.map(p=>scores[p])):0;
+  const winners=contenders.filter(pname=>scores[pname]===topScore);
+  await dbUpdate('rooms/'+roomCode,{winners,scores});
+  if(winners.length) addSystemMsg('🎉 Duck numbers revealed! Highest total: '+topScore+'. Winner(s): '+winners.join(', ')+'!');
+  else addSystemMsg('🎉 Duck numbers revealed! Nobody picked any ducks!');
 }
 
 async function resetDuckGame(){
   if(!confirm('Reset the duck game?'))return;
   duckNumbers=shuffleArray(Array.from({length:duckCount},(_,i)=>i+1));
   duckRevealed=false;
-  await dbUpdate('rooms/'+roomCode,{duckNumbers,revealed:false,players:{},winners:[],winnerNum:duckWinnerNum});
+  await dbUpdate('rooms/'+roomCode,{duckNumbers,revealed:false,players:{},winners:[],scores:{}});
   buildDuckHostGrid();
   addSystemMsg('🔄 Game reset — new duck numbers assigned!');
 }
@@ -3534,15 +3516,21 @@ function startDuckHostListen(){
     document.getElementById('duck-h-plist').innerHTML=ps.length
       ? ps.map(n=>{const p=room.players[n];const picks=(p.picks||[]).length;return`<div class="pchip">${escH(n)}: ${picks} duck${picks!==1?'s':''} picked</div>`}).join('')
       : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
-    // Results when revealed
+    // Results when revealed — ranked by total, highest first
     if(room.revealed&&room.duckNumbers){
       const res=document.getElementById('duck-h-results');
-      let html='';
-      ps.forEach(pname=>{
+      const scores=room.scores||{};
+      const winners=room.winners||[];
+      const ranked=ps.map(pname=>{
         const p=room.players[pname];
         const nums=(p.picks||[]).map(idx=>room.duckNumbers[idx]);
-        html+=`<div class="pchip" style="border-color:#fbbf24">${escH(pname)}: 🦆 ${nums.join(' &amp; 🦆 ')}</div>`;
-      });
+        const total=scores[pname]!=null?scores[pname]:nums.reduce((a,b)=>a+b,0);
+        return{pname,nums,total};
+      }).sort((a,b)=>b.total-a.total);
+      const html=ranked.map(r=>{
+        const isWinner=winners.includes(r.pname);
+        return`<div class="pchip" style="border-color:${isWinner?'#22c55e':'#fbbf24'}">${isWinner?'🏆 ':''}${escH(r.pname)}: 🦆 ${r.nums.join(' &amp; 🦆 ')} = <b>${r.total}</b></div>`;
+      }).join('');
       res.innerHTML=html||'<span style="color:var(--muted);font-size:.83rem">No players yet</span>';
     }
   });
@@ -3611,21 +3599,21 @@ function startDuckPlayerListen(){
     document.getElementById('sright').textContent=Object.keys(room.players||{}).length+' players online';
     if(room.revealed&&room.duckNumbers&&duckMyPicks.length>0&&!document.getElementById('duckp-result').classList.contains('show')){
       const nums=duckMyPicks.map(idx=>room.duckNumbers[idx]);
-      const winNum=room.winnerNum;
-      const won=winNum!=null&&nums.includes(winNum);
+      const total=nums.reduce((a,b)=>a+b,0);
+      const won=(room.winners||[]).includes(myName);
       document.getElementById('duckp-result-emojis').textContent=duckMyPicks.map(()=>'🦆').join(' ');
-      document.getElementById('duckp-result-nums').textContent=nums.join(' & ')+(winNum!=null?' (Winning number: '+winNum+')':'');
+      document.getElementById('duckp-result-nums').textContent=nums.join(' + ')+' = '+total;
       document.getElementById('duckp-result').classList.add('show');
       // Update grid to show numbers
       document.querySelectorAll('#duckp-grid .duck').forEach((c,i)=>{
         c.querySelector('.duck-num').textContent=room.duckNumbers[i];
         if(duckMyPicks.includes(i))c.style.background='linear-gradient(135deg,#f59e0b,#fbbf24)';
-        if(room.duckNumbers[i]===winNum)c.style.outline='3px solid #22c55e';
+        if(won&&duckMyPicks.includes(i))c.style.outline='3px solid #22c55e';
       });
       // Banner for all players
       if(room.winners&&room.winners.length) showWinnerBanner(room.winners);
-      if(won)showWin('🦆 Lucky Duck!','Your duck had the winning number '+winNum+'!');
-      addSystemMsg('🦆 '+myName+'\'s ducks: '+nums.join(' & ')+(won?' 🏆 WINNER!':''));
+      if(won)showWin('🦆 Lucky Duck!','Your ducks added up to '+total+' — the highest total!');
+      addSystemMsg('🦆 '+myName+'\'s ducks: '+nums.join(' & ')+' = '+total+(won?' 🏆 WINNER!':''));
     }    // Room closed by host
     if(room.status==='closed'){
       showRoomClosed();
@@ -5193,10 +5181,9 @@ async function rejoinAsHost(room){
     go('s-oe-host'); setHostUI(); startOEHostListen(); startChatListen(); showChatFab();
   } else if(type==='duck'){
     duckCount=room.duckCount||20; duckPicksAllowed=room.duckPicksAllowed||2;
-    duckNumbers=room.duckNumbers||[]; duckWinnerNum=room.winnerNum||null; duckRevealed=room.revealed||false;
+    duckNumbers=room.duckNumbers||[]; duckRevealed=room.revealed||false;
     document.getElementById('duck-h-code').textContent=room.code;
     document.getElementById('duck-share-link').value=buildJoinURL(room.code);
-    document.getElementById('duck-h-winner-num').textContent=duckWinnerNum;
     buildDuckHostGrid();
     go('s-duck-host'); setHostUI(); startDuckHostListen(); startChatListen(); showChatFab();
   } else if(type==='mm'){
@@ -5368,13 +5355,13 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
 //  Init setup grids/dropdowns on page load
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',()=>{
-    updateDuckWinnerRange();buildSqSetupGrid();
+    buildSqSetupGrid();
     // Show My Rooms tab on home screen (no role set yet)
     const rt=document.getElementById('rooms-tab-btn');
     if(rt)rt.style.display='';
   });
 } else {
-  updateDuckWinnerRange(); buildSqSetupGrid();
+  buildSqSetupGrid();
   const rt=document.getElementById('rooms-tab-btn');
   if(rt)rt.style.display='';
 }
