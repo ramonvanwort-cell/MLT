@@ -339,13 +339,13 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 /* Lucky Duck */
 .duck-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0;max-width:500px}
 .duck{width:72px;height:72px;border-radius:14px;background:var(--surface2);border:2px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:.2s;user-select:none;position:relative}
-.duck:hover:not(.duck-taken):not(.duck-mine){border-color:#fbbf24;background:rgba(251,191,36,.1)}
+.duck:hover:not(.duck-mine){border-color:#fbbf24;background:rgba(251,191,36,.1)}
 .duck .duck-emoji{font-size:1.8rem;line-height:1}
 .duck .duck-num{font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--muted);margin-top:2px}
 .duck.duck-mine{background:linear-gradient(135deg,#f59e0b,#fbbf24);border-color:transparent}
 .duck.duck-mine .duck-num{color:#0f0e17}
-.duck.duck-taken{opacity:.35;cursor:default}
-.duck.duck-taken .duck-emoji::after{content:'✓';position:absolute;top:4px;right:6px;font-size:.7rem;color:var(--green)}
+.duck.duck-picked{border-color:rgba(34,197,94,.5)}
+.duck .duck-pickcount{display:none;position:absolute;top:4px;right:6px;background:#22c55e;color:#0f0e17;font-size:.65rem;font-weight:800;border-radius:8px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px}
 .duck-result{background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(245,158,11,.1));border:1.5px solid rgba(251,191,36,.3);border-radius:14px;padding:18px;margin:12px 0;display:none;text-align:center}
 .duck-result.show{display:block}
 .duck-result .dr-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#fbbf24;margin-bottom:8px}
@@ -3460,7 +3460,7 @@ function buildDuckHostGrid(){
   for(let i=0;i<duckCount;i++){
     const d=document.createElement('div');
     d.className='duck';d.dataset.idx=i;
-    d.innerHTML='<span class="duck-emoji">🦆</span><span class="duck-num">'+(i+1)+'</span>';
+    d.innerHTML='<span class="duck-emoji">🦆</span><span class="duck-num">'+(i+1)+'</span><span class="duck-pickcount"></span>';
     g.appendChild(d);
   }
 }
@@ -3504,13 +3504,18 @@ function startDuckHostListen(){
     document.getElementById('duck-h-pcount').textContent=ps.length+' players joined';
     document.getElementById('duck-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
     const grid=document.getElementById('duck-h-grid');
-    // Mark taken ducks
+    // Ducks can be picked by more than one player — show how many picked each one
+    const pickCounts={};
     ps.forEach(pname=>{
       const p=room.players[pname];
-      (p.picks||[]).forEach(idx=>{
-        const cell=grid.querySelector('[data-idx="'+idx+'"]');
-        if(cell)cell.classList.add('duck-taken');
-      });
+      (p.picks||[]).forEach(idx=>{pickCounts[idx]=(pickCounts[idx]||0)+1});
+    });
+    grid.querySelectorAll('.duck').forEach(cell=>{
+      const idx=parseInt(cell.dataset.idx);
+      const cnt=pickCounts[idx]||0;
+      const badge=cell.querySelector('.duck-pickcount');
+      cell.classList.toggle('duck-picked',cnt>0);
+      if(badge){badge.textContent=cnt;badge.style.display=cnt>0?'block':'none'}
     });
     // Player list
     document.getElementById('duck-h-plist').innerHTML=ps.length
@@ -3564,16 +3569,32 @@ async function joinDuckRoom(code,name){
 
 function buildDuckPlayerGrid(room){
   const g=document.getElementById('duckp-grid');g.innerHTML='';
-  const takenMap={};
-  Object.entries(room.players||{}).forEach(([pn,p])=>{(p.picks||[]).forEach(idx=>{takenMap[idx]=pn})});
+  // Ducks are NOT exclusive — more than one player can pick the same duck.
+  // pickCounts is only used to show a small "X others picked this" badge.
+  const pickCounts={};
+  Object.entries(room.players||{}).forEach(([pn,p])=>{(p.picks||[]).forEach(idx=>{pickCounts[idx]=(pickCounts[idx]||0)+1})});
   for(let i=0;i<duckCount;i++){
     const d=document.createElement('div');
-    d.className='duck'+(takenMap[i]?' duck-taken':'');
+    const mine=duckMyPicks.includes(i);
+    const othersCnt=mine?(pickCounts[i]||1)-1:(pickCounts[i]||0);
+    d.className='duck'+(mine?' duck-mine':'')+(othersCnt>0?' duck-picked':'');
     d.dataset.idx=i;
-    d.innerHTML='<span class="duck-emoji">🦆</span><span class="duck-num">'+(i+1)+'</span>';
-    if(!takenMap[i])d.onclick=()=>pickDuck(i,d);
+    d.innerHTML='<span class="duck-emoji">🦆</span><span class="duck-num">'+(i+1)+'</span>'
+      +'<span class="duck-pickcount"'+(othersCnt>0?' style="display:block"':'')+' title="'+othersCnt+' other player'+(othersCnt!==1?'s':'')+' also picked this duck">'+othersCnt+'</span>';
     g.appendChild(d);
   }
+  refreshDuckPickability();
+}
+
+// (Re)attach click handlers to every duck cell based on current pick state.
+// A duck stays pickable no matter how many other players already picked it —
+// the only limit is how many ducks THIS player is allowed to pick.
+function refreshDuckPickability(){
+  document.querySelectorAll('#duckp-grid .duck').forEach(c=>{
+    const idx=parseInt(c.dataset.idx);
+    const mine=duckMyPicks.includes(idx);
+    c.onclick=(!mine&&duckMyPicks.length>=duckPicksAllowed)?null:(()=>pickDuck(idx,c));
+  });
 }
 
 async function pickDuck(idx,el){
@@ -3583,10 +3604,12 @@ async function pickDuck(idx,el){
     duckMyPicks.push(idx);el.classList.add('duck-mine');
   }
   await dbUpdate('rooms/'+roomCode+'/players/'+myName,{picks:duckMyPicks});
-  if(duckMyPicks.length===duckPicksAllowed){
+  refreshDuckPickability();
+  if(duckMyPicks.length>=duckPicksAllowed){
     document.getElementById('duckp-pick-label').textContent='✓ Ducks picked! Waiting for host to reveal…';
-    document.querySelectorAll('#duckp-grid .duck:not(.duck-mine)').forEach(c=>c.onclick=null);
     addSystemMsg('🦆 '+myName+' picked their duck'+(duckPicksAllowed>1?'s':'')+'!');
+  }else{
+    document.getElementById('duckp-pick-label').textContent='Pick '+duckPicksAllowed+' duck'+(duckPicksAllowed>1?'s':'')+'! Tap to select.';
   }
 }
 
