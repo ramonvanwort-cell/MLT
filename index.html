@@ -3471,7 +3471,7 @@ async function revealDucks(){
   await dbUpdate('rooms/'+roomCode,{revealed:true});
   // Update host grid to show numbers
   const cells=document.querySelectorAll('#duck-h-grid .duck');
-  cells.forEach((c,i)=>{c.querySelector('.duck-num').textContent=duckNumbers[i];c.style.background='linear-gradient(135deg,#f59e0b,#fbbf24)';c.querySelector('.duck-emoji').style.fontSize='1.3rem'});
+  cells.forEach((c,i)=>{c.querySelector('.duck-num').textContent=duckNumbers[i];c.style.background='linear-gradient(135deg,#f59e0b,#fbbf24)';c.querySelector('.duck-emoji').style.fontSize='1.3rem';c.querySelector('.duck-num').style.color='#0f0e17'});
   // Find winners: player(s) whose picked ducks add up to the highest total
   const room=await dbGet('rooms/'+roomCode);
   const scores={};
@@ -3630,7 +3630,7 @@ function startDuckPlayerListen(){
       // Update grid to show numbers
       document.querySelectorAll('#duckp-grid .duck').forEach((c,i)=>{
         c.querySelector('.duck-num').textContent=room.duckNumbers[i];
-        if(duckMyPicks.includes(i))c.style.background='linear-gradient(135deg,#f59e0b,#fbbf24)';
+        if(duckMyPicks.includes(i)){c.style.background='linear-gradient(135deg,#f59e0b,#fbbf24)';c.querySelector('.duck-num').style.color='#0f0e17'}
         if(won&&duckMyPicks.includes(i))c.style.outline='3px solid #22c55e';
       });
       // Banner for all players
