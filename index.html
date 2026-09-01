@@ -329,6 +329,15 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .fg-cell:hover{border-color:var(--accent2);background:var(--surface2)}
 .fg-cell.correct{background:rgba(6,214,160,.2);border-color:var(--green);color:var(--green)}
 .fg-cell.wrong{background:rgba(239,71,111,.2);border-color:var(--pink);color:var(--pink);animation:shake .3s ease}
+/* Match the Pairs — real 3D flip cards */
+.mp-card{width:72px;height:72px;perspective:600px}
+.mp-inner{position:relative;width:100%;height:100%;cursor:pointer;transition:transform .45s cubic-bezier(.34,1.1,.64,1);transform-style:preserve-3d}
+.mp-card.flipped .mp-inner,.mp-card.matched .mp-inner{transform:rotateY(180deg);cursor:default}
+.mp-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:12px;backface-visibility:hidden;-webkit-backface-visibility:hidden;font-weight:700}
+.mp-face-back{background:var(--surface2);border:2px solid rgba(255,255,255,.08);color:var(--accent2);font-size:1.3rem}
+.mp-inner:hover .mp-face-back{border-color:var(--accent2)}
+.mp-face-front{background:var(--surface);border:2px solid rgba(255,255,255,.08);font-size:1.6rem;transform:rotateY(180deg)}
+.mp-card.correct .mp-face-front{background:rgba(6,214,160,.18);border-color:var(--green)}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .fg-result{text-align:center;padding:20px;background:var(--surface);border-radius:16px;margin-bottom:20px;width:100%;max-width:420px}
 .fg-result .fg-ricon{font-size:3rem;margin-bottom:8px}
@@ -2032,6 +2041,18 @@ if(window._dbReady)initDB();
 else{window.addEventListener('db-ready',initDB);setTimeout(()=>{if(!window._dbReady)document.getElementById('setup-banner').style.display='block'},2000)}
 
 
+// ════════════ FEATURE TOGGLES ════════════
+// Set BINGO_ENABLED back to true (and reload) to bring the Bingo option back.
+const BINGO_ENABLED = false;
+function applyGameToggles(){
+  if(!BINGO_ENABLED){
+    const tabBtn=document.querySelector('.tab-btn.bingo-tab');
+    if(tabBtn)tabBtn.style.display='none';
+    // If Bingo was the default/active tab, fall back to Lucky Numbers instead
+    if(tabBtn&&tabBtn.classList.contains('active'))switchTab('lucky');
+  }
+}
+
 // ════════════ SAFE DOM HELPER ════════════
 function $id(id) { return document.getElementById(id); }
 function safeSet(id, prop, val) { const el = $id(id); if (el) el[prop] = val; }
@@ -2580,6 +2601,7 @@ async function createRoom(){
   const name=document.getElementById('host-name').value.trim();
   const label=document.getElementById('room-label').value.trim()||'MLT Bingo';
   const err=document.getElementById('host-err'); err.textContent='';
+  if(!BINGO_ENABLED){err.textContent='Bingo is currently disabled';return}
   if(!name){err.textContent='Enter your name';return}
   if(!db){err.textContent='Firebase not connected';return}
   const code=genCode();
@@ -2652,6 +2674,7 @@ async function joinRoom(){
   const code=document.getElementById('j-code').value.trim().toUpperCase();
   const name=document.getElementById('j-name').value.trim();
   const err=document.getElementById('j-err'); err.textContent='';
+  if(!BINGO_ENABLED){err.textContent='Bingo is currently disabled';return}
   if(!code||!name){err.textContent='Enter your name and room code';return}
   if(!db){err.textContent='Firebase not connected';return}
   const room=await dbGet('rooms/'+code);
@@ -4232,6 +4255,7 @@ async function directJoin() {
   }
   // Route to the right join flow (new player)
   if (directJoinType === 'bingo') {
+    if(!BINGO_ENABLED){err.textContent='Bingo is currently disabled';return}
     document.getElementById('j-name').value = name;
     document.getElementById('j-code').value = directJoinCode;
     await joinRoom();
@@ -4800,10 +4824,12 @@ function buildMatch() {
 
   matchCards.forEach((card,i)=>{
     const d=document.createElement('div');
-    d.className='fg-cell';
-    d.style.cssText='width:72px;height:72px;font-size:1.6rem;background:var(--surface2);color:transparent;transition:.2s';
-    d.textContent=card.emoji;
+    d.className='mp-card';
     d.dataset.idx=i;
+    d.innerHTML='<div class="mp-inner">'
+      +'<div class="mp-face mp-face-back">❓</div>'
+      +'<div class="mp-face mp-face-front">'+card.emoji+'</div>'
+      +'</div>';
     d.onclick=()=>matchFlip(i,d);
     grid.appendChild(d);
   });
@@ -4819,13 +4845,13 @@ function matchFlip(i,el){
   if(card.flipped||card.matched)return;
   if(matchFlipped.length>=2)return;
   card.flipped=true;
-  el.style.color='var(--text)'; el.style.background='var(--surface)';
+  el.classList.add('flipped');
   matchFlipped.push({i,el});
   if(matchFlipped.length===2){
     const [a,b]=matchFlipped;
     if(matchCards[a.i].emoji===matchCards[b.i].emoji){
       matchCards[a.i].matched=matchCards[b.i].matched=true;
-      a.el.classList.add('correct'); b.el.classList.add('correct');
+      a.el.classList.add('matched','correct'); b.el.classList.add('matched','correct');
       matchSolved++; matchFlipped=[];
       if(matchSolved===6){
         fgScore+=50+(fgStreak*5); fgStreak++;
@@ -4835,8 +4861,8 @@ function matchFlip(i,el){
     } else {
       setTimeout(()=>{
         matchCards[a.i].flipped=matchCards[b.i].flipped=false;
-        a.el.style.color='transparent'; a.el.style.background='var(--surface2)';
-        b.el.style.color='transparent'; b.el.style.background='var(--surface2)';
+        a.el.classList.remove('flipped');
+        b.el.classList.remove('flipped');
         matchFlipped=[];
       },800);
     }
@@ -5379,12 +5405,14 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',()=>{
     buildSqSetupGrid();
+    applyGameToggles();
     // Show My Rooms tab on home screen (no role set yet)
     const rt=document.getElementById('rooms-tab-btn');
     if(rt)rt.style.display='';
   });
 } else {
   buildSqSetupGrid();
+  applyGameToggles();
   const rt=document.getElementById('rooms-tab-btn');
   if(rt)rt.style.display='';
 }
