@@ -296,6 +296,12 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .hcard.find-card:hover{border-color:var(--accent2)}
 .find-game-tag{background:rgba(255,209,102,.15);color:var(--accent2)}
 .tab-btn.active.rooms-tab{border-color:rgba(167,243,208,.5);color:#6ee7b7}
+.tab-btn.active.solo-tab{border-color:rgba(239,71,111,.5);color:var(--pink)}
+/* ── FIND GAMES SUB-TABS ── */
+.fg-subtabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.fg-subtab-btn{padding:9px 14px;border:1.5px solid rgba(255,255,255,.08);background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;border-radius:20px;cursor:pointer;transition:.2s;white-space:nowrap}
+.fg-subtab-btn:hover{background:var(--surface2);color:var(--text)}
+.fg-subtab-btn.active{background:var(--surface2);color:var(--accent2);border-color:rgba(255,209,102,.5)}
 /* ── MY ROOMS ── */
 .mr-card{background:var(--surface);border:1.5px solid rgba(255,255,255,.08);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;transition:.2s}
 .mr-card:hover{border-color:rgba(255,255,255,.18)}
@@ -409,6 +415,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <button class="tab-btn other-tab" onclick="switchTab('other')"><span class="t-icon">🎮</span>Other Games</button>
     <button class="tab-btn fb-tab" onclick="switchTab('fb')"><span class="t-icon">📘</span>Facebook Games</button>
     <button class="tab-btn find-tab" onclick="switchTab('find')"><span class="t-icon">🔎</span>Find Games</button>
+    <button class="tab-btn solo-tab" onclick="switchTab('solo')"><span class="t-icon">🎯</span>Solo Games</button>
     <button class="tab-btn rooms-tab" id="rooms-tab-btn" onclick="switchTab('rooms')" style="display:none"><span class="t-icon">🚪</span>My Rooms</button>
   </div>
 
@@ -540,6 +547,18 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <h3>Murder Mystery</h3>
         <p>Host fills in victim, suspects &amp; weapon. Players vote on who they think did it — host reveals the answer!</p>
       </div>
+      <div class="hcard fb" onclick="go('s-price-setup')">
+        <div class="ic">💰</div>
+        <div class="game-tag fb-game-tag">Host</div>
+        <h3>Price is Right</h3>
+        <p>Host locks in a secret price for an item. Players guess — closest without going over wins!</p>
+      </div>
+      <div class="hcard fb" onclick="go('s-ttl-setup')">
+        <div class="ic">🎭</div>
+        <div class="game-tag fb-game-tag">Host</div>
+        <h3>Two Truths and a Lie</h3>
+        <p>Host enters three statements — one's a lie. Players vote which one — host reveals the truth!</p>
+      </div>
     </div>
     <div style="margin-top:16px">
       <div class="hcard fb" onclick="go('s-fb-join')" style="text-align:left;display:flex;align-items:center;gap:14px;padding:18px 20px">
@@ -558,12 +577,24 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <div class="section-header" style="margin-bottom:16px">
       <h2 style="color:var(--accent2)">🏆 Multiplayer</h2><div class="section-line"></div>
     </div>
-    <div class="hcards" style="margin-bottom:28px">
-      <div class="hcard find-card" onclick="go('s-fg-setup')">
-        <div class="ic">👑</div>
+    <p style="color:var(--muted);font-size:.83rem;margin:-8px 0 16px">Pick a game to host — everyone gets the same puzzle at the same time. Fastest correct answer wins each round!</p>
+
+    <div class="fg-subtabs" id="fg-subtabs">
+      <button class="fg-subtab-btn active" data-fg="odd" onclick="switchFGSubtab('odd')">🔎 Odd One Out</button>
+      <button class="fg-subtab-btn" data-fg="count" onclick="switchFGSubtab('count')">🔢 Count the Emojis</button>
+      <button class="fg-subtab-btn" data-fg="order" onclick="switchFGSubtab('order')">🔀 Quick Order</button>
+      <button class="fg-subtab-btn" data-fg="colour" onclick="switchFGSubtab('colour')">🎨 Colour vs Word</button>
+      <button class="fg-subtab-btn" data-fg="emoji" onclick="switchFGSubtab('emoji')">🎬 Emoji Trivia</button>
+      <button class="fg-subtab-btn" data-fg="quiz" onclick="switchFGSubtab('quiz')">🧠 Trivia Quiz Show</button>
+      <button class="fg-subtab-btn" data-fg="rank" onclick="switchFGSubtab('rank')">📶 Line 'Em Up</button>
+    </div>
+
+    <div class="hcards" style="margin-bottom:16px">
+      <div class="hcard find-card" onclick="hostFGType(currentFGSubtab)">
+        <div class="ic" id="fg-subtab-ic">🔎</div>
         <div class="game-tag find-game-tag">Host</div>
-        <h3>Host a Find Game</h3>
-        <p>Pick a game, set rounds — everyone gets the same puzzle at the same time. Fastest correct answer wins!</p>
+        <h3 id="fg-subtab-title">Find the Odd One Out</h3>
+        <p id="fg-subtab-desc">Spot the one that doesn't belong. Race the clock — fastest correct answer wins the round!</p>
       </div>
       <div class="hcard find-card" onclick="go('s-fg-join')" style="text-align:left;display:flex;align-items:center;gap:14px;padding:18px 20px">
         <div style="font-size:2rem;flex-shrink:0">🎮</div>
@@ -574,9 +605,14 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- SOLO GAMES TAB -->
+  <div class="tab-panel" id="tab-solo">
     <div class="section-header" style="margin-bottom:16px">
-      <h2 style="color:var(--muted);font-size:1.2rem">🎯 Solo Practice</h2><div class="section-line"></div>
+      <h2 style="color:var(--pink)">🎯 Solo Practice</h2><div class="section-line"></div>
     </div>
+    <p style="color:var(--muted);font-size:.83rem;margin:-8px 0 16px">No room, no players — just you against the clock.</p>
     <div class="hcards">
       <div class="hcard find-card" onclick="startFindGame('odd')">
         <div class="ic">🔎</div>
@@ -1691,6 +1727,192 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
   </div>
 </div>
 
+<!-- ══════════ PRICE IS RIGHT SETUP ══════════ -->
+<div class="screen" id="s-price-setup">
+  <div class="card">
+    <h2>💰 Price is Right — Host Setup</h2>
+    <p class="sub">Create your room, then lock in an item &amp; secret price. Closest guess without going over wins!</p>
+    <div class="ig"><label>Your Name</label><input id="price-host-name" placeholder="e.g. Sarah" maxlength="20"/></div>
+    <div class="ig"><label>Room Name (optional)</label><input id="price-room-label" placeholder="e.g. Price Night" maxlength="30"/></div>
+    <div class="ig"><label>Max Players</label>
+      <select id="price-max">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="20" selected>20</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+    <button class="btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff" onclick="createPriceRoom()">Create Room →</button>
+    <p class="err-txt" id="price-setup-err"></p>
+  </div>
+</div>
+
+<!-- ══════════ PRICE IS RIGHT HOST ══════════ -->
+<div class="screen" id="s-price-host">
+  <div class="rcd">
+    <div class="code" id="price-h-code" style="background:linear-gradient(90deg,#22c55e,#16a34a);-webkit-background-clip:text;-webkit-text-fill-color:transparent">——</div>
+    <div class="hint">Room ready · <span id="price-h-pcount">0 players joined</span></div>
+    <div class="share-box">
+      <div class="share-label">🔗 Player join link</div>
+      <div class="share-link-row">
+        <input id="price-share-link" readonly onclick="this.select()" value=""/>
+        <button class="copy-btn" id="price-copy-btn" onclick="copyLink('price-share-link','price-copy-btn')">Copy Link</button>
+      </div>
+    </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
+  </div>
+  <div class="card">
+    <h2>💰 Price is Right</h2>
+    <p class="sub">Lock in an item and its real price — closest guess without going over wins!</p>
+    <div id="price-set-phase">
+      <div class="ig"><label>Item Name (optional)</label><input id="price-item-in" placeholder="e.g. Vintage Guitar" maxlength="40"/></div>
+      <div class="ig"><label>🔒 Secret Price (players won't see this)</label><input type="number" id="price-secret-in" placeholder="e.g. 250" min="0" step="0.01"/></div>
+      <button class="btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff" onclick="priceSetRound()">🔒 Lock In Item &amp; Price</button>
+    </div>
+    <div id="price-reveal-phase" style="display:none">
+      <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.88rem;color:#22c55e">
+        💲 <b id="price-h-item">—</b> — secret price: <b id="price-h-secret" style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem">—</b> <span style="color:var(--muted);font-size:.75rem">(only you see this)</span>
+      </div>
+      <div id="price-guess-list" class="players-guess-list"></div>
+      <div class="fr mt14">
+        <button class="btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff" onclick="revealPrice()">🎉 Reveal Winner</button>
+        <button class="btn btn-danger btn-sm" onclick="resetPriceRound()">New Round</button>
+      </div>
+      <div id="price-winner-display" style="display:none;margin-top:14px;background:rgba(251,191,36,.1);border:1.5px solid #fbbf24;border-radius:12px;padding:16px;text-align:center">
+        <div id="price-winner-name" style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#fbbf24"></div>
+        <div id="price-winner-detail" style="color:var(--muted);font-size:.82rem;margin-top:4px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>👥 Players &amp; Guesses</h2>
+    <p class="sub" id="price-h-plabel">0 players connected</p>
+    <div id="price-h-plist" class="plist"></div>
+  </div>
+</div>
+
+<!-- ══════════ PRICE IS RIGHT PLAYER ══════════ -->
+<div class="screen" id="s-price-player">
+  <div style="width:100%;max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:1px" id="pricep-rlabel">Room</div>
+        <div style="color:var(--muted);font-size:.78rem">Playing as <b id="pricep-name">—</b></div>
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:5px;background:linear-gradient(90deg,#22c55e,#16a34a);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="pricep-code">—</div>
+    </div>
+    <div id="pricep-waiting" style="text-align:center;padding:30px 20px;color:var(--muted)">
+      <div style="font-size:2.5rem;margin-bottom:10px">⏳</div>
+      <div style="font-weight:700">Waiting for the host to set the item…</div>
+    </div>
+    <div id="pricep-guess-form" style="display:none">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="color:var(--muted);font-size:.8rem">What's the price of…</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#22c55e" id="pricep-item">—</div>
+      </div>
+      <div class="ig"><label>Your Guess</label><input type="number" id="pricep-guess-in" placeholder="e.g. 200" min="0" step="0.01"/></div>
+      <button class="btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;width:100%;justify-content:center" onclick="pricepSubmitGuess()">🔒 Lock In Guess</button>
+      <p id="pricep-locked-msg" style="display:none;text-align:center;color:var(--green);margin-top:12px;font-weight:700">✓ Guess locked in! Waiting for reveal…</p>
+    </div>
+    <div id="pricep-result" style="display:none;margin-top:14px;border-radius:12px;padding:16px;text-align:center"></div>
+  </div>
+</div>
+
+<!-- ══════════ TWO TRUTHS AND A LIE SETUP ══════════ -->
+<div class="screen" id="s-ttl-setup">
+  <div class="card">
+    <h2>🎭 Two Truths and a Lie — Host Setup</h2>
+    <p class="sub">Create your room, then enter three statements — players vote which one is the lie!</p>
+    <div class="ig"><label>Your Name</label><input id="ttl-host-name" placeholder="e.g. Sarah" maxlength="20"/></div>
+    <div class="ig"><label>Room Name (optional)</label><input id="ttl-room-label" placeholder="e.g. Icebreaker Night" maxlength="30"/></div>
+    <div class="ig"><label>Max Players</label>
+      <select id="ttl-max">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="20" selected>20</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+    <button class="btn" style="background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff" onclick="createTTLRoom()">Create Room →</button>
+    <p class="err-txt" id="ttl-setup-err"></p>
+  </div>
+</div>
+
+<!-- ══════════ TWO TRUTHS AND A LIE HOST ══════════ -->
+<div class="screen" id="s-ttl-host">
+  <div class="rcd">
+    <div class="code" id="ttl-h-code" style="background:linear-gradient(90deg,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent">——</div>
+    <div class="hint">Room ready · <span id="ttl-h-pcount">0 players joined</span></div>
+    <div class="share-box">
+      <div class="share-label">🔗 Player join link</div>
+      <div class="share-link-row">
+        <input id="ttl-share-link" readonly onclick="this.select()" value=""/>
+        <button class="copy-btn" id="ttl-copy-btn" onclick="copyLink('ttl-share-link','ttl-copy-btn')">Copy Link</button>
+      </div>
+    </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
+  </div>
+  <div class="card">
+    <h2>🎭 Two Truths and a Lie</h2>
+    <p class="sub">Enter three statements — one should be a lie. Players vote which one!</p>
+    <div id="ttl-set-phase">
+      <div class="ig"><label>Statement 1</label><input id="ttl-stmt-0" maxlength="140" placeholder="e.g. I've climbed Kilimanjaro"/></div>
+      <div class="ig"><label>Statement 2</label><input id="ttl-stmt-1" maxlength="140" placeholder="e.g. I once met a president"/></div>
+      <div class="ig"><label>Statement 3</label><input id="ttl-stmt-2" maxlength="140" placeholder="e.g. I'm afraid of butterflies"/></div>
+      <div class="ig"><label>🤥 Which one is the LIE? (secret — players won't see this)</label>
+        <select id="ttl-lie-select">
+          <option value="0">Statement 1</option>
+          <option value="1">Statement 2</option>
+          <option value="2">Statement 3</option>
+        </select>
+      </div>
+      <button class="btn" style="background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff" onclick="ttlSetRound()">🔒 Lock In Round</button>
+    </div>
+    <div id="ttl-reveal-phase" style="display:none">
+      <div class="suspect-list" id="ttl-h-statements"></div>
+      <div class="fr mt14">
+        <button class="btn" style="background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff" onclick="revealTTL()">🎉 Reveal the Lie!</button>
+        <button class="btn btn-danger btn-sm" onclick="resetTTL()">New Round</button>
+      </div>
+      <div id="ttl-h-winner-box" style="display:none;margin-top:14px;background:rgba(251,191,36,.1);border:1.5px solid #fbbf24;border-radius:12px;padding:16px;text-align:center">
+        <div id="ttl-h-winner-title" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#fbbf24"></div>
+        <div id="ttl-h-winner-detail" style="color:var(--muted);font-size:.82rem;margin-top:4px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>👥 Players &amp; Votes</h2>
+    <p class="sub" id="ttl-h-plabel">0 players connected</p>
+    <div id="ttl-h-plist" class="plist"></div>
+  </div>
+</div>
+
+<!-- ══════════ TWO TRUTHS AND A LIE PLAYER ══════════ -->
+<div class="screen" id="s-ttl-player">
+  <div style="width:100%;max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:1px" id="ttlp-rlabel">Room</div>
+        <div style="color:var(--muted);font-size:.78rem">Playing as <b id="ttlp-name">—</b></div>
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:5px;background:linear-gradient(90deg,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="ttlp-code">—</div>
+    </div>
+    <div id="ttlp-waiting" style="text-align:center;padding:30px 20px;color:var(--muted)">
+      <div style="font-size:2.5rem;margin-bottom:10px">⏳</div>
+      <div style="font-weight:700">Waiting for the host to enter statements…</div>
+    </div>
+    <div id="ttlp-vote-form" style="display:none">
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:10px">Which one is the LIE? Tap to vote.</p>
+      <div class="suspect-list" id="ttlp-statement-list"></div>
+    </div>
+    <div id="ttlp-result" style="display:none;margin-top:14px;border-radius:12px;padding:16px;text-align:center"></div>
+  </div>
+</div>
+
 <!-- ══════════ BINGO HOST SETUP ══════════ -->
 <div class="screen" id="s-host-setup">
   <div class="card">
@@ -1825,6 +2047,9 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <option value="count">🔢 Count the Emojis</option>
         <option value="order">🔀 Quick Order</option>
         <option value="colour">🎨 Colour vs Word</option>
+        <option value="emoji">🎬 Emoji Trivia</option>
+        <option value="quiz">🧠 Trivia Quiz Show</option>
+        <option value="rank">📶 Line 'Em Up</option>
       </select>
     </div>
     <div class="ig"><label>Number of Rounds</label>
@@ -4067,6 +4292,334 @@ function startMMPlayerListen(){
 }
 
 // ════════════════════════════════════════
+//  PRICE IS RIGHT
+// ════════════════════════════════════════
+let priceItem='', priceSecret=null, priceMyGuess=null;
+
+function priceComputeWinner(players, secret){
+  const entries=Object.entries(players||{}).filter(([,p])=>p.guess!=null);
+  if(!entries.length)return null;
+  // Prefer the closest guess that doesn't go OVER the secret price; if everyone
+  // went over, fall back to whoever was closest overall.
+  const underOrEqual=entries.filter(([,p])=>p.guess<=secret);
+  const pool=underOrEqual.length?underOrEqual:entries;
+  let best=null,bestDist=Infinity;
+  pool.forEach(([name,p])=>{
+    const dist=Math.abs(p.guess-secret);
+    if(dist<bestDist){bestDist=dist;best=name}
+  });
+  return best;
+}
+
+async function createPriceRoom(){
+  const name=document.getElementById('price-host-name').value.trim();
+  const label=document.getElementById('price-room-label').value.trim()||'Price is Right';
+  const err=document.getElementById('price-setup-err');err.textContent='';
+  if(!name){err.textContent='Enter your name';return}
+  if(!db){err.textContent='Firebase not connected';return}
+  const maxP=parseInt(document.getElementById('price-max').value);
+  const code=genCode();
+  roomCode=code;myName=name;myRole='host';gameType='price';
+  await dbSet('rooms/'+code,{code,type:'price',hostName:name,label,maxPlayers:maxP,
+    item:'',secret:null,revealed:false,players:{},winners:[],created:Date.now()});
+  document.getElementById('price-h-code').textContent=code;
+  document.getElementById('price-share-link').value=buildJoinURL(code);
+  go('s-price-host');setHostUI();
+  startPriceHostListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'price','host',label);
+  addSystemMsg('💰 Price is Right room '+code+' created by '+name);
+}
+
+async function priceSetRound(){
+  const item=document.getElementById('price-item-in').value.trim()||'Mystery Item';
+  const secret=parseFloat(document.getElementById('price-secret-in').value);
+  if(isNaN(secret)||secret<0){alert('Enter a valid secret price');return}
+  priceItem=item;priceSecret=secret;
+  document.getElementById('price-set-phase').style.display='none';
+  document.getElementById('price-reveal-phase').style.display='block';
+  document.getElementById('price-h-item').textContent=item;
+  document.getElementById('price-h-secret').textContent='$'+secret;
+  document.getElementById('price-winner-display').style.display='none';
+  await dbUpdate('rooms/'+roomCode,{item,secret,revealed:false,winners:[]});
+  addSystemMsg('🔒 Host locked in the item. Submit your guesses!');
+}
+
+async function revealPrice(){
+  if(!confirm('Reveal the winner now?'))return;
+  const room=await dbGet('rooms/'+roomCode);
+  if(!room)return;
+  const best=priceComputeWinner(room.players,priceSecret);
+  await dbUpdate('rooms/'+roomCode,{revealed:true,winners:best?[best]:[]});
+  const wd=document.getElementById('price-winner-display');
+  if(best){
+    const g=room.players[best].guess;
+    wd.style.display='block';
+    document.getElementById('price-winner-name').textContent='🏆 '+best;
+    document.getElementById('price-winner-detail').textContent='Guessed $'+g+' — actual price was $'+priceSecret+'!';
+    addSystemMsg('🎉 '+best+' wins! Price was $'+priceSecret+', they guessed $'+g);
+  } else {
+    wd.style.display='block';
+    document.getElementById('price-winner-name').textContent='No guesses yet!';
+    document.getElementById('price-winner-detail').textContent='Nobody submitted a guess this round.';
+  }
+}
+
+async function resetPriceRound(){
+  priceItem='';priceSecret=null;
+  document.getElementById('price-set-phase').style.display='block';
+  document.getElementById('price-reveal-phase').style.display='none';
+  document.getElementById('price-winner-display').style.display='none';
+  document.getElementById('price-item-in').value='';
+  document.getElementById('price-secret-in').value='';
+  await dbUpdate('rooms/'+roomCode,{item:'',secret:null,revealed:false,winners:[]});
+  const room=await dbGet('rooms/'+roomCode);
+  if(room&&room.players){
+    const updates={};
+    Object.keys(room.players).forEach(n=>{updates['rooms/'+roomCode+'/players/'+n+'/guess']=null});
+    if(Object.keys(updates).length)await _update(_ref(db),updates);
+  }
+  addSystemMsg('🔄 New round started!');
+}
+
+function startPriceHostListen(){
+  unsubHost=dbListen('rooms/'+roomCode,room=>{
+    if(!room)return;
+    if(!$id('price-h-pcount'))return;
+    const ps=Object.keys(room.players||{});
+    document.getElementById('price-h-pcount').textContent=ps.length+' players joined';
+    document.getElementById('price-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
+    document.getElementById('price-h-plist').innerHTML=ps.length
+      ? ps.map(n=>{const p=room.players[n];return`<div class="pchip">${escH(n)}${p.guess!=null?': $'+p.guess:' — no guess yet'}</div>`}).join('')
+      : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
+    if(room.secret!=null&&room.players){
+      const gl=document.getElementById('price-guess-list');
+      const guesses=Object.entries(room.players).filter(([,p])=>p.guess!=null).sort((a,b)=>a[1].guess-b[1].guess);
+      gl.innerHTML=guesses.length?guesses.map(([n,p])=>`<div class="guess-row"><span class="gname">${escH(n)}</span><span class="gval">$${p.guess}</span></div>`).join(''):'<span style="color:var(--muted);font-size:.83rem">No guesses yet</span>';
+    }
+  });
+}
+
+async function joinPriceRoom(code,name){
+  const room=await dbGet('rooms/'+code);
+  if(!room||room.type!=='price')return false;
+  priceItem=room.item||'';priceSecret=room.secret!=null?room.secret:null;priceMyGuess=null;
+  await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now(),guess:null}});
+  document.getElementById('pricep-rlabel').textContent=room.label||'Price is Right';
+  document.getElementById('pricep-name').textContent=name;
+  document.getElementById('pricep-code').textContent=code;
+  document.getElementById('pricep-item').textContent=priceItem||'Mystery Item';
+  if(priceSecret!=null){
+    document.getElementById('pricep-waiting').style.display='none';
+    document.getElementById('pricep-guess-form').style.display='block';
+  }
+  go('s-price-player');document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
+  startPricePlayerListen();startChatListen();showChatFab();
+  addSystemMsg('👋 '+name+' joined the Price is Right room');
+  return true;
+}
+
+async function pricepSubmitGuess(){
+  const v=parseFloat(document.getElementById('pricep-guess-in').value);
+  if(isNaN(v)||v<0){alert('Enter a valid guess');return}
+  priceMyGuess=v;
+  await dbUpdate('rooms/'+roomCode+'/players/'+myName,{guess:v});
+  document.getElementById('pricep-guess-in').disabled=true;
+  document.querySelector('#pricep-guess-form button').disabled=true;
+  document.getElementById('pricep-locked-msg').style.display='block';
+  addSystemMsg('💰 '+myName+' locked in a guess!');
+}
+
+function startPricePlayerListen(){
+  const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
+  unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
+    dot.className='sdot';stxt.textContent='Connected';
+    if(!$id('pricep-item'))return;
+    document.getElementById('sright').textContent=Object.keys(room.players||{}).length+' players online';
+    // Round just became active (secret set, wasn't before)
+    if(room.secret!=null&&priceSecret==null){
+      priceSecret=room.secret;priceItem=room.item||'';
+      document.getElementById('pricep-item').textContent=priceItem||'Mystery Item';
+      document.getElementById('pricep-waiting').style.display='none';
+      document.getElementById('pricep-guess-form').style.display='block';
+    }
+    if(room.revealed&&room.secret!=null){
+      const myGuess=(room.players[myName]||{}).guess;
+      const won=(room.winners||[]).includes(myName);
+      const res=document.getElementById('pricep-result');res.style.display='block';
+      res.style.cssText='display:block;margin-top:14px;border-radius:12px;padding:16px;text-align:center;background:'+(won?'rgba(251,191,36,.1)':'rgba(239,68,68,.08)')+';border:1.5px solid '+(won?'#fbbf24':'#ef4444');
+      res.innerHTML=(won?'<b style="color:#fbbf24;font-size:1.1rem">🏆 You won!</b>':'<b style="color:#ef4444">Not this time!</b>')
+        +'<br><span style="color:var(--muted);font-size:.82rem">Real price was $'+room.secret+(myGuess!=null?' — you guessed $'+myGuess:'')+'</span>';
+      if(room.winners&&room.winners.length) showWinnerBanner(room.winners);
+      if(won&&!document.getElementById('win-ov').classList.contains('show'))showWin('💰 You Win!','Your guess of $'+myGuess+' was closest!');
+    }    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
+    }
+  });
+}
+
+// ════════════════════════════════════════
+//  TWO TRUTHS AND A LIE
+// ════════════════════════════════════════
+let ttlStatements=[], ttlLieIdx=null;
+
+function renderTTLStatements(containerId, statements, votes, myVote, revealed, lieIdx, clickable){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  el.innerHTML=(statements||[]).map((s,i)=>{
+    const voteCount=Object.values(votes||{}).filter(v=>v===i).length;
+    let cls='suspect-row';
+    if(myVote===i)cls+=' sr-picked';
+    if(revealed&&i===lieIdx)cls+=' sr-wrong';
+    if(revealed&&i!==lieIdx)cls+=' sr-correct';
+    const onclick=(clickable&&!revealed)?' onclick="castTTLVote('+i+')"':'';
+    return`<div class="${cls}"${onclick}>
+      <div class="sr-name">${escH(s)}${revealed&&i===lieIdx?' 🤥 THE LIE':''}</div>
+      <div class="sr-votes">${voteCount} vote${voteCount!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+async function createTTLRoom(){
+  const name=document.getElementById('ttl-host-name').value.trim();
+  const label=document.getElementById('ttl-room-label').value.trim()||'Two Truths and a Lie';
+  const err=document.getElementById('ttl-setup-err');err.textContent='';
+  if(!name){err.textContent='Enter your name';return}
+  if(!db){err.textContent='Firebase not connected';return}
+  const maxP=parseInt(document.getElementById('ttl-max').value);
+  const code=genCode();
+  roomCode=code;myName=name;myRole='host';gameType='ttl';
+  await dbSet('rooms/'+code,{code,type:'ttl',hostName:name,label,maxPlayers:maxP,
+    statements:[],lieIndex:null,revealed:false,votes:{},players:{},winners:[],created:Date.now()});
+  document.getElementById('ttl-h-code').textContent=code;
+  document.getElementById('ttl-share-link').value=buildJoinURL(code);
+  go('s-ttl-host');setHostUI();
+  startTTLHostListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'ttl','host',label);
+  addSystemMsg('🎭 Two Truths and a Lie room '+code+' created by '+name);
+}
+
+async function ttlSetRound(){
+  const s0=document.getElementById('ttl-stmt-0').value.trim();
+  const s1=document.getElementById('ttl-stmt-1').value.trim();
+  const s2=document.getElementById('ttl-stmt-2').value.trim();
+  if(!s0||!s1||!s2){alert('Fill in all three statements');return}
+  const lieIdx=parseInt(document.getElementById('ttl-lie-select').value);
+  ttlStatements=[s0,s1,s2];ttlLieIdx=lieIdx;
+  document.getElementById('ttl-set-phase').style.display='none';
+  document.getElementById('ttl-reveal-phase').style.display='block';
+  document.getElementById('ttl-h-winner-box').style.display='none';
+  renderTTLStatements('ttl-h-statements',ttlStatements,{},null,false,lieIdx,false);
+  await dbUpdate('rooms/'+roomCode,{statements:ttlStatements,lieIndex:lieIdx,revealed:false,votes:{},winners:[]});
+  addSystemMsg('🔒 Host locked in three statements. Vote which one is the lie!');
+}
+
+async function revealTTL(){
+  if(!confirm('Reveal the lie now?'))return;
+  const room=await dbGet('rooms/'+roomCode);
+  if(!room)return;
+  const lieIdx=room.lieIndex;
+  const votes=room.votes||{};
+  const winners=Object.entries(votes).filter(([,v])=>v===lieIdx).map(([n])=>n);
+  await dbUpdate('rooms/'+roomCode,{revealed:true,winners});
+  renderTTLStatements('ttl-h-statements',room.statements,votes,null,true,lieIdx,false);
+  const wb=document.getElementById('ttl-h-winner-box');wb.style.display='block';
+  document.getElementById('ttl-h-winner-title').textContent='🤥 The lie was: "'+room.statements[lieIdx]+'"';
+  document.getElementById('ttl-h-winner-detail').textContent=winners.length?winners.join(', ')+' got it right!':'Nobody guessed correctly!';
+  addSystemMsg('🎉 The lie was revealed! '+(winners.length?winners.join(', ')+' got it right!':'Nobody guessed correctly!'));
+}
+
+async function resetTTL(){
+  ttlStatements=[];ttlLieIdx=null;
+  document.getElementById('ttl-set-phase').style.display='block';
+  document.getElementById('ttl-reveal-phase').style.display='none';
+  document.getElementById('ttl-h-winner-box').style.display='none';
+  document.getElementById('ttl-stmt-0').value='';
+  document.getElementById('ttl-stmt-1').value='';
+  document.getElementById('ttl-stmt-2').value='';
+  await dbUpdate('rooms/'+roomCode,{statements:[],lieIndex:null,revealed:false,votes:{},winners:[]});
+  addSystemMsg('🔄 New round started!');
+}
+
+function startTTLHostListen(){
+  unsubHost=dbListen('rooms/'+roomCode,room=>{
+    if(!room)return;
+    if(!$id('ttl-h-pcount'))return;
+    const ps=Object.keys(room.players||{});
+    document.getElementById('ttl-h-pcount').textContent=ps.length+' players joined';
+    document.getElementById('ttl-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
+    document.getElementById('ttl-h-plist').innerHTML=ps.length
+      ? ps.map(n=>{const voted=(room.votes||{})[n]!=null;return`<div class="pchip">${escH(n)}${voted?' ✓ voted':' — waiting'}</div>`}).join('')
+      : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
+    if(room.statements&&room.statements.length){
+      renderTTLStatements('ttl-h-statements',room.statements,room.votes||{},null,!!room.revealed,room.lieIndex,false);
+    }
+  });
+}
+
+async function joinTTLRoom(code,name){
+  const room=await dbGet('rooms/'+code);
+  if(!room||room.type!=='ttl')return false;
+  ttlStatements=room.statements||[];ttlLieIdx=room.lieIndex!=null?room.lieIndex:null;
+  await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now()}});
+  document.getElementById('ttlp-rlabel').textContent=room.label||'Two Truths and a Lie';
+  document.getElementById('ttlp-name').textContent=name;
+  document.getElementById('ttlp-code').textContent=code;
+  if(ttlStatements.length){
+    document.getElementById('ttlp-waiting').style.display='none';
+    document.getElementById('ttlp-vote-form').style.display='block';
+    renderTTLStatements('ttlp-statement-list',ttlStatements,room.votes||{},null,false,ttlLieIdx,true);
+  }
+  go('s-ttl-player');document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
+  startTTLPlayerListen();startChatListen();showChatFab();
+  addSystemMsg('👋 '+name+' joined the Two Truths and a Lie room');
+  return true;
+}
+
+async function castTTLVote(idx){
+  const room=await dbGet('rooms/'+roomCode);
+  if(room&&room.revealed)return;
+  await dbUpdate('rooms/'+roomCode+'/votes',{[myName]:idx});
+  addSystemMsg('🤔 '+myName+' cast their vote');
+}
+
+function startTTLPlayerListen(){
+  const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
+  unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
+    dot.className='sdot';stxt.textContent='Connected';
+    if(!$id('ttlp-statement-list'))return;
+    document.getElementById('sright').textContent=Object.keys(room.players||{}).length+' players online';
+    // Round just became active
+    if(room.statements&&room.statements.length&&!ttlStatements.length){
+      ttlStatements=room.statements;ttlLieIdx=room.lieIndex;
+      document.getElementById('ttlp-waiting').style.display='none';
+      document.getElementById('ttlp-vote-form').style.display='block';
+    }
+    const myVote=(room.votes||{})[myName];
+    const myVoteIdx=myVote!=null?myVote:null;
+    if(room.statements&&room.statements.length){
+      renderTTLStatements('ttlp-statement-list',room.statements,room.votes||{},myVoteIdx,!!room.revealed,room.lieIndex,true);
+    }
+    if(room.revealed&&room.lieIndex!=null){
+      const won=(room.winners||[]).includes(myName);
+      const res=document.getElementById('ttlp-result');res.style.display='block';
+      res.style.cssText='display:block;margin-top:14px;border-radius:12px;padding:16px;text-align:center;background:'+(won?'rgba(251,191,36,.1)':'rgba(239,68,68,.08)')+';border:1.5px solid '+(won?'#fbbf24':'#ef4444');
+      res.innerHTML=(won?'<b style="color:#fbbf24;font-size:1.1rem">🏆 You spotted the lie!</b>':'<b style="color:#ef4444">Not quite!</b>')
+        +'<br><span style="color:var(--muted);font-size:.82rem">The lie was: "'+escH(room.statements[room.lieIndex])+'"</span>';
+      if(room.winners&&room.winners.length) showWinnerBanner(room.winners);
+      if(won&&!document.getElementById('win-ov').classList.contains('show'))showWin('🎭 You Win!','You spotted the lie!');
+    }    // Room closed by host
+    if(room.status==='closed'){
+      showRoomClosed();
+    }
+  });
+}
+
+// ════════════════════════════════════════
 //  UNIFIED FACEBOOK GAMES JOIN
 // ════════════════════════════════════════
 async function joinFBRoom(){
@@ -4077,7 +4630,7 @@ async function joinFBRoom(){
   if(!db){err.textContent='Firebase not connected';return}
   const room=await dbGet('rooms/'+code);
   if(!room){err.textContent='Room not found — check the code!';return}
-  const fbTypes=['duck','sq','mm'];
+  const fbTypes=['duck','sq','mm','price','ttl'];
   if(!fbTypes.includes(room.type)){err.textContent='This is not a Facebook Games room';return}
   const pc=Object.keys(room.players||{}).length;
   if(pc>=(room.maxPlayers||20)){err.textContent='Room is full';return}
@@ -4086,6 +4639,8 @@ async function joinFBRoom(){
   if(room.type==='duck')await joinDuckRoom(code,name);
   else if(room.type==='sq')await joinSqRoom(code,name);
   else if(room.type==='mm')await joinMMRoom(code,name);
+  else if(room.type==='price')await joinPriceRoom(code,name);
+  else if(room.type==='ttl')await joinTTLRoom(code,name);
 }
 
 // ════════════════════════════════════════
@@ -4098,6 +4653,7 @@ function switchTab(tab) {
     'other':  { cls: 'other',  panel: 'other' },
     'fb':     { cls: 'fb',     panel: 'fb' },
     'find':   { cls: 'find',   panel: 'find' },
+    'solo':   { cls: 'solo',   panel: 'solo' },
     'rooms':  { cls: 'rooms',  panel: 'rooms' }
   };
   const t = tabMap[tab] || { cls: tab, panel: tab };
@@ -4167,9 +4723,10 @@ async function checkURLJoin() {
     const max = room.maxPlayers || 50;
     const isBingo = room.type === 'bingo';
     const isFG = room.type === 'fg';
-    const gameLabel = room.type === 'ln1' ? '1️⃣ Pick & Draw' : room.type === 'ln2' ? '2️⃣ Lucky Draw' : room.type === 'ln3' ? '3️⃣ Closest Wins' : room.type === 'hl' ? '🔢 Higher or Lower' : room.type === 'lastn' ? '🏁 Last Number' : room.type === 'oe' ? '🎲 Odd or Even' : room.type === 'duck' ? '🦆 Lucky Duck' : room.type === 'sq' ? '🟦 Guess the Square' : room.type === 'mm' ? '🔍 Murder Mystery' : room.type === 'fg' ? '🔎 Find Games' : '🎱 Bingo';
-    document.getElementById('dj-game-icon').textContent = isBingo ? '🎱' : isFG ? '🔎' : '🍀';
-    document.getElementById('dj-room-name').textContent = room.label || (isBingo ? 'MLT Bingo' : isFG ? 'Find Games' : 'MLT Lucky Numbers');
+    const isFB = ['duck','sq','mm','price','ttl'].includes(room.type);
+    const gameLabel = room.type === 'ln1' ? '1️⃣ Pick & Draw' : room.type === 'ln2' ? '2️⃣ Lucky Draw' : room.type === 'ln3' ? '3️⃣ Closest Wins' : room.type === 'hl' ? '🔢 Higher or Lower' : room.type === 'lastn' ? '🏁 Last Number' : room.type === 'oe' ? '🎲 Odd or Even' : room.type === 'duck' ? '🦆 Lucky Duck' : room.type === 'sq' ? '🟦 Guess the Square' : room.type === 'mm' ? '🔍 Murder Mystery' : room.type === 'price' ? '💰 Price is Right' : room.type === 'ttl' ? '🎭 Two Truths and a Lie' : room.type === 'fg' ? '🔎 Find Games' : '🎱 Bingo';
+    document.getElementById('dj-game-icon').textContent = isBingo ? '🎱' : isFG ? '🔎' : isFB ? '🎮' : '🍀';
+    document.getElementById('dj-room-name').textContent = room.label || (isBingo ? 'MLT Bingo' : isFG ? 'Find Games' : isFB ? 'Facebook Games' : 'MLT Lucky Numbers');
     document.getElementById('dj-room-sub').textContent = gameLabel + ' · ' + pc + ' / ' + max + ' players joined';
     const joinBtn = document.getElementById('dj-join-btn');
     joinBtn.className = 'btn ' + (isBingo ? 'btn-accent' : isFG ? 'btn-accent' : 'btn-purple');
@@ -4271,7 +4828,7 @@ async function directJoin() {
     document.getElementById('oej-name').value = name;
     document.getElementById('oej-code').value = directJoinCode;
     await joinOERoom();
-  } else if (['duck','sq','mm'].includes(directJoinType)) {
+  } else if (['duck','sq','mm','price','ttl'].includes(directJoinType)) {
     document.getElementById('fbj-name').value = name;
     document.getElementById('fbj-code').value = directJoinCode;
     await joinFBRoom();
@@ -4307,9 +4864,90 @@ let fghRound=0, fghTotalRounds=8, fghGameType='odd', fghRoundSeeds=[], fghRoundT
 
 const FG_GAME_LABELS = {
   odd:'🔎 Find the Odd One Out', count:'🔢 Count the Emojis',
-  order:'🔀 Quick Order', colour:'🎨 Colour vs Word'
+  order:'🔀 Quick Order', colour:'🎨 Colour vs Word',
+  emoji:'🎬 Emoji Trivia', quiz:'🧠 Trivia Quiz Show', rank:'📶 Line \'Em Up'
 };
 const FG_MP_TIME = 12; // seconds per multiplayer round
+const FG_RANK_TIME = 20; // ranking rounds get a bit more time
+
+// ── FIND GAMES sub-tabs (one per game, under the Find Games tab) ──
+const FG_SUBTAB_INFO = {
+  odd:    {ic:'🔎', title:'Find the Odd One Out', desc:'Spot the one that doesn\'t belong. Race the clock — fastest correct answer wins the round!'},
+  count:  {ic:'🔢', title:'Count the Emojis',     desc:'How many are there? Count fast — fastest correct answer wins the round!'},
+  order:  {ic:'🔀', title:'Quick Order',          desc:'Tap numbers lowest to highest before anyone else does!'},
+  colour: {ic:'🎨', title:'Colour vs Word',       desc:'Tap the ink colour — not the word. Your brain will fight you!'},
+  emoji:  {ic:'🎬', title:'Emoji Trivia',         desc:'Guess the movie from the emoji clues — fastest correct guess wins!'},
+  quiz:   {ic:'🧠', title:'Trivia Quiz Show',     desc:'Answer trivia questions — first correct answer wins each round!'},
+  rank:   {ic:'📶', title:'Line \'Em Up',          desc:'Put the items in the right order before anyone else does!'}
+};
+let currentFGSubtab = 'odd';
+function switchFGSubtab(type) {
+  currentFGSubtab = type;
+  document.querySelectorAll('.fg-subtab-btn').forEach(b => b.classList.toggle('active', b.dataset.fg === type));
+  const info = FG_SUBTAB_INFO[type] || FG_SUBTAB_INFO.odd;
+  document.getElementById('fg-subtab-ic').textContent = info.ic;
+  document.getElementById('fg-subtab-title').textContent = info.title;
+  document.getElementById('fg-subtab-desc').textContent = info.desc;
+}
+function hostFGType(type) {
+  document.getElementById('fg-game-type').value = type;
+  go('s-fg-setup');
+}
+
+// ── Content bank: Emoji Trivia / Guess the Movie ──
+const EMOJI_CLUES = [
+  {emojis:'🕷️🕸️🧑', answer:'Spider-Man'},
+  {emojis:'🦁👑🌅', answer:'The Lion King'},
+  {emojis:'🚢🧊💔', answer:'Titanic'},
+  {emojis:'🐠🔍🌊', answer:'Finding Nemo'},
+  {emojis:'👻🚫🏢', answer:'Ghostbusters'},
+  {emojis:'🦖🏝️🚙', answer:'Jurassic Park'},
+  {emojis:'🍫🏭🎫', answer:'Charlie and the Chocolate Factory'},
+  {emojis:'🕶️🕴️👽', answer:'Men in Black'},
+  {emojis:'❄️👸⛄', answer:'Frozen'},
+  {emojis:'🦇🦸‍♂️🌃', answer:'Batman'},
+  {emojis:'🧙‍♂️💍🌋', answer:'The Lord of the Rings'},
+  {emojis:'🤖❤️🌱', answer:'WALL-E'},
+  {emojis:'🦈🏖️🚤', answer:'Jaws'},
+  {emojis:'🏠🎄🥷', answer:'Home Alone'},
+  {emojis:'👠🎃🕛', answer:'Cinderella'},
+  {emojis:'🐝🎬🍯', answer:'Bee Movie'},
+  {emojis:'🎈🏠👴', answer:'Up'},
+  {emojis:'🚗⚡🏁', answer:'Cars'}
+];
+
+// ── Content bank: Trivia Quiz Show ──
+const QUIZ_QUESTIONS = [
+  {q:'What is the capital of France?', choices:['Paris','Lyon','Marseille','Nice'], answer:'Paris'},
+  {q:'How many continents are there on Earth?', choices:['5','6','7','8'], answer:'7'},
+  {q:'What is the largest planet in our solar system?', choices:['Earth','Saturn','Jupiter','Neptune'], answer:'Jupiter'},
+  {q:'Who painted the Mona Lisa?', choices:['Van Gogh','Da Vinci','Picasso','Monet'], answer:'Da Vinci'},
+  {q:'What is the chemical symbol for gold?', choices:['Go','Gd','Au','Ag'], answer:'Au'},
+  {q:'Which country hosted the 2016 Summer Olympics?', choices:['China','UK','Brazil','Japan'], answer:'Brazil'},
+  {q:'What is the smallest prime number?', choices:['0','1','2','3'], answer:'2'},
+  {q:'How many strings does a standard guitar have?', choices:['4','5','6','7'], answer:'6'},
+  {q:'What is the tallest mountain in the world?', choices:['K2','Everest','Kilimanjaro','Denali'], answer:'Everest'},
+  {q:'Which planet is known as the Red Planet?', choices:['Venus','Mars','Mercury','Saturn'], answer:'Mars'},
+  {q:'What is the currency of Japan?', choices:['Won','Yuan','Yen','Ringgit'], answer:'Yen'},
+  {q:'How many players are on a standard football (soccer) team on the field?', choices:['9','10','11','12'], answer:'11'},
+  {q:'What is the largest ocean on Earth?', choices:['Atlantic','Indian','Arctic','Pacific'], answer:'Pacific'},
+  {q:'Who wrote "Romeo and Juliet"?', choices:['Dickens','Shakespeare','Austen','Twain'], answer:'Shakespeare'},
+  {q:'What gas do plants primarily absorb from the atmosphere?', choices:['Oxygen','Nitrogen','Carbon Dioxide','Hydrogen'], answer:'Carbon Dioxide'},
+  {q:'How many sides does a hexagon have?', choices:['5','6','7','8'], answer:'6'}
+];
+
+// ── Content bank: Line 'Em Up (ranking) ──
+const RANK_SETS = [
+  {prompt:'Order these planets — closest to the Sun first:', items:['Mercury','Venus','Earth','Mars','Jupiter']},
+  {prompt:'Order by size — smallest to largest:', items:['Ant','Cat','Dog','Horse','Elephant']},
+  {prompt:'Order these landmarks — shortest to tallest:', items:['Statue of Liberty','Eiffel Tower','Empire State Building','Burj Khalifa']},
+  {prompt:'Order by average lifespan — shortest to longest:', items:['Mosquito','Mouse','Dog','Human','Tortoise']},
+  {prompt:'Order these movies — oldest to newest release:', items:['Star Wars','Titanic','Avatar','Frozen','Black Panther']},
+  {prompt:'Order by population — smallest to largest:', items:['Vatican City','Monaco','Netherlands','Brazil','China']},
+  {prompt:'Order these events — oldest to newest:', items:['Moon Landing','Fall of the Berlin Wall','World Wide Web goes public','First iPhone released','First Covid-19 vaccine approved']},
+  {prompt:'Order by speed — slowest to fastest:', items:['Snail','Human','Cheetah','Sound','Light']},
+  {prompt:'Order by boiling/freezing extremity — coldest to hottest:', items:['Absolute Zero','Ice melting','Room temperature','Water boiling','Sun\'s surface']}
+];
 
 // ── Seed generator: deterministic puzzle from a numeric seed ──
 function fgSeedRandom(seed){
@@ -4366,6 +5004,31 @@ function fgPuzzleFromSeed(type, seed){
     sh.sort(()=>rng()-.5);
     return{ink,word,choices:sh,answer:ink.name};
   }
+  if(type==='emoji'){
+    const item=EMOJI_CLUES[Math.floor(rng()*EMOJI_CLUES.length)];
+    const wrongPool=EMOJI_CLUES.filter(x=>x.answer!==item.answer).map(x=>x.answer);
+    const distractors=[];
+    let attempts=0;
+    while(distractors.length<3&&attempts<40){
+      const c=wrongPool[Math.floor(rng()*wrongPool.length)];
+      if(!distractors.includes(c))distractors.push(c);
+      attempts++;
+    }
+    const choices=[...distractors,item.answer].sort(()=>rng()-.5);
+    return{emojis:item.emojis,choices,answer:item.answer};
+  }
+  if(type==='quiz'){
+    const q=QUIZ_QUESTIONS[Math.floor(rng()*QUIZ_QUESTIONS.length)];
+    const choices=[...q.choices].sort(()=>rng()-.5);
+    return{question:q.q,choices,answer:q.answer};
+  }
+  if(type==='rank'){
+    const set=RANK_SETS[Math.floor(rng()*RANK_SETS.length)];
+    const correct=set.items;
+    const pool=[...correct];
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+    return{prompt:set.prompt,pool,correct,answer:correct.join(' → ')};
+  }
   return{answer:''};
 }
 
@@ -4404,6 +5067,7 @@ async function fghLaunchRound(){
   fghRound++;
   const seed=fgGenSeed(fghRound);
   const puzzle=fgPuzzleFromSeed(fghGameType,seed);
+  const roundTime=fghGameType==='rank'?FG_RANK_TIME:FG_MP_TIME;
   // Show puzzle preview to host
   document.getElementById('fgh-puzzle-preview').style.display='block';
   document.getElementById('fgh-puzzle-text').textContent='Answer: '+puzzle.answer;
@@ -4413,17 +5077,17 @@ async function fghLaunchRound(){
   document.getElementById('fgh-status-badge').style.color='var(--green)';
   document.getElementById('fgh-launch-btn').disabled=true;
   // Start host-side visual timer
-  fghStartTimerBar('fgh-timer-bar', FG_MP_TIME);
+  fghStartTimerBar('fgh-timer-bar', roundTime);
   await dbUpdate('rooms/'+roomCode,{
     round:fghRound, roundSeed:seed, roundActive:true,
     roundAnswers:{}, status:'playing',
-    roundDeadline:Date.now()+FG_MP_TIME*1000
+    roundDeadline:Date.now()+roundTime*1000
   });
   addSystemMsg('🚀 Round '+fghRound+' launched!');
   // Auto-end round after time
   fghRoundTimer=setTimeout(async()=>{
     await fghEndRound(puzzle.answer);
-  }, FG_MP_TIME*1000+500);
+  }, roundTime*1000+500);
 }
 
 function fghStartTimerBar(id, secs){
@@ -4633,6 +5297,55 @@ function fgpShowPuzzle(type, seed, timeLeft){
       btnRow.appendChild(b);
     });
     grid.appendChild(btnRow);
+  } else if(type==='emoji'){
+    safeText('fgp-prompt','🎬 Guess the movie!');
+    grid.style.gridTemplateColumns='1fr';
+    const display=document.createElement('div');
+    display.style.cssText='font-size:3rem;letter-spacing:6px;margin-bottom:16px;text-align:center;pointer-events:none;border:none;background:transparent';
+    display.className='fg-cell'; display.textContent=puzzle.emojis;
+    grid.appendChild(display);
+    const btnRow=document.createElement('div');
+    btnRow.style.cssText='display:flex;flex-direction:column;gap:8px;align-items:stretch';
+    puzzle.choices.forEach(c=>{
+      const b=document.createElement('button');
+      b.className='btn btn-outline'; b.style.cssText='font-size:.88rem;padding:11px 14px';
+      b.textContent=c;
+      b.onclick=()=>fgpSubmitAnswer(c, b, c===puzzle.answer, -1, grid);
+      btnRow.appendChild(b);
+    });
+    grid.appendChild(btnRow);
+  } else if(type==='quiz'){
+    safeText('fgp-prompt',puzzle.question);
+    grid.style.gridTemplateColumns='1fr';
+    const btnRow=document.createElement('div');
+    btnRow.style.cssText='display:flex;flex-direction:column;gap:8px;align-items:stretch';
+    puzzle.choices.forEach(c=>{
+      const b=document.createElement('button');
+      b.className='btn btn-outline'; b.style.cssText='font-size:.9rem;padding:11px 14px;text-align:left';
+      b.textContent=c;
+      b.onclick=()=>fgpSubmitAnswer(c, b, c===puzzle.answer, -1, grid);
+      btnRow.appendChild(b);
+    });
+    grid.appendChild(btnRow);
+  } else if(type==='rank'){
+    safeText('fgp-prompt',puzzle.prompt+' (tap in order)');
+    grid.style.gridTemplateColumns='1fr';
+    let nextIdx=0;
+    puzzle.pool.forEach(item=>{
+      const d=document.createElement('div');
+      d.className='fg-cell'; d.style.cssText='width:100%;height:auto;min-height:52px;padding:10px 14px;font-size:.92rem;font-weight:700;justify-content:flex-start;text-align:left';
+      d.textContent=item;
+      d.onclick=()=>{
+        if(fgpAnswered)return;
+        if(item===puzzle.correct[nextIdx]){
+          d.classList.add('correct'); d.onclick=null; nextIdx++;
+          if(nextIdx===puzzle.correct.length) fgpSubmitAnswer(puzzle.answer, d, true, -1, grid);
+        } else {
+          d.classList.add('wrong'); setTimeout(()=>d.classList.remove('wrong'),400);
+        }
+      };
+      grid.appendChild(d);
+    });
   }
   // Auto-expire
   fgpPlayerTimer=setTimeout(()=>{
@@ -5114,7 +5827,7 @@ function getMyRooms(){
   try{return JSON.parse(localStorage.getItem(MY_ROOMS_KEY)||'[]')}catch(e){return[]}
 }
 
-const TYPE_LABELS={bingo:'🎱 Bingo',ln1:'1️⃣ Pick & Draw',ln2:'2️⃣ Lucky Draw',ln3:'3️⃣ Closest Wins',hl:'🔢 Higher or Lower',lastn:'🏁 Last Number',oe:'🎲 Odd or Even',duck:'🦆 Lucky Duck',sq:'🟦 Guess the Square',mm:'🔍 Murder Mystery',fg:'🔎 Find Games'};
+const TYPE_LABELS={bingo:'🎱 Bingo',ln1:'1️⃣ Pick & Draw',ln2:'2️⃣ Lucky Draw',ln3:'3️⃣ Closest Wins',hl:'🔢 Higher or Lower',lastn:'🏁 Last Number',oe:'🎲 Odd or Even',duck:'🦆 Lucky Duck',sq:'🟦 Guess the Square',mm:'🔍 Murder Mystery',fg:'🔎 Find Games',price:'💰 Price is Right',ttl:'🎭 Two Truths and a Lie'};
 
 function renderMyRooms(){
   const el=document.getElementById('my-rooms-list');
@@ -5253,6 +5966,40 @@ async function rejoinAsHost(room){
       document.getElementById('mm-h-reveal-detail').textContent=winners.length?winners.join(', ')+' got it right!':'Nobody guessed correctly!';
     }
     go('s-mm-host'); setHostUI(); startMMHostListen(); startChatListen(); showChatFab();
+  } else if(type==='price'){
+    priceItem=room.item||''; priceSecret=room.secret!=null?room.secret:null;
+    document.getElementById('price-h-code').textContent=room.code;
+    document.getElementById('price-share-link').value=buildJoinURL(room.code);
+    if(priceSecret!=null){
+      document.getElementById('price-set-phase').style.display='none';
+      document.getElementById('price-reveal-phase').style.display='block';
+      document.getElementById('price-h-item').textContent=priceItem;
+      document.getElementById('price-h-secret').textContent='$'+priceSecret;
+      if(room.revealed&&room.winners&&room.winners.length){
+        const best=room.winners[0];
+        const g=(room.players&&room.players[best]&&room.players[best].guess)||'';
+        document.getElementById('price-winner-display').style.display='block';
+        document.getElementById('price-winner-name').textContent='🏆 '+best;
+        document.getElementById('price-winner-detail').textContent='Guessed $'+g+' — actual price was $'+priceSecret+'!';
+      }
+    }
+    go('s-price-host'); setHostUI(); startPriceHostListen(); startChatListen(); showChatFab();
+  } else if(type==='ttl'){
+    ttlStatements=room.statements||[]; ttlLieIdx=room.lieIndex!=null?room.lieIndex:null;
+    document.getElementById('ttl-h-code').textContent=room.code;
+    document.getElementById('ttl-share-link').value=buildJoinURL(room.code);
+    if(ttlStatements.length){
+      document.getElementById('ttl-set-phase').style.display='none';
+      document.getElementById('ttl-reveal-phase').style.display='block';
+      renderTTLStatements('ttl-h-statements',ttlStatements,room.votes||{},null,!!room.revealed,ttlLieIdx,false);
+      if(room.revealed){
+        const winners=room.winners||[];
+        document.getElementById('ttl-h-winner-box').style.display='block';
+        document.getElementById('ttl-h-winner-title').textContent='🤥 The lie was: "'+ttlStatements[ttlLieIdx]+'"';
+        document.getElementById('ttl-h-winner-detail').textContent=winners.length?winners.join(', ')+' got it right!':'Nobody guessed correctly!';
+      }
+    }
+    go('s-ttl-host'); setHostUI(); startTTLHostListen(); startChatListen(); showChatFab();
   } else {
     alert('Rejoining as host for this game type is not yet supported. Please recreate the room.');
   }
@@ -5373,6 +6120,41 @@ async function rejoinAsPlayer(room, name){
     renderMMPlayerSuspects(room,myVote);
     go('s-mm-player'); document.getElementById('sbar').style.display='flex';
     startMMPlayerListen(); startChatListen(); showChatFab();
+  } else if(type==='price'){
+    gameType='price';
+    priceItem=room.item||''; priceSecret=room.secret!=null?room.secret:null;
+    const pd=room.players&&room.players[name];
+    priceMyGuess=pd&&pd.guess!=null?pd.guess:null;
+    document.getElementById('pricep-rlabel').textContent=room.label||'Price is Right';
+    document.getElementById('pricep-name').textContent=name;
+    document.getElementById('pricep-code').textContent=code;
+    document.getElementById('pricep-item').textContent=priceItem||'Mystery Item';
+    if(priceSecret!=null){
+      document.getElementById('pricep-waiting').style.display='none';
+      document.getElementById('pricep-guess-form').style.display='block';
+      if(priceMyGuess!=null){
+        document.getElementById('pricep-guess-in').value=priceMyGuess;
+        document.getElementById('pricep-guess-in').disabled=true;
+        document.querySelector('#pricep-guess-form button').disabled=true;
+        document.getElementById('pricep-locked-msg').style.display='block';
+      }
+    }
+    go('s-price-player'); document.getElementById('sbar').style.display='flex';
+    startPricePlayerListen(); startChatListen(); showChatFab();
+  } else if(type==='ttl'){
+    gameType='ttl';
+    ttlStatements=room.statements||[]; ttlLieIdx=room.lieIndex!=null?room.lieIndex:null;
+    const myVote=room.votes&&room.votes[name]!=null?room.votes[name]:null;
+    document.getElementById('ttlp-rlabel').textContent=room.label||'Two Truths and a Lie';
+    document.getElementById('ttlp-name').textContent=name;
+    document.getElementById('ttlp-code').textContent=code;
+    if(ttlStatements.length){
+      document.getElementById('ttlp-waiting').style.display='none';
+      document.getElementById('ttlp-vote-form').style.display='block';
+      renderTTLStatements('ttlp-statement-list',ttlStatements,room.votes||{},myVote,!!room.revealed,ttlLieIdx,true);
+    }
+    go('s-ttl-player'); document.getElementById('sbar').style.display='flex';
+    startTTLPlayerListen(); startChatListen(); showChatFab();
   } else {
     alert('Please use the regular join screen to rejoin this game type.');
   }
