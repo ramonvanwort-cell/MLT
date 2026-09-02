@@ -4919,21 +4919,265 @@ const EMOJI_CLUES = [
 // ── Content bank: Trivia Quiz Show ──
 const QUIZ_QUESTIONS = [
   {q:'What is the capital of France?', choices:['Paris','Lyon','Marseille','Nice'], answer:'Paris'},
-  {q:'How many continents are there on Earth?', choices:['5','6','7','8'], answer:'7'},
-  {q:'What is the largest planet in our solar system?', choices:['Earth','Saturn','Jupiter','Neptune'], answer:'Jupiter'},
-  {q:'Who painted the Mona Lisa?', choices:['Van Gogh','Da Vinci','Picasso','Monet'], answer:'Da Vinci'},
+  {q:'What is the capital of Japan?', choices:['Osaka','Kyoto','Tokyo','Nagoya'], answer:'Tokyo'},
+  {q:'What is the capital of Australia?', choices:['Sydney','Melbourne','Canberra','Perth'], answer:'Canberra'},
+  {q:'What is the capital of Canada?', choices:['Toronto','Vancouver','Ottawa','Montreal'], answer:'Ottawa'},
+  {q:'What is the capital of Egypt?', choices:['Cairo','Alexandria','Giza','Luxor'], answer:'Cairo'},
+  {q:'What is the capital of Brazil?', choices:['Rio de Janeiro','São Paulo','Brasília','Salvador'], answer:'Brasília'},
+  {q:'What is the capital of Russia?', choices:['St. Petersburg','Moscow','Novosibirsk','Kazan'], answer:'Moscow'},
+  {q:'What is the capital of Italy?', choices:['Milan','Venice','Naples','Rome'], answer:'Rome'},
+  {q:'What is the capital of Spain?', choices:['Barcelona','Madrid','Seville','Valencia'], answer:'Madrid'},
+  {q:'What is the capital of Germany?', choices:['Munich','Hamburg','Berlin','Frankfurt'], answer:'Berlin'},
+  {q:'What is the capital of South Korea?', choices:['Busan','Incheon','Seoul','Daegu'], answer:'Seoul'},
+  {q:'What is the capital of Argentina?', choices:['Córdoba','Buenos Aires','Rosario','Mendoza'], answer:'Buenos Aires'},
+  {q:'What is the capital of Turkey?', choices:['Istanbul','Izmir','Ankara','Bursa'], answer:'Ankara'},
+  {q:'What is the capital of Kenya?', choices:['Mombasa','Nairobi','Kisumu','Nakuru'], answer:'Nairobi'},
+  {q:'What is the capital of Norway?', choices:['Bergen','Trondheim','Oslo','Stavanger'], answer:'Oslo'},
+  {q:'What is the capital of the Netherlands?', choices:['Rotterdam','The Hague','Amsterdam','Utrecht'], answer:'Amsterdam'},
+  {q:'What is the capital of Greece?', choices:['Thessaloniki','Athens','Patras','Heraklion'], answer:'Athens'},
+  {q:'What is the capital of Portugal?', choices:['Porto','Lisbon','Faro','Coimbra'], answer:'Lisbon'},
+  {q:'What is the capital of Sweden?', choices:['Gothenburg','Malmö','Stockholm','Uppsala'], answer:'Stockholm'},
+  {q:'What is the capital of Thailand?', choices:['Chiang Mai','Bangkok','Phuket','Pattaya'], answer:'Bangkok'},
+  {q:'What is the capital of Mexico?', choices:['Guadalajara','Mexico City','Cancún','Monterrey'], answer:'Mexico City'},
+  {q:'What is the capital of India?', choices:['Mumbai','Bangalore','New Delhi','Kolkata'], answer:'New Delhi'},
+  {q:'What is the capital of China?', choices:['Shanghai','Beijing','Hong Kong','Guangzhou'], answer:'Beijing'},
+  {q:'What is the capital of South Africa (seat of government)?', choices:['Cape Town','Johannesburg','Pretoria','Durban'], answer:'Pretoria'},
+  {q:'What is the capital of Switzerland?', choices:['Geneva','Zurich','Bern','Basel'], answer:'Bern'},
+  {q:'What is the capital of Poland?', choices:['Kraków','Warsaw','Gdańsk','Wrocław'], answer:'Warsaw'},
+  {q:'What is the capital of Austria?', choices:['Salzburg','Graz','Vienna','Innsbruck'], answer:'Vienna'},
+  {q:'What is the capital of Ireland?', choices:['Cork','Galway','Dublin','Limerick'], answer:'Dublin'},
+  {q:'What is the capital of Cuba?', choices:['Santiago de Cuba','Havana','Camagüey','Holguín'], answer:'Havana'},
+  {q:'What is the capital of Indonesia?', choices:['Bali','Jakarta','Surabaya','Bandung'], answer:'Jakarta'},
+  {q:'What is the longest river in the world?', choices:['Amazon','Nile','Yangtze','Mississippi'], answer:'Nile'},
+  {q:'What is the largest hot desert in the world?', choices:['Gobi','Kalahari','Sahara','Arabian'], answer:'Sahara'},
+  {q:'What is the smallest country in the world by area?', choices:['Monaco','Vatican City','San Marino','Liechtenstein'], answer:'Vatican City'},
+  {q:'What is the largest country in the world by area?', choices:['Canada','China','United States','Russia'], answer:'Russia'},
+  {q:'Which continent is the Sahara Desert located on?', choices:['Asia','Africa','Australia','South America'], answer:'Africa'},
+  {q:'What is the tallest waterfall in the world?', choices:['Niagara Falls','Angel Falls','Victoria Falls','Iguazu Falls'], answer:'Angel Falls'},
+  {q:'Which is the smallest ocean by area?', choices:['Indian Ocean','Atlantic Ocean','Arctic Ocean','Southern Ocean'], answer:'Arctic Ocean'},
+  {q:'What is the longest mountain range in the world?', choices:['Rocky Mountains','Andes','Himalayas','Alps'], answer:'Andes'},
+  {q:'What is the smallest continent by land area?', choices:['Europe','Australia','Antarctica','South America'], answer:'Australia'},
+  {q:'Which African country was formerly known as Abyssinia?', choices:['Somalia','Ethiopia','Sudan','Eritrea'], answer:'Ethiopia'},
+  {q:'Which country is home to the Great Barrier Reef?', choices:['Indonesia','Philippines','Australia','Fiji'], answer:'Australia'},
+  {q:'Mount Everest sits on the border of Nepal and which other country?', choices:['India','China','Bhutan','Pakistan'], answer:'China'},
+  {q:'Which country has the most natural lakes?', choices:['Russia','United States','Finland','Canada'], answer:'Canada'},
+  {q:'The Panama Canal connects the Atlantic Ocean to which other ocean?', choices:['Indian Ocean','Arctic Ocean','Pacific Ocean','Southern Ocean'], answer:'Pacific Ocean'},
+  {q:'Which country is shaped like a boot?', choices:['Greece','Italy','Croatia','Spain'], answer:'Italy'},
+  {q:'What is the capital of Iceland?', choices:['Akureyri','Reykjavik','Kópavogur','Hafnarfjörður'], answer:'Reykjavik'},
+  {q:'What is the largest island in the world?', choices:['Madagascar','Borneo','New Guinea','Greenland'], answer:'Greenland'},
+  {q:'Which US state is known as the Sunshine State?', choices:['California','Florida','Arizona','Texas'], answer:'Florida'},
+  {q:'Which strait separates Europe from Africa at its narrowest point?', choices:['Strait of Hormuz','Strait of Gibraltar','Bosphorus Strait','Bering Strait'], answer:'Strait of Gibraltar'},
+  {q:'Which country has the most time zones?', choices:['Russia','United States','France','China'], answer:'France'},
+  {q:'What is the name of the wall that once divided a European capital city?', choices:['Vienna Wall','Berlin Wall','Warsaw Wall','Prague Wall'], answer:'Berlin Wall'},
   {q:'What is the chemical symbol for gold?', choices:['Go','Gd','Au','Ag'], answer:'Au'},
-  {q:'Which country hosted the 2016 Summer Olympics?', choices:['China','UK','Brazil','Japan'], answer:'Brazil'},
-  {q:'What is the smallest prime number?', choices:['0','1','2','3'], answer:'2'},
-  {q:'How many strings does a standard guitar have?', choices:['4','5','6','7'], answer:'6'},
-  {q:'What is the tallest mountain in the world?', choices:['K2','Everest','Kilimanjaro','Denali'], answer:'Everest'},
-  {q:'Which planet is known as the Red Planet?', choices:['Venus','Mars','Mercury','Saturn'], answer:'Mars'},
-  {q:'What is the currency of Japan?', choices:['Won','Yuan','Yen','Ringgit'], answer:'Yen'},
-  {q:'How many players are on a standard football (soccer) team on the field?', choices:['9','10','11','12'], answer:'11'},
-  {q:'What is the largest ocean on Earth?', choices:['Atlantic','Indian','Arctic','Pacific'], answer:'Pacific'},
-  {q:'Who wrote "Romeo and Juliet"?', choices:['Dickens','Shakespeare','Austen','Twain'], answer:'Shakespeare'},
+  {q:'What is the chemical symbol for water?', choices:['H2O','O2H','HO2','H2O2'], answer:'H2O'},
   {q:'What gas do plants primarily absorb from the atmosphere?', choices:['Oxygen','Nitrogen','Carbon Dioxide','Hydrogen'], answer:'Carbon Dioxide'},
-  {q:'How many sides does a hexagon have?', choices:['5','6','7','8'], answer:'6'}
+  {q:'What is the hardest natural substance on Earth?', choices:['Gold','Iron','Diamond','Quartz'], answer:'Diamond'},
+  {q:'What is the chemical symbol for sodium?', choices:['So','Sd','Na','Nu'], answer:'Na'},
+  {q:'How many bones are in the adult human body?', choices:['186','206','226','246'], answer:'206'},
+  {q:'What force keeps planets in orbit around the Sun?', choices:['Magnetism','Gravity','Friction','Inertia'], answer:'Gravity'},
+  {q:'What is the boiling point of water at sea level in Celsius?', choices:['90°C','100°C','110°C','120°C'], answer:'100°C'},
+  {q:'What is the freezing point of water in Celsius?', choices:['-10°C','0°C','10°C','32°C'], answer:'0°C'},
+  {q:'Which gas makes up the majority of Earth\'s atmosphere?', choices:['Oxygen','Carbon Dioxide','Nitrogen','Hydrogen'], answer:'Nitrogen'},
+  {q:'What part of the cell is known as the powerhouse?', choices:['Nucleus','Ribosome','Mitochondria','Golgi apparatus'], answer:'Mitochondria'},
+  {q:'What is the study of earthquakes called?', choices:['Meteorology','Seismology','Geology','Volcanology'], answer:'Seismology'},
+  {q:'What type of energy is stored in a stretched rubber band?', choices:['Kinetic','Potential','Thermal','Chemical'], answer:'Potential'},
+  {q:'Which blood type is known as the universal donor?', choices:['A','B','AB','O negative'], answer:'O negative'},
+  {q:'What is the most abundant gas in the universe?', choices:['Oxygen','Helium','Hydrogen','Nitrogen'], answer:'Hydrogen'},
+  {q:'What is the pH of pure water?', choices:['5','6','7','8'], answer:'7'},
+  {q:'What is the process by which plants make food using sunlight called?', choices:['Respiration','Photosynthesis','Transpiration','Fermentation'], answer:'Photosynthesis'},
+  {q:'Which scientist developed the theory of general relativity?', choices:['Isaac Newton','Albert Einstein','Niels Bohr','Galileo Galilei'], answer:'Albert Einstein'},
+  {q:'What is the SI unit of electric current?', choices:['Volt','Watt','Ampere','Ohm'], answer:'Ampere'},
+  {q:'What is the smallest unit of matter that retains an element\'s properties?', choices:['Molecule','Atom','Proton','Cell'], answer:'Atom'},
+  {q:'Which organ in the human body produces insulin?', choices:['Liver','Kidney','Pancreas','Spleen'], answer:'Pancreas'},
+  {q:'What is the main gas responsible for the greenhouse effect on Earth?', choices:['Oxygen','Carbon Dioxide','Helium','Argon'], answer:'Carbon Dioxide'},
+  {q:'How many chambers does the human heart have?', choices:['2','3','4','5'], answer:'4'},
+  {q:'What is the chemical symbol for iron?', choices:['Ir','In','Fe','Fr'], answer:'Fe'},
+  {q:'Which vitamin is produced when skin is exposed to sunlight?', choices:['Vitamin A','Vitamin C','Vitamin D','Vitamin K'], answer:'Vitamin D'},
+  {q:'What is the speed of light in a vacuum, approximately?', choices:['150,000 km/s','300,000 km/s','450,000 km/s','600,000 km/s'], answer:'300,000 km/s'},
+  {q:'What is the largest organ in the human body?', choices:['Liver','Brain','Skin','Lungs'], answer:'Skin'},
+  {q:'Which particle has a negative electric charge?', choices:['Proton','Neutron','Electron','Positron'], answer:'Electron'},
+  {q:'What is table salt\'s chemical name?', choices:['Sodium hydroxide','Sodium chloride','Sodium carbonate','Potassium chloride'], answer:'Sodium chloride'},
+  {q:'What natural phenomenon is measured using the Richter scale?', choices:['Hurricanes','Earthquakes','Tornadoes','Tsunamis'], answer:'Earthquakes'},
+  {q:'What is the largest planet in our solar system?', choices:['Earth','Saturn','Jupiter','Neptune'], answer:'Jupiter'},
+  {q:'Which planet is known as the Red Planet?', choices:['Venus','Mars','Mercury','Saturn'], answer:'Mars'},
+  {q:'What is the closest planet to the Sun?', choices:['Venus','Earth','Mercury','Mars'], answer:'Mercury'},
+  {q:'What galaxy is Earth located in?', choices:['Andromeda','Whirlpool','Milky Way','Triangulum'], answer:'Milky Way'},
+  {q:'Who was the first person to walk on the Moon?', choices:['Buzz Aldrin','Neil Armstrong','Yuri Gagarin','John Glenn'], answer:'Neil Armstrong'},
+  {q:'What do we call a rocky body that orbits the Sun and is too small to be a planet?', choices:['Comet','Meteor','Asteroid','Nebula'], answer:'Asteroid'},
+  {q:'Which planet has the most moons in our solar system (as classically taught)?', choices:['Jupiter','Saturn','Uranus','Neptune'], answer:'Saturn'},
+  {q:'What is the name of our galaxy\'s nearest large galactic neighbor?', choices:['Triangulum','Andromeda','Sombrero','Whirlpool'], answer:'Andromeda'},
+  {q:'What causes a solar eclipse?', choices:['Earth blocks sunlight to the Moon','The Moon blocks sunlight to Earth','Mars aligns with the Sun','Clouds cover the Sun'], answer:'The Moon blocks sunlight to Earth'},
+  {q:'What is the name of the first artificial satellite launched into space?', choices:['Apollo 11','Sputnik 1','Voyager 1','Explorer 1'], answer:'Sputnik 1'},
+  {q:'Which planet is famous for its prominent ring system?', choices:['Jupiter','Saturn','Uranus','Neptune'], answer:'Saturn'},
+  {q:'What do astronomers call a star that suddenly increases in brightness and explodes?', choices:['Pulsar','Supernova','Quasar','Nebula'], answer:'Supernova'},
+  {q:'How many planets are in our solar system?', choices:['7','8','9','10'], answer:'8'},
+  {q:'What is the term for the point in an orbit closest to the Sun?', choices:['Apogee','Perigee','Perihelion','Aphelion'], answer:'Perihelion'},
+  {q:'In what year did World War II end?', choices:['1943','1944','1945','1946'], answer:'1945'},
+  {q:'Who was the first President of the United States?', choices:['Thomas Jefferson','John Adams','George Washington','Benjamin Franklin'], answer:'George Washington'},
+  {q:'Which ancient civilization built the pyramids of Giza?', choices:['Romans','Greeks','Egyptians','Mesopotamians'], answer:'Egyptians'},
+  {q:'In what year did the Titanic sink?', choices:['1905','1912','1918','1923'], answer:'1912'},
+  {q:'Who wrote the Declaration of Independence?', choices:['George Washington','Thomas Jefferson','Benjamin Franklin','James Madison'], answer:'Thomas Jefferson'},
+  {q:'Which wall fell in 1989, symbolizing the end of the Cold War in Europe?', choices:['Great Wall of China','Hadrian\'s Wall','Berlin Wall','Western Wall'], answer:'Berlin Wall'},
+  {q:'Who was the first Emperor of Rome?', choices:['Julius Caesar','Nero','Augustus','Constantine'], answer:'Augustus'},
+  {q:'In which year did Christopher Columbus first reach the Americas?', choices:['1392','1492','1592','1692'], answer:'1492'},
+  {q:'Which country gifted the Statue of Liberty to the United States?', choices:['United Kingdom','Spain','France','Italy'], answer:'France'},
+  {q:'Who was the British Prime Minister during most of World War II?', choices:['Neville Chamberlain','Winston Churchill','Clement Attlee','Anthony Eden'], answer:'Winston Churchill'},
+  {q:'The Renaissance began in which country?', choices:['France','Italy','Germany','Spain'], answer:'Italy'},
+  {q:'Which ancient wonder of the world stood in Alexandria, Egypt?', choices:['Colossus of Rhodes','Hanging Gardens','Lighthouse of Alexandria','Temple of Artemis'], answer:'Lighthouse of Alexandria'},
+  {q:'Who was known as the "Maid of Orléans"?', choices:['Marie Antoinette','Joan of Arc','Catherine the Great','Eleanor of Aquitaine'], answer:'Joan of Arc'},
+  {q:'In what year did the Berlin Wall fall?', choices:['1987','1989','1991','1993'], answer:'1989'},
+  {q:'Which empire was ruled by Genghis Khan?', choices:['Ottoman Empire','Mongol Empire','Persian Empire','Roman Empire'], answer:'Mongol Empire'},
+  {q:'The French Revolution began in which year?', choices:['1769','1789','1799','1809'], answer:'1789'},
+  {q:'Who was the ancient Egyptian queen known for her relationships with Julius Caesar and Mark Antony?', choices:['Nefertiti','Hatshepsut','Cleopatra','Nefertari'], answer:'Cleopatra'},
+  {q:'Which country was the first to grant women the right to vote nationally?', choices:['United States','United Kingdom','New Zealand','France'], answer:'New Zealand'},
+  {q:'The Great Wall was built primarily to protect which country?', choices:['Japan','China','Mongolia','Korea'], answer:'China'},
+  {q:'Who was the leader of the Soviet Union during the Cuban Missile Crisis?', choices:['Joseph Stalin','Nikita Khrushchev','Leonid Brezhnev','Mikhail Gorbachev'], answer:'Nikita Khrushchev'},
+  {q:'Who directed the movie "Jaws"?', choices:['George Lucas','Steven Spielberg','Martin Scorsese','James Cameron'], answer:'Steven Spielberg'},
+  {q:'Which movie features the song "My Heart Will Go On"?', choices:['The Titanic','Frozen','La La Land','Ghost'], answer:'The Titanic'},
+  {q:'In "The Wizard of Oz," what color are Dorothy\'s slippers?', choices:['Silver','Red','Blue','Gold'], answer:'Red'},
+  {q:'Which studio produces the "Toy Story" films?', choices:['DreamWorks','Pixar','Illumination','Warner Bros.'], answer:'Pixar'},
+  {q:'Who played Jack Sparrow in "Pirates of the Caribbean"?', choices:['Orlando Bloom','Johnny Depp','Geoffrey Rush','Javier Bardem'], answer:'Johnny Depp'},
+  {q:'What is the name of the fictional African country in "Black Panther"?', choices:['Zamunda','Wakanda','Genosha','Sokovia'], answer:'Wakanda'},
+  {q:'Which movie won the Academy Award for Best Picture in 1994?', choices:['Pulp Fiction','Forrest Gump','The Shawshank Redemption','Speed'], answer:'Forrest Gump'},
+  {q:'Who directed "Inception" and "Interstellar"?', choices:['Denis Villeneuve','Christopher Nolan','Ridley Scott','David Fincher'], answer:'Christopher Nolan'},
+  {q:'In "Star Wars," who is Luke Skywalker\'s father?', choices:['Obi-Wan Kenobi','Darth Vader','Yoda','Han Solo'], answer:'Darth Vader'},
+  {q:'Which sitcom is set in a coffee shop called Central Perk?', choices:['Seinfeld','Friends','How I Met Your Mother','Cheers'], answer:'Friends'},
+  {q:'Who played the title role in the 2004 film "Kill Bill"?', choices:['Angelina Jolie','Uma Thurman','Charlize Theron','Cameron Diaz'], answer:'Uma Thurman'},
+  {q:'What is the name of the coffee shop gang\'s hangout in "How I Met Your Mother"?', choices:['Central Perk','MacLaren\'s Pub','Monk\'s Café','The Max'], answer:'MacLaren\'s Pub'},
+  {q:'Which actor played the Joker in "The Dark Knight" (2008)?', choices:['Jared Leto','Joaquin Phoenix','Heath Ledger','Jack Nicholson'], answer:'Heath Ledger'},
+  {q:'What is the highest-grossing film of all time (unadjusted for inflation)?', choices:['Titanic','Avengers: Endgame','Avatar','Star Wars: The Force Awakens'], answer:'Avatar'},
+  {q:'Which animated movie features a clownfish searching for his son?', choices:['Shark Tale','Finding Nemo','The Little Mermaid','Moana'], answer:'Finding Nemo'},
+  {q:'Who created the "Harry Potter" book series that inspired the films?', choices:['J.R.R. Tolkien','J.K. Rowling','C.S. Lewis','Roald Dahl'], answer:'J.K. Rowling'},
+  {q:'In "Breaking Bad," what is the main character Walter White\'s alias?', choices:['Scarface','Heisenberg','El Jefe','The Cook'], answer:'Heisenberg'},
+  {q:'Which streaming show is set in the fictional town of Hawkins, Indiana?', choices:['Stranger Things','Ozark','The Umbrella Academy','Riverdale'], answer:'Stranger Things'},
+  {q:'Who voiced the character Woody in the "Toy Story" films?', choices:['Tim Allen','Tom Hanks','Billy Crystal','John Ratzenberger'], answer:'Tom Hanks'},
+  {q:'Which film series follows a British spy with the code number 007?', choices:['Mission Impossible','James Bond','Jason Bourne','Kingsman'], answer:'James Bond'},
+  {q:'Which band released the album "Abbey Road"?', choices:['The Rolling Stones','The Beatles','Led Zeppelin','Pink Floyd'], answer:'The Beatles'},
+  {q:'Who is known as the "King of Pop"?', choices:['Prince','Elvis Presley','Michael Jackson','James Brown'], answer:'Michael Jackson'},
+  {q:'How many strings does a standard guitar have?', choices:['4','5','6','7'], answer:'6'},
+  {q:'Which instrument has keys, pedals, and strings, played by striking hammers?', choices:['Violin','Piano','Harp','Organ'], answer:'Piano'},
+  {q:'Who composed "The Four Seasons"?', choices:['Bach','Mozart','Vivaldi','Beethoven'], answer:'Vivaldi'},
+  {q:'Which pop star released the album "1989"?', choices:['Katy Perry','Taylor Swift','Ariana Grande','Adele'], answer:'Taylor Swift'},
+  {q:'What was the first name of the famous deaf composer Beethoven?', choices:['Ludwig','Franz','Johann','Wolfgang'], answer:'Ludwig'},
+  {q:'Which music genre originated in Jamaica in the late 1960s?', choices:['Reggae','Blues','Jazz','Salsa'], answer:'Reggae'},
+  {q:'Which iconic rock band featured Freddie Mercury as lead singer?', choices:['The Who','Queen','Aerosmith','Deep Purple'], answer:'Queen'},
+  {q:'What instrument is Yo-Yo Ma famous for playing?', choices:['Violin','Cello','Piano','Flute'], answer:'Cello'},
+  {q:'Which artist is known as "The Queen of Soul"?', choices:['Whitney Houston','Aretha Franklin','Diana Ross','Tina Turner'], answer:'Aretha Franklin'},
+  {q:'How many members were originally in the band "The Beatles"?', choices:['3','4','5','6'], answer:'4'},
+  {q:'Which country is credited as the birthplace of jazz music?', choices:['France','United States','Cuba','Brazil'], answer:'United States'},
+  {q:'How many players are on a standard football (soccer) team on the field?', choices:['9','10','11','12'], answer:'11'},
+  {q:'In which sport would you perform a "slam dunk"?', choices:['Volleyball','Basketball','Tennis','Baseball'], answer:'Basketball'},
+  {q:'How many players are on a basketball team on the court at once?', choices:['4','5','6','7'], answer:'5'},
+  {q:'Which country has won the most FIFA World Cups?', choices:['Germany','Argentina','Italy','Brazil'], answer:'Brazil'},
+  {q:'In tennis, what is a score of zero called?', choices:['Nil','Love','Zero','Null'], answer:'Love'},
+  {q:'How often are the Summer Olympic Games held?', choices:['Every 2 years','Every 3 years','Every 4 years','Every 5 years'], answer:'Every 4 years'},
+  {q:'What sport is played at Wimbledon?', choices:['Golf','Cricket','Tennis','Rugby'], answer:'Tennis'},
+  {q:'How many holes are played in a standard round of golf?', choices:['9','12','18','24'], answer:'18'},
+  {q:'In boxing, how many minutes is a standard professional round?', choices:['2 minutes','3 minutes','4 minutes','5 minutes'], answer:'3 minutes'},
+  {q:'Which country is credited with inventing the sport of cricket?', choices:['Australia','India','England','South Africa'], answer:'England'},
+  {q:'How many rings are on the Olympic flag?', choices:['4','5','6','7'], answer:'5'},
+  {q:'What is the maximum score possible with a single break in snooker?', choices:['147','155','100','180'], answer:'147'},
+  {q:'In American football, how many points is a touchdown worth?', choices:['3','5','6','7'], answer:'6'},
+  {q:'Which sport uses terms like "birdie", "eagle", and "bogey"?', choices:['Tennis','Golf','Cricket','Baseball'], answer:'Golf'},
+  {q:'How many players are on the ice per team in ice hockey (excluding goalie)?', choices:['4','5','6','7'], answer:'5'},
+  {q:'Who wrote "Romeo and Juliet"?', choices:['Dickens','Shakespeare','Austen','Twain'], answer:'Shakespeare'},
+  {q:'Who wrote "Pride and Prejudice"?', choices:['Charlotte Brontë','Jane Austen','Emily Dickinson','Virginia Woolf'], answer:'Jane Austen'},
+  {q:'Which novel begins with the line "Call me Ishmael"?', choices:['Moby-Dick','Treasure Island','The Old Man and the Sea','Robinson Crusoe'], answer:'Moby-Dick'},
+  {q:'Who wrote the "Harry Potter" series?', choices:['J.R.R. Tolkien','J.K. Rowling','Roald Dahl','C.S. Lewis'], answer:'J.K. Rowling'},
+  {q:'Who is the author of "1984" and "Animal Farm"?', choices:['Aldous Huxley','George Orwell','Ray Bradbury','H.G. Wells'], answer:'George Orwell'},
+  {q:'Which Shakespeare play features the characters Rosencrantz and Guildenstern?', choices:['Macbeth','Hamlet','Othello','King Lear'], answer:'Hamlet'},
+  {q:'Who wrote "The Great Gatsby"?', choices:['Ernest Hemingway','F. Scott Fitzgerald','John Steinbeck','William Faulkner'], answer:'F. Scott Fitzgerald'},
+  {q:'Which fictional detective lives at 221B Baker Street?', choices:['Hercule Poirot','Sherlock Holmes','Sam Spade','Philip Marlowe'], answer:'Sherlock Holmes'},
+  {q:'Who wrote "The Chronicles of Narnia"?', choices:['J.R.R. Tolkien','C.S. Lewis','Philip Pullman','Lewis Carroll'], answer:'C.S. Lewis'},
+  {q:'Which epic poem tells the story of the Trojan War hero Achilles?', choices:['The Odyssey','The Iliad','The Aeneid','Beowulf'], answer:'The Iliad'},
+  {q:'Who wrote "Don Quixote"?', choices:['Gabriel García Márquez','Miguel de Cervantes','Pablo Neruda','Jorge Luis Borges'], answer:'Miguel de Cervantes'},
+  {q:'In "The Lord of the Rings," what is the name of Frodo\'s home region?', choices:['Rohan','Gondor','The Shire','Mordor'], answer:'The Shire'},
+  {q:'Who painted the Mona Lisa?', choices:['Van Gogh','Da Vinci','Picasso','Monet'], answer:'Da Vinci'},
+  {q:'Who painted "The Starry Night"?', choices:['Claude Monet','Vincent van Gogh','Salvador Dalí','Pablo Picasso'], answer:'Vincent van Gogh'},
+  {q:'Which artist is famous for the melting clocks in "The Persistence of Memory"?', choices:['Pablo Picasso','Salvador Dalí','René Magritte','Joan Miró'], answer:'Salvador Dalí'},
+  {q:'Michelangelo painted the ceiling of which famous chapel?', choices:['Notre-Dame','Sistine Chapel','St. Peter\'s Basilica','Westminster Abbey'], answer:'Sistine Chapel'},
+  {q:'Which art movement is Pablo Picasso most associated with?', choices:['Impressionism','Cubism','Surrealism','Baroque'], answer:'Cubism'},
+  {q:'The "Girl with a Pearl Earring" was painted by which artist?', choices:['Rembrandt','Johannes Vermeer','Jan van Eyck','Frans Hals'], answer:'Johannes Vermeer'},
+  {q:'Which sculptor created the statue of David?', choices:['Donatello','Michelangelo','Bernini','Rodin'], answer:'Michelangelo'},
+  {q:'Who is credited as a co-founder of Apple Inc.?', choices:['Bill Gates','Steve Jobs','Jeff Bezos','Elon Musk'], answer:'Steve Jobs'},
+  {q:'What does "WWW" stand for?', choices:['World Wide Web','World Wide Wire','Wide World Web','World Web Wide'], answer:'World Wide Web'},
+  {q:'What does "CPU" stand for?', choices:['Central Process Unit','Central Processing Unit','Computer Personal Unit','Central Processor Utility'], answer:'Central Processing Unit'},
+  {q:'Which company created the Android operating system?', choices:['Apple','Microsoft','Google','Samsung'], answer:'Google'},
+  {q:'What does "HTML" stand for?', choices:['Hyperlinks and Text Markup Language','HyperText Markup Language','High Text Markup Language','Hyper Transfer Markup Language'], answer:'HyperText Markup Language'},
+  {q:'Who is often credited as the father of the World Wide Web?', choices:['Bill Gates','Tim Berners-Lee','Steve Wozniak','Alan Turing'], answer:'Tim Berners-Lee'},
+  {q:'What does "USB" stand for?', choices:['Universal Serial Bus','United Serial Bus','Universal System Bus','Unified Serial Bus'], answer:'Universal Serial Bus'},
+  {q:'Which company developed the PlayStation console?', choices:['Microsoft','Nintendo','Sony','Sega'], answer:'Sony'},
+  {q:'What is the name of Elon Musk\'s electric car company?', choices:['SpaceX','Tesla','Neuralink','The Boring Company'], answer:'Tesla'},
+  {q:'What does "AI" commonly stand for in computing?', choices:['Automated Interface','Artificial Intelligence','Analog Input','Applied Informatics'], answer:'Artificial Intelligence'},
+  {q:'How many continents are there on Earth?', choices:['5','6','7','8'], answer:'7'},
+  {q:'What is the smallest prime number?', choices:['0','1','2','3'], answer:'2'},
+  {q:'How many sides does a hexagon have?', choices:['5','6','7','8'], answer:'6'},
+  {q:'What is the value of Pi rounded to two decimal places?', choices:['3.12','3.14','3.16','3.18'], answer:'3.14'},
+  {q:'How many degrees are in a right angle?', choices:['45','90','180','360'], answer:'90'},
+  {q:'What do you call a triangle with all three sides equal?', choices:['Scalene','Isosceles','Equilateral','Right-angled'], answer:'Equilateral'},
+  {q:'How many sides does an octagon have?', choices:['6','7','8','9'], answer:'8'},
+  {q:'What is the sum of the interior angles of a triangle?', choices:['90 degrees','180 degrees','270 degrees','360 degrees'], answer:'180 degrees'},
+  {q:'What is the square root of 144?', choices:['10','11','12','13'], answer:'12'},
+  {q:'In Roman numerals, what number does "X" represent?', choices:['5','10','50','100'], answer:'10'},
+  {q:'What is the largest mammal in the world?', choices:['African Elephant','Blue Whale','Giraffe','Great White Shark'], answer:'Blue Whale'},
+  {q:'What is the fastest land animal?', choices:['Lion','Cheetah','Horse','Greyhound'], answer:'Cheetah'},
+  {q:'How many legs does a spider have?', choices:['6','8','10','12'], answer:'8'},
+  {q:'What is a baby kangaroo called?', choices:['Cub','Joey','Kit','Pup'], answer:'Joey'},
+  {q:'Which bird is known for its inability to fly and lives in Antarctica?', choices:['Ostrich','Penguin','Emu','Kiwi'], answer:'Penguin'},
+  {q:'What is the tallest animal in the world?', choices:['Elephant','Giraffe','Camel','Moose'], answer:'Giraffe'},
+  {q:'Which animal is known as the "King of the Jungle"?', choices:['Tiger','Lion','Elephant','Gorilla'], answer:'Lion'},
+  {q:'How many hearts does an octopus have?', choices:['1','2','3','4'], answer:'3'},
+  {q:'What do you call a group of lions?', choices:['Pack','Pride','Herd','Colony'], answer:'Pride'},
+  {q:'Which mammal is known to lay eggs?', choices:['Kangaroo','Platypus','Koala','Armadillo'], answer:'Platypus'},
+  {q:'What is the only continent where giraffes live in the wild?', choices:['Asia','Africa','South America','Australia'], answer:'Africa'},
+  {q:'Which sea creature has three hearts and blue blood?', choices:['Squid','Octopus','Jellyfish','Starfish'], answer:'Octopus'},
+  {q:'What is the national bird of the United States?', choices:['Golden Eagle','Bald Eagle','Hawk','Falcon'], answer:'Bald Eagle'},
+  {q:'How many humps does a Bactrian camel have?', choices:['1','2','3','4'], answer:'2'},
+  {q:'What is the largest species of big cat?', choices:['Lion','Tiger','Jaguar','Leopard'], answer:'Tiger'},
+  {q:'What is the main ingredient in guacamole?', choices:['Tomato','Avocado','Onion','Pepper'], answer:'Avocado'},
+  {q:'Which country is credited with inventing pizza in its modern form?', choices:['France','Italy','Greece','Spain'], answer:'Italy'},
+  {q:'What type of pastry is used to make a traditional croissant?', choices:['Shortcrust','Puff pastry','Filo pastry','Choux pastry'], answer:'Puff pastry'},
+  {q:'Which fruit is used to make wine?', choices:['Apples','Grapes','Cherries','Plums'], answer:'Grapes'},
+  {q:'What is sushi traditionally wrapped in?', choices:['Lettuce','Rice paper','Seaweed (nori)','Banana leaf'], answer:'Seaweed (nori)'},
+  {q:'What spice is derived from the crocus flower and is the most expensive by weight?', choices:['Cinnamon','Saffron','Cardamom','Turmeric'], answer:'Saffron'},
+  {q:'Which country is the origin of the croissant\'s ancestor pastry, the kipferl?', choices:['France','Austria','Germany','Switzerland'], answer:'Austria'},
+  {q:'What is the main grain used to make traditional sake?', choices:['Wheat','Barley','Rice','Corn'], answer:'Rice'},
+  {q:'Which country produces the most coffee in the world?', choices:['Colombia','Vietnam','Ethiopia','Brazil'], answer:'Brazil'},
+  {q:'What gives tonic water its bitter taste?', choices:['Caffeine','Quinine','Tannins','Citric acid'], answer:'Quinine'},
+  {q:'In Greek mythology, who is the king of the gods?', choices:['Poseidon','Zeus','Hades','Apollo'], answer:'Zeus'},
+  {q:'Who is the Roman god of war?', choices:['Jupiter','Neptune','Mars','Mercury'], answer:'Mars'},
+  {q:'In Norse mythology, who is the god of thunder?', choices:['Odin','Loki','Thor','Baldur'], answer:'Thor'},
+  {q:'Which creature in Greek mythology has the body of a lion and the head of a human?', choices:['Minotaur','Sphinx','Centaur','Chimera'], answer:'Sphinx'},
+  {q:'Who is the Greek goddess of love and beauty?', choices:['Athena','Hera','Aphrodite','Artemis'], answer:'Aphrodite'},
+  {q:'In Egyptian mythology, who is the god of the afterlife?', choices:['Ra','Anubis','Osiris','Horus'], answer:'Osiris'},
+  {q:'What is the name of Thor\'s hammer in Norse mythology?', choices:['Gungnir','Mjölnir','Excalibur','Aegis'], answer:'Mjölnir'},
+  {q:'Which Greek hero is known for his twelve labors?', choices:['Achilles','Perseus','Hercules','Theseus'], answer:'Hercules'},
+  {q:'Which HBO series is based on George R.R. Martin\'s novels?', choices:['The Wire','Game of Thrones','Westworld','True Blood'], answer:'Game of Thrones'},
+  {q:'What is the name of the fictional town in "The Simpsons"?', choices:['Quahog','Springfield','South Park','Arlen'], answer:'Springfield'},
+  {q:'Which show features a chemistry teacher who becomes a drug manufacturer?', choices:['Ozark','Better Call Saul','Breaking Bad','Narcos'], answer:'Breaking Bad'},
+  {q:'In "SpongeBob SquarePants," what is the name of SpongeBob\'s pet snail?', choices:['Patrick','Gary','Squidward','Sandy'], answer:'Gary'},
+  {q:'Which competition show features contestants baking in a tent in the UK?', choices:['MasterChef','The Great British Bake Off','Chopped','Top Chef'], answer:'The Great British Bake Off'},
+  {q:'What is the currency of Japan?', choices:['Won','Yuan','Yen','Ringgit'], answer:'Yen'},
+  {q:'What is the currency used in most of the European Union?', choices:['Franc','Euro','Pound','Mark'], answer:'Euro'},
+  {q:'What is the official language of Brazil?', choices:['Spanish','Portuguese','French','Italian'], answer:'Portuguese'},
+  {q:'How many colors are in a rainbow?', choices:['5','6','7','8'], answer:'7'},
+  {q:'What is the tallest mountain in the world (above sea level)?', choices:['K2','Everest','Kilimanjaro','Denali'], answer:'Everest'},
+  {q:'What is the largest ocean on Earth?', choices:['Atlantic','Indian','Arctic','Pacific'], answer:'Pacific'},
+  {q:'What do you call a word that reads the same forwards and backwards?', choices:['Anagram','Palindrome','Synonym','Acronym'], answer:'Palindrome'},
+  {q:'Which side of the road do cars drive on in the United Kingdom?', choices:['Left','Right','Either','Center'], answer:'Left'},
+  {q:'What is the most spoken native language in the world?', choices:['English','Hindi','Spanish','Mandarin Chinese'], answer:'Mandarin Chinese'},
+  {q:'How many time zones does mainland China officially use?', choices:['1','4','6','8'], answer:'1'},
+  {q:'What is the tallest man-made structure in the world?', choices:['Eiffel Tower','Burj Khalifa','Shanghai Tower','One World Trade Center'], answer:'Burj Khalifa'},
+  {q:'What is the most populous city in the world (city proper)?', choices:['Tokyo','Delhi','Shanghai','Mumbai'], answer:'Tokyo'},
+  {q:'Which metal is liquid at room temperature?', choices:['Lead','Mercury','Tin','Zinc'], answer:'Mercury'},
+  {q:'What is the national flower of Japan?', choices:['Rose','Cherry Blossom','Lotus','Tulip'], answer:'Cherry Blossom'},
+  {q:'Which sign of the zodiac is represented by a scale?', choices:['Leo','Libra','Aries','Gemini'], answer:'Libra'},
+  {q:'What is the term for a word that has the same meaning as another word?', choices:['Antonym','Synonym','Homonym','Acronym'], answer:'Synonym'},
+  {q:'Which continent has the most countries?', choices:['Asia','Europe','Africa','South America'], answer:'Africa'},
+  {q:'What is the name of the famous clock tower in London often mistakenly called "Big Ben"?', choices:['Elizabeth Tower','Westminster Tower','Victoria Tower','London Tower'], answer:'Elizabeth Tower'},
+  {q:'What does "SOS" traditionally signal?', choices:['Stop Other Ships','Save Our Souls','Send Out Signal','Save Our Ship (as an official meaning)'], answer:'Save Our Souls'},
+  {q:'What is the most common blood type in the world?', choices:['A positive','O positive','B positive','AB positive'], answer:'O positive'}
 ];
 
 // ── Content bank: Line 'Em Up (ranking) ──
@@ -4946,7 +5190,13 @@ const RANK_SETS = [
   {prompt:'Order by population — smallest to largest:', items:['Vatican City','Monaco','Netherlands','Brazil','China']},
   {prompt:'Order these events — oldest to newest:', items:['Moon Landing','Fall of the Berlin Wall','World Wide Web goes public','First iPhone released','First Covid-19 vaccine approved']},
   {prompt:'Order by speed — slowest to fastest:', items:['Snail','Human','Cheetah','Sound','Light']},
-  {prompt:'Order by boiling/freezing extremity — coldest to hottest:', items:['Absolute Zero','Ice melting','Room temperature','Water boiling','Sun\'s surface']}
+  {prompt:'Order by boiling/freezing extremity — coldest to hottest:', items:['Absolute Zero','Ice melting','Room temperature','Water boiling','Sun\'s surface']},
+  {prompt:'Order these units of time — shortest to longest:', items:['Second','Hour','Day','Month','Year']},
+  {prompt:'Order these sports by players per side — fewest to most on the field/court:', items:['Basketball (5)','Volleyball (6)','Water Polo (7)','Baseball (9)','Football/Soccer (11)']},
+  {prompt:'Order these planets — largest to smallest:', items:['Jupiter','Saturn','Neptune','Earth','Mercury']},
+  {prompt:'Order these distances — shortest to longest:', items:['100m','1 km','1 mile','Marathon (42km)','100 miles']},
+  {prompt:'Order these ages — youngest to oldest at a typical milestone:', items:['Toddler','Child','Teenager','Adult','Senior']},
+  {prompt:'Order these temperatures — coldest to hottest:', items:['-20°C','0°C','20°C','37°C','100°C']}
 ];
 
 // ── Seed generator: deterministic puzzle from a numeric seed ──
@@ -4960,7 +5210,25 @@ function fgGenSeed(round){
   return Date.now()%1000000 + round*7919;
 }
 
-function fgPuzzleFromSeed(type, seed){
+// ── No-repeat picker: guarantees each room plays through a shuffled order of a
+// content bank before ever repeating an item, instead of picking with replacement.
+// Both host and player derive the same order from the room code + bank name, so no
+// extra data needs to travel over the wire.
+function fgHashStr(str){
+  let h=2166136261;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}
+  return h>>>0;
+}
+function fgNonRepeatIndex(poolLength, bankName, roundNum){
+  const base=fgHashStr((roomCode||'SOLO')+'|'+bankName);
+  const rng=fgSeedRandom(base);
+  const idx=[...Array(poolLength).keys()];
+  for(let i=idx.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+  const r=Math.max(1,roundNum||1);
+  return idx[(r-1)%poolLength];
+}
+
+function fgPuzzleFromSeed(type, seed, roundNum){
   const rng=fgSeedRandom(seed);
   if(type==='odd'){
     const sets=ODD_SETS;
@@ -5005,7 +5273,8 @@ function fgPuzzleFromSeed(type, seed){
     return{ink,word,choices:sh,answer:ink.name};
   }
   if(type==='emoji'){
-    const item=EMOJI_CLUES[Math.floor(rng()*EMOJI_CLUES.length)];
+    const eIdx=fgNonRepeatIndex(EMOJI_CLUES.length,'emoji',roundNum);
+    const item=EMOJI_CLUES[eIdx];
     const wrongPool=EMOJI_CLUES.filter(x=>x.answer!==item.answer).map(x=>x.answer);
     const distractors=[];
     let attempts=0;
@@ -5018,12 +5287,14 @@ function fgPuzzleFromSeed(type, seed){
     return{emojis:item.emojis,choices,answer:item.answer};
   }
   if(type==='quiz'){
-    const q=QUIZ_QUESTIONS[Math.floor(rng()*QUIZ_QUESTIONS.length)];
+    const qIdx=fgNonRepeatIndex(QUIZ_QUESTIONS.length,'quiz',roundNum);
+    const q=QUIZ_QUESTIONS[qIdx];
     const choices=[...q.choices].sort(()=>rng()-.5);
     return{question:q.q,choices,answer:q.answer};
   }
   if(type==='rank'){
-    const set=RANK_SETS[Math.floor(rng()*RANK_SETS.length)];
+    const rIdx=fgNonRepeatIndex(RANK_SETS.length,'rank',roundNum);
+    const set=RANK_SETS[rIdx];
     const correct=set.items;
     const pool=[...correct];
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
@@ -5066,7 +5337,7 @@ async function fghLaunchRound(){
   if(fghRound>=fghTotalRounds){alert('All rounds played! End the game.');return}
   fghRound++;
   const seed=fgGenSeed(fghRound);
-  const puzzle=fgPuzzleFromSeed(fghGameType,seed);
+  const puzzle=fgPuzzleFromSeed(fghGameType,seed,fghRound);
   const roundTime=fghGameType==='rank'?FG_RANK_TIME:FG_MP_TIME;
   // Show puzzle preview to host
   document.getElementById('fgh-puzzle-preview').style.display='block';
@@ -5194,7 +5465,7 @@ function startFGPlayerListen(){
     if(room.roundActive && room.round!==fgpLastRound && room.roundSeed){
       fgpLastRound=room.round; fgpAnswered=false;
       const timeLeft=Math.max(0,Math.round((room.roundDeadline-Date.now())/1000));
-      fgpShowPuzzle(fgpGameType, room.roundSeed, timeLeft);
+      fgpShowPuzzle(fgpGameType, room.roundSeed, timeLeft, room.round);
       safeStyle('fgp-round-result','display','none');
     }
     // Round ended — show answer
@@ -5220,8 +5491,8 @@ function startFGPlayerListen(){
   });
 }
 
-function fgpShowPuzzle(type, seed, timeLeft){
-  const puzzle=fgPuzzleFromSeed(type, seed);
+function fgpShowPuzzle(type, seed, timeLeft, roundNum){
+  const puzzle=fgPuzzleFromSeed(type, seed, roundNum);
   document.getElementById('fgp-waiting').style.display='none';
   document.getElementById('fgp-puzzle-area').style.display='block';
   const grid=document.getElementById('fgp-grid');
@@ -6000,6 +6271,51 @@ async function rejoinAsHost(room){
       }
     }
     go('s-ttl-host'); setHostUI(); startTTLHostListen(); startChatListen(); showChatFab();
+  } else if(type==='fg'){
+    fghGameType=room.gameType||'odd';
+    fghTotalRounds=room.totalRounds||8;
+    fghRound=room.round||0;
+    document.getElementById('fgh-code').textContent=room.code;
+    document.getElementById('fg-share-link').value=buildJoinURL(room.code);
+    document.getElementById('fgh-game-title').textContent=FG_GAME_LABELS[fghGameType]||'Find Games';
+    document.getElementById('fgh-total-rounds').textContent=fghTotalRounds;
+    document.getElementById('fgh-round').textContent=fghRound;
+    const launchBtn=document.getElementById('fgh-launch-btn');
+    clearTimeout(fghRoundTimer);
+    if(room.status==='finished'){
+      launchBtn.disabled=true; launchBtn.textContent='All rounds done!';
+      document.getElementById('fgh-status-badge').textContent='Game finished';
+      document.getElementById('fgh-status-badge').style.color='var(--accent2)';
+    } else if(room.roundActive && room.roundSeed){
+      const puzzle=fgPuzzleFromSeed(fghGameType, room.roundSeed, fghRound);
+      document.getElementById('fgh-puzzle-preview').style.display='block';
+      document.getElementById('fgh-puzzle-text').textContent='Answer: '+puzzle.answer;
+      document.getElementById('fgh-answer-box').style.display='none';
+      document.getElementById('fgh-status-badge').textContent='Round '+fghRound+' — LIVE';
+      document.getElementById('fgh-status-badge').style.color='var(--green)';
+      launchBtn.disabled=true;
+      const remaining=Math.max(0.5,(room.roundDeadline-Date.now())/1000);
+      fghStartTimerBar('fgh-timer-bar', remaining);
+      fghRoundTimer=setTimeout(async()=>{ await fghEndRound(puzzle.answer); }, remaining*1000+500);
+    } else if(room.round>0){
+      document.getElementById('fgh-status-badge').textContent='Round '+fghRound+' — Results';
+      document.getElementById('fgh-status-badge').style.color='var(--accent2)';
+      if(room.roundAnswer){
+        document.getElementById('fgh-answer-box').style.display='block';
+        document.getElementById('fgh-answer-text').textContent=room.roundAnswer;
+      }
+      if(fghRound<fghTotalRounds){
+        launchBtn.disabled=false;
+        launchBtn.textContent='🚀 Launch Round '+(fghRound+1);
+      } else {
+        launchBtn.disabled=true;
+        launchBtn.textContent='All rounds done!';
+      }
+    }
+    if(room.winners&&room.winners.length&&room.status==='finished'){
+      safeHTML('fgh-winners',room.winners.map((w,i)=>`<div class="wchip">${i===0?'🥇':i===1?'🥈':'🥉'} ${escH(w)}</div>`).join(''));
+    }
+    go('s-fg-host'); setHostUI(); startFGHostListen(); startChatListen(); showChatFab();
   } else {
     alert('Rejoining as host for this game type is not yet supported. Please recreate the room.');
   }
@@ -6054,7 +6370,7 @@ async function rejoinAsPlayer(room, name){
     hlLastRound=room.round||0;
     document.getElementById('hlp-rlabel').textContent=room.label||'Higher or Lower';
     document.getElementById('hlp-name').textContent=name;
-    document.getElementById('hlp-code').textContent=code;
+    document.getElementById('hlp-code').textContent=room.code;
     document.getElementById('hlp-total-rounds').textContent=hlTotalRounds;
     go('s-hl-player'); document.getElementById('sbar').style.display='flex';
     startHLPlayerListen(); startChatListen(); showChatFab();
@@ -6065,7 +6381,7 @@ async function rejoinAsPlayer(room, name){
     lastNDrawn=room.drawn||[];
     document.getElementById('lastnp-rlabel').textContent=room.label||'Last Number';
     document.getElementById('lastnp-name').textContent=name;
-    document.getElementById('lastnp-code').textContent=code;
+    document.getElementById('lastnp-code').textContent=room.code;
     buildLastNPlayerGrid(room);
     // Re-mark picks on grid
     lastNMyPicks.forEach(n=>{
@@ -6085,7 +6401,7 @@ async function rejoinAsPlayer(room, name){
     oeLastRound=room.round||0;
     document.getElementById('oep-rlabel').textContent=room.label||'Odd or Even';
     document.getElementById('oep-name').textContent=name;
-    document.getElementById('oep-code').textContent=code;
+    document.getElementById('oep-code').textContent=room.code;
     document.getElementById('oep-total-rounds').textContent=oeTotalRounds;
     go('s-oe-player'); document.getElementById('sbar').style.display='flex';
     startOEPlayerListen(); startChatListen(); showChatFab();
@@ -6096,7 +6412,7 @@ async function rejoinAsPlayer(room, name){
     duckMyPicks=pd&&pd.picks||[];
     document.getElementById('duckp-rlabel').textContent=room.label||'Lucky Duck';
     document.getElementById('duckp-name').textContent=name;
-    document.getElementById('duckp-code').textContent=code;
+    document.getElementById('duckp-code').textContent=room.code;
     document.getElementById('duckp-pick-label').textContent=duckMyPicks.length>=duckPicksAllowed?'✓ Ducks picked! Waiting for host to reveal…':'Pick '+duckPicksAllowed+' duck'+(duckPicksAllowed>1?'s':'')+'! Tap to select.';
     buildDuckPlayerGrid(room);
     go('s-duck-player'); document.getElementById('sbar').style.display='flex';
@@ -6107,7 +6423,7 @@ async function rejoinAsPlayer(room, name){
     const myTheory=room.theories&&room.theories[name]||{};
     document.getElementById('mmp-rlabel').textContent=room.label||'Murder Mystery';
     document.getElementById('mmp-name').textContent=name;
-    document.getElementById('mmp-code').textContent=code;
+    document.getElementById('mmp-code').textContent=room.code;
     document.getElementById('mmp-victim').textContent=room.victim||'—';
     document.getElementById('mmp-weapon-disp').textContent=room.weapon||'—';
     document.getElementById('mmp-location-disp').textContent=room.location||'—';
@@ -6127,7 +6443,7 @@ async function rejoinAsPlayer(room, name){
     priceMyGuess=pd&&pd.guess!=null?pd.guess:null;
     document.getElementById('pricep-rlabel').textContent=room.label||'Price is Right';
     document.getElementById('pricep-name').textContent=name;
-    document.getElementById('pricep-code').textContent=code;
+    document.getElementById('pricep-code').textContent=room.code;
     document.getElementById('pricep-item').textContent=priceItem||'Mystery Item';
     if(priceSecret!=null){
       document.getElementById('pricep-waiting').style.display='none';
@@ -6147,7 +6463,7 @@ async function rejoinAsPlayer(room, name){
     const myVote=room.votes&&room.votes[name]!=null?room.votes[name]:null;
     document.getElementById('ttlp-rlabel').textContent=room.label||'Two Truths and a Lie';
     document.getElementById('ttlp-name').textContent=name;
-    document.getElementById('ttlp-code').textContent=code;
+    document.getElementById('ttlp-code').textContent=room.code;
     if(ttlStatements.length){
       document.getElementById('ttlp-waiting').style.display='none';
       document.getElementById('ttlp-vote-form').style.display='block';
@@ -6155,6 +6471,41 @@ async function rejoinAsPlayer(room, name){
     }
     go('s-ttl-player'); document.getElementById('sbar').style.display='flex';
     startTTLPlayerListen(); startChatListen(); showChatFab();
+  } else if(type==='fg'){
+    gameType='fg';
+    fgpGameType=room.gameType||'odd';
+    fgpTotalRounds=room.totalRounds||8;
+    fgpMyScore=(room.scores&&room.scores[name])||0;
+    document.getElementById('fgp-rlabel').textContent=room.label||'Find Games';
+    document.getElementById('fgp-name').textContent=name;
+    document.getElementById('fgp-code').textContent=room.code;
+    document.getElementById('fgp-total-rounds').textContent=fgpTotalRounds;
+    document.getElementById('fgp-round').textContent=room.round||0;
+    document.getElementById('fgp-my-score').textContent=fgpMyScore;
+    const myAns=room.roundAnswers&&room.roundAnswers[name];
+    if(room.roundActive && room.roundSeed && !myAns){
+      // Round is live and I haven't answered yet — show the puzzle
+      fgpLastRound=room.round; fgpAnswered=false;
+      const timeLeft=Math.max(0,Math.round((room.roundDeadline-Date.now())/1000));
+      fgpShowPuzzle(fgpGameType, room.roundSeed, timeLeft, room.round);
+    } else if(room.roundActive && myAns){
+      // Round is live but I already locked in an answer before disconnecting
+      fgpLastRound=room.round; fgpAnswered=true;
+      document.getElementById('fgp-puzzle-area').style.display='none';
+      document.getElementById('fgp-waiting').style.display='block';
+      document.getElementById('fgp-waiting').innerHTML='<div style="font-size:2rem;margin-bottom:8px">'+(myAns.correct?'✅':'❌')+'</div><div style="font-weight:700">Answer locked in! Waiting for round to end…</div>';
+    } else if(!room.roundActive && room.round>0 && room.roundAnswer){
+      // Round just ended
+      fgpLastRound=room.round; fgpAnswered=true;
+      fgpShowRoundResult(room);
+    } else {
+      fgpLastRound=room.round||0;
+    }
+    if(room.status==='finished'&&room.winners&&room.winners.length){
+      showWinnerBanner(room.winners);
+    }
+    go('s-fg-player'); document.getElementById('sbar').style.display='flex';
+    startFGPlayerListen(); startChatListen(); showChatFab();
   } else {
     alert('Please use the regular join screen to rejoin this game type.');
   }
