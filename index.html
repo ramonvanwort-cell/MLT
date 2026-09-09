@@ -297,6 +297,46 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .find-game-tag{background:rgba(255,209,102,.15);color:var(--accent2)}
 .tab-btn.active.rooms-tab{border-color:rgba(167,243,208,.5);color:#6ee7b7}
 .tab-btn.active.solo-tab{border-color:rgba(239,71,111,.5);color:var(--pink)}
+.tab-btn.active.wheel-tab{border-color:rgba(34,211,238,.5);color:#22d3ee}
+/* ── WHEEL OF MLT ── */
+.wheel-layout{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;width:100%;max-width:940px}
+.wheel-col{flex:1 1 380px;max-width:460px}
+.wheel-panel-stack{flex:1 1 320px;max-width:400px;display:flex;flex-direction:column;gap:16px}
+.wheel-panel-stack .card{margin-bottom:0}
+.wheel-stage{position:relative;width:min(360px,80vw);aspect-ratio:1;margin:6px auto 18px}
+.wheel-stage canvas{display:block;width:100%;height:100%;border-radius:50%;box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.wheel-hub-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:15%;height:15%;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 0 4px var(--bg),0 2px 8px rgba(0,0,0,.4);z-index:2}
+.wheel-pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:26px;height:34px;z-index:3;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.wheel-count-pill{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid rgba(255,255,255,.08);color:var(--muted);font-size:.8rem;padding:6px 14px;border-radius:20px;margin-bottom:16px;font-variant-numeric:tabular-nums}
+.wheel-count-pill b{color:var(--text)}
+.wheel-spin-btn{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:1px;padding:15px 42px;width:100%;justify-content:center}
+.wheel-winner-box{width:100%;min-height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;margin-top:16px;padding:12px 16px;border-radius:12px;background:var(--surface2);border:1.5px dashed rgba(255,255,255,.12);position:relative;overflow:hidden}
+.wheel-winner-box.has-winner{border-style:solid;border-color:#22d3ee;box-shadow:0 0 0 1px rgba(34,211,238,.25) inset,0 0 24px rgba(34,211,238,.16)}
+.wheel-winner-label{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:#22d3ee;font-weight:700}
+.wheel-winner-name{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:.5px;word-break:break-word}
+.wheel-subtabs{display:flex;gap:6px;background:var(--surface2);padding:5px;border-radius:20px;border:1px solid rgba(255,255,255,.08);margin:14px 0 18px}
+.wheel-subtab-btn{flex:1;padding:9px 10px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:700;font-size:.83rem;border-radius:16px;cursor:pointer;transition:.15s}
+.wheel-subtab-btn.active{background:#22d3ee;color:#0f0e17}
+.wheel-help{color:var(--muted);font-size:.78rem;margin:-8px 0 14px;line-height:1.45}
+.wheel-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid rgba(255,255,255,.08)}
+.wheel-toggle-row:first-of-type{border-top:none;padding-top:0}
+.wheel-toggle-text b{display:block;font-size:.88rem}
+.wheel-toggle-text span{display:block;font-size:.75rem;color:var(--muted);margin-top:2px;line-height:1.4}
+.wheel-switch{position:relative;width:42px;height:24px;flex:0 0 auto}
+.wheel-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.wheel-switch .track{position:absolute;inset:0;background:var(--surface);border:1.5px solid rgba(255,255,255,.12);border-radius:999px;transition:.15s}
+.wheel-switch .thumb{position:absolute;top:2px;left:2px;width:17px;height:17px;background:var(--muted);border-radius:50%;transition:.15s}
+.wheel-switch input:checked + .track{background:rgba(34,211,238,.25);border-color:#22d3ee}
+.wheel-switch input:checked + .track + .thumb{transform:translateX(18px);background:#22d3ee}
+.wheel-history-list{list-style:none;max-height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.wheel-history-list li{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.85rem}
+.wheel-history-list li:last-child{border-bottom:none}
+.wheel-h-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.wheel-h-name{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wheel-h-time{color:var(--muted);font-size:.74rem;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.wheel-history-empty{color:var(--muted);font-size:.85rem;padding:6px 4px}
+.wheel-confetti{position:absolute;top:-10px;width:7px;height:12px;opacity:.95;border-radius:2px}
+@keyframes wheelFall{to{transform:translateY(120px) rotate(380deg);opacity:0}}
 /* ── FIND GAMES SUB-TABS ── */
 .fg-subtabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
 .fg-subtab-btn{padding:9px 14px;border:1.5px solid rgba(255,255,255,.08);background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;border-radius:20px;cursor:pointer;transition:.2s;white-space:nowrap}
@@ -416,6 +456,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <button class="tab-btn fb-tab" onclick="switchTab('fb')"><span class="t-icon">📘</span>Facebook Games</button>
     <button class="tab-btn find-tab" onclick="switchTab('find')"><span class="t-icon">🔎</span>Find Games</button>
     <button class="tab-btn solo-tab" onclick="switchTab('solo')"><span class="t-icon">🎯</span>Solo Games</button>
+    <button class="tab-btn wheel-tab" onclick="switchTab('wheel')"><span class="t-icon">🎡</span>Wheel of MLT</button>
     <button class="tab-btn rooms-tab" id="rooms-tab-btn" onclick="switchTab('rooms')" style="display:none"><span class="t-icon">🚪</span>My Rooms</button>
   </div>
 
@@ -643,6 +684,101 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <div class="game-tag find-game-tag">Spot It</div>
         <h3>Colour vs Word</h3>
         <p>Tap the ink colour — not the word. Your brain will fight you!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHEEL OF MLT TAB -->
+  <div class="tab-panel" id="tab-wheel">
+    <div class="section-header" style="margin-bottom:16px">
+      <h2 style="color:#22d3ee">🎡 Wheel of MLT</h2><div class="section-line"></div>
+    </div>
+    <p style="color:var(--muted);font-size:.83rem;margin:-8px 0 20px">Spin the wheel to randomly pick a number or a name — no room needed.</p>
+
+    <div class="wheel-layout">
+      <div class="wheel-col">
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <div class="wheel-stage" id="wheelStage">
+            <canvas id="wheelCanvas" width="360" height="360" role="img" aria-label="Spinning wheel with choices"></canvas>
+            <div class="wheel-hub-dot"></div>
+            <div class="wheel-pointer" aria-hidden="true">
+              <svg width="26" height="34" viewBox="0 0 26 34"><path d="M13 34 L1 9 Q13 18 25 9 Z" fill="#fffffe" stroke="#0f0e17" stroke-width="2"/></svg>
+            </div>
+          </div>
+          <span class="wheel-count-pill" id="wheelCountPill">12 options on the wheel</span>
+          <button class="btn btn-accent wheel-spin-btn" id="wheelSpinBtn" type="button">SPIN!</button>
+          <div class="wheel-winner-box" id="wheelWinnerBox">
+            <span style="color:var(--muted);font-size:.85rem" id="wheelWinnerEmpty">No winner yet — press SPIN to begin.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wheel-panel-stack">
+        <div class="card">
+          <h2 style="font-size:1.15rem">Build the wheel</h2>
+          <div class="wheel-subtabs" role="tablist">
+            <button class="wheel-subtab-btn active" id="wheelTabNumbers" role="tab" aria-selected="true" type="button">🔢 Numbers</button>
+            <button class="wheel-subtab-btn" id="wheelTabNames" role="tab" aria-selected="false" type="button">✍️ Names</button>
+          </div>
+          <div id="wheelPanelNumbers">
+            <div class="ig" style="max-width:100%">
+              <label>Number of segments</label>
+              <input type="number" id="wheelNumCount" min="2" max="100" value="12">
+            </div>
+            <p class="wheel-help">The wheel gets numbers 1 through whatever count you enter here.</p>
+            <button class="btn btn-purple" id="wheelBuildNumbers" type="button" style="width:100%;justify-content:center">Update wheel</button>
+          </div>
+          <div id="wheelPanelNames" style="display:none">
+            <div class="ig" style="max-width:100%">
+              <label>Names — one per line</label>
+              <textarea id="wheelNamesInput" placeholder="Paste your list here, one name per line…"
+                style="width:100%;background:var(--surface);border:1.5px solid rgba(255,255,255,.1);border-radius:11px;padding:12px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;resize:vertical;min-height:140px;line-height:1.6" rows="7">Alex
+Jordan
+Sam
+Taylor
+Morgan
+Casey
+Riley
+Drew</textarea>
+            </div>
+            <p class="wheel-help">Paste straight from Notepad or Excel — one name per line (commas work too). These are example names for now.</p>
+            <button class="btn btn-purple" id="wheelBuildNames" type="button" style="width:100%;justify-content:center">Update wheel</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size:1.15rem">Options</h2>
+          <div class="wheel-toggle-row">
+            <div class="wheel-toggle-text">
+              <b>Remove winner from the wheel</b>
+              <span>Handy for picking people in turn, without repeats.</span>
+            </div>
+            <label class="wheel-switch">
+              <input type="checkbox" id="wheelRemoveToggle">
+              <span class="track"></span>
+              <span class="thumb"></span>
+            </label>
+          </div>
+          <div class="wheel-toggle-row">
+            <div class="wheel-toggle-text">
+              <b>Sound</b>
+              <span>A ticking sound while the wheel spins.</span>
+            </div>
+            <label class="wheel-switch">
+              <input type="checkbox" id="wheelSoundToggle" checked>
+              <span class="track"></span>
+              <span class="thumb"></span>
+            </label>
+          </div>
+          <button class="btn btn-outline btn-sm" id="wheelResetBtn" type="button" style="width:100%;justify-content:center;margin-top:14px" disabled>Restore full list</button>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size:1.15rem">History</h2>
+          <ul class="wheel-history-list" id="wheelHistoryList">
+            <li class="wheel-history-empty">No spins yet — spin the wheel to get started.</li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -4654,6 +4790,7 @@ function switchTab(tab) {
     'fb':     { cls: 'fb',     panel: 'fb' },
     'find':   { cls: 'find',   panel: 'find' },
     'solo':   { cls: 'solo',   panel: 'solo' },
+    'wheel':  { cls: 'wheel',  panel: 'wheel' },
     'rooms':  { cls: 'rooms',  panel: 'rooms' }
   };
   const t = tabMap[tab] || { cls: tab, panel: tab };
@@ -4664,6 +4801,7 @@ function switchTab(tab) {
   if (btn) btn.classList.add('active');
   if (panel) panel.classList.add('active');
   if (tab === 'rooms') renderMyRooms();
+  if (tab === 'wheel') wheelResizeCanvas();
 }
 
 document.getElementById('j-code').addEventListener('input',function(){this.value=this.value.toUpperCase()});
@@ -6534,11 +6672,407 @@ const _origCreateRoom=createRoom;
 createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomCode)saveRoomToLocal(roomCode,myName,'bingo','host',document.getElementById('room-label')?.value||'MLT Bingo')};
 
 // ════════════════════════════════════════
+//  WHEEL OF MLT (local — no room/Firebase needed)
+// ════════════════════════════════════════
+(function(){
+  "use strict";
+
+  const WHEEL_COLORS = ['#ffb627','#ff3d7f','#2fd3c8','#7b5cfa','#ff7a45','#4fd164','#3da5ff','#ff5c5c','#ffe066','#c86bff'];
+  const wheelReduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const WHEEL_STORE_KEY = 'mlt_wheel_state_v1';
+
+  const wheelState = {
+    mode: 'numbers',
+    fullList: [],
+    activeList: [],
+    removeAfterWin: false,
+    soundOn: true,
+    history: [],
+    rotation: 0,
+    spinning: false
+  };
+
+  let wheelCanvasEl, wheelCtx, wheelStageEl, wheelSpinBtnEl, wheelCountPillEl, wheelWinnerBoxEl, wheelHistoryListEl, wheelResetBtnEl;
+  let wheelDpr = Math.max(1, window.devicePixelRatio || 1);
+  let wheelAudioCtx = null;
+
+  function wheelParseNames(text){
+    let lines = text.split(/\r?\n/);
+    if(lines.length === 1 && lines[0].indexOf(',') !== -1){
+      lines = lines[0].split(',');
+    }
+    return lines.map(s=>s.trim()).filter(s=>s.length>0);
+  }
+
+  function wheelSaveSettings(){
+    try{
+      localStorage.setItem(WHEEL_STORE_KEY, JSON.stringify({
+        mode: wheelState.mode,
+        numCount: document.getElementById('wheelNumCount').value,
+        namesText: document.getElementById('wheelNamesInput').value,
+        removeAfterWin: wheelState.removeAfterWin,
+        soundOn: wheelState.soundOn
+      }));
+    }catch(e){}
+  }
+  function wheelLoadSettings(){
+    try{
+      const raw = localStorage.getItem(WHEEL_STORE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+
+  function wheelSetActiveList(list){
+    wheelState.activeList = list.slice();
+    wheelState.rotation = wheelState.rotation % (Math.PI*2);
+    wheelRender();
+    wheelUpdateCountPill();
+    wheelUpdateResetBtn();
+  }
+
+  function wheelBuildNumbers(n){
+    n = Math.max(2, Math.min(100, Math.floor(n) || 12));
+    document.getElementById('wheelNumCount').value = n;
+    const list = [];
+    for(let i=1;i<=n;i++) list.push(String(i));
+    wheelState.fullList = list;
+    wheelSetActiveList(list);
+    wheelSaveSettings();
+  }
+
+  function wheelBuildNames(text){
+    let list = wheelParseNames(text);
+    if(list.length < 2){
+      alert('Enter at least 2 names (one per line).');
+      return;
+    }
+    if(list.length > 100) list = list.slice(0,100);
+    wheelState.fullList = list;
+    wheelSetActiveList(list);
+    wheelSaveSettings();
+  }
+
+  function wheelUpdateCountPill(){
+    const n = wheelState.activeList.length;
+    const total = wheelState.fullList.length;
+    if(n === total){
+      wheelCountPillEl.innerHTML = '<b>'+n+'</b> option'+(n===1?'':'s')+' on the wheel';
+    } else {
+      wheelCountPillEl.innerHTML = '<b>'+n+'</b> of <b>'+total+'</b> still on the wheel';
+    }
+  }
+
+  function wheelUpdateResetBtn(){
+    wheelResetBtnEl.disabled = wheelState.activeList.length >= wheelState.fullList.length;
+  }
+
+  // ---------- tabs ----------
+  function wheelSelectTab(mode){
+    wheelState.mode = mode;
+    const isNum = mode === 'numbers';
+    document.getElementById('wheelTabNumbers').classList.toggle('active', isNum);
+    document.getElementById('wheelTabNames').classList.toggle('active', !isNum);
+    document.getElementById('wheelTabNumbers').setAttribute('aria-selected', isNum);
+    document.getElementById('wheelTabNames').setAttribute('aria-selected', !isNum);
+    document.getElementById('wheelPanelNumbers').style.display = isNum ? 'block' : 'none';
+    document.getElementById('wheelPanelNames').style.display = isNum ? 'none' : 'block';
+    wheelSaveSettings();
+  }
+
+  // ---------- canvas sizing ----------
+  window.wheelResizeCanvas = function(){
+    if(!wheelStageEl) return;
+    const size = wheelStageEl.clientWidth;
+    if(!size) return;
+    wheelCanvasEl.style.width = size + 'px';
+    wheelCanvasEl.style.height = size + 'px';
+    wheelCanvasEl.width = Math.round(size * wheelDpr);
+    wheelCanvasEl.height = Math.round(size * wheelDpr);
+    wheelRender();
+  };
+  let wheelResizeTimer;
+  window.addEventListener('resize', function(){
+    clearTimeout(wheelResizeTimer);
+    wheelResizeTimer = setTimeout(function(){
+      const panel = document.getElementById('tab-wheel');
+      if(panel && panel.classList.contains('active')) window.wheelResizeCanvas();
+    }, 120);
+  });
+
+  // ---------- drawing ----------
+  function wheelFitText(txt, maxWidth, fontSize){
+    wheelCtx.font = '700 ' + fontSize + 'px DM Sans, sans-serif';
+    if(wheelCtx.measureText(txt).width <= maxWidth) return txt;
+    let t = txt;
+    while(t.length > 1 && wheelCtx.measureText(t + '…').width > maxWidth){
+      t = t.slice(0, -1);
+    }
+    return t + '…';
+  }
+
+  function wheelRender(rotationOverride){
+    const list = wheelState.activeList;
+    const n = list.length;
+    const w = wheelCanvasEl.width, h = wheelCanvasEl.height;
+    const cx = w/2, cy = h/2;
+    const radius = Math.min(cx, cy) - 4*wheelDpr;
+    const rotation = (rotationOverride !== undefined) ? rotationOverride : wheelState.rotation;
+
+    wheelCtx.clearRect(0,0,w,h);
+    if(n === 0){
+      wheelCtx.beginPath();
+      wheelCtx.arc(cx,cy,radius,0,Math.PI*2);
+      wheelCtx.fillStyle = '#242235';
+      wheelCtx.fill();
+      wheelCtx.font = (16*wheelDpr)+'px DM Sans, sans-serif';
+      wheelCtx.fillStyle = '#a7a3c0';
+      wheelCtx.textAlign = 'center';
+      wheelCtx.textBaseline = 'middle';
+      wheelCtx.fillText('All picked', cx, cy);
+      return;
+    }
+
+    const segAngle = (Math.PI*2) / n;
+    const fontSize = Math.max(10, Math.min(20, 230/n)) * wheelDpr;
+
+    wheelCtx.save();
+    wheelCtx.translate(cx,cy);
+    wheelCtx.rotate(rotation);
+
+    for(let i=0;i<n;i++){
+      const start = i*segAngle;
+      const end = start+segAngle;
+      wheelCtx.beginPath();
+      wheelCtx.moveTo(0,0);
+      wheelCtx.arc(0,0,radius,start,end);
+      wheelCtx.closePath();
+      wheelCtx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
+      wheelCtx.fill();
+      wheelCtx.lineWidth = 2*wheelDpr;
+      wheelCtx.strokeStyle = '#0f0e17';
+      wheelCtx.stroke();
+    }
+
+    wheelCtx.fillStyle = '#221334';
+    wheelCtx.textBaseline = 'middle';
+    for(let j=0;j<n;j++){
+      const mid = j*segAngle + segAngle/2;
+      wheelCtx.save();
+      wheelCtx.rotate(mid);
+      wheelCtx.textAlign = 'right';
+      const maxW = radius - 26*wheelDpr;
+      const label = wheelFitText(list[j], maxW, fontSize);
+      wheelCtx.font = '700 ' + fontSize + 'px DM Sans, sans-serif';
+      wheelCtx.fillText(label, radius - 14*wheelDpr, 0);
+      wheelCtx.restore();
+    }
+
+    wheelCtx.restore();
+  }
+
+  // ---------- audio tick ----------
+  function wheelTick(){
+    if(!wheelState.soundOn) return;
+    try{
+      if(!wheelAudioCtx) wheelAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const t = wheelAudioCtx.currentTime;
+      const osc = wheelAudioCtx.createOscillator();
+      const gain = wheelAudioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 1100;
+      gain.gain.setValueAtTime(0.05, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      osc.connect(gain).connect(wheelAudioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.06);
+    }catch(e){}
+  }
+
+  // ---------- confetti ----------
+  function wheelBurstConfetti(){
+    if(wheelReduceMotion) return;
+    for(let i=0;i<26;i++){
+      const el = document.createElement('span');
+      el.className = 'wheel-confetti';
+      el.style.left = (Math.random()*94)+'%';
+      el.style.background = WHEEL_COLORS[i % WHEEL_COLORS.length];
+      el.style.animation = 'wheelFall ' + (0.9+Math.random()*0.6).toFixed(2) + 's ease-in forwards';
+      el.style.animationDelay = (Math.random()*0.25).toFixed(2)+'s';
+      wheelWinnerBoxEl.appendChild(el);
+      (function(node){
+        setTimeout(function(){ if(node.parentNode) node.parentNode.removeChild(node); }, 1800);
+      })(el);
+    }
+  }
+
+  // ---------- history ----------
+  function wheelAddHistory(label){
+    wheelState.history.unshift({label:label, time:new Date()});
+    if(wheelState.history.length > 40) wheelState.history.length = 40;
+    wheelRenderHistory();
+  }
+  function wheelRenderHistory(){
+    if(wheelState.history.length === 0){
+      wheelHistoryListEl.innerHTML = '<li class="wheel-history-empty">No spins yet — spin the wheel to get started.</li>';
+      return;
+    }
+    wheelHistoryListEl.innerHTML = wheelState.history.map(function(hEntry,idx){
+      const hh = hEntry.time.getHours().toString().padStart(2,'0');
+      const mm = hEntry.time.getMinutes().toString().padStart(2,'0');
+      const color = WHEEL_COLORS[idx % WHEEL_COLORS.length];
+      return '<li><span class="wheel-h-dot" style="background:'+color+'"></span>'+
+             '<span class="wheel-h-name">'+escH(hEntry.label)+'</span>'+
+             '<span class="wheel-h-time">'+hh+':'+mm+'</span></li>';
+    }).join('');
+  }
+
+  // ---------- spin ----------
+  function wheelShowWinner(label){
+    wheelWinnerBoxEl.classList.add('has-winner');
+    wheelWinnerBoxEl.innerHTML =
+      '<span class="wheel-winner-label">🎉 Winner</span>' +
+      '<span class="wheel-winner-name">' + escH(label) + '</span>';
+    wheelBurstConfetti();
+  }
+
+  function wheelEaseOutQuint(t){ return 1 - Math.pow(1-t, 5); }
+
+  function wheelStartSpin(){
+    if(wheelState.spinning) return;
+    const n = wheelState.activeList.length;
+    if(n === 0) return;
+    wheelState.spinning = true;
+    wheelSpinBtnEl.disabled = true;
+
+    const winnerIndex = Math.floor(Math.random() * n);
+    const segAngle = (Math.PI*2) / n;
+    const pointerAngle = -Math.PI/2;
+    const jitter = (Math.random()-0.5) * segAngle * 0.7;
+    const twoPi = Math.PI*2;
+    let targetLocal = pointerAngle - (winnerIndex*segAngle + segAngle/2 + jitter);
+    targetLocal = ((targetLocal % twoPi) + twoPi) % twoPi;
+
+    const startRot = wheelState.rotation;
+    const currentMod = ((startRot % twoPi) + twoPi) % twoPi;
+    let delta = targetLocal - currentMod;
+    if(delta < 0) delta += twoPi;
+    const extraSpins = 6 + Math.floor(Math.random()*3);
+    const finalRotation = startRot + delta + extraSpins*twoPi;
+
+    if(wheelReduceMotion){
+      wheelState.rotation = finalRotation;
+      wheelRender();
+      wheelFinishSpin(winnerIndex);
+      return;
+    }
+
+    const duration = 4200;
+    let startTime = null;
+    let lastSeg = Math.floor(startRot / segAngle);
+
+    function frame(ts){
+      if(startTime === null) startTime = ts;
+      const elapsed = ts - startTime;
+      const t = Math.min(1, elapsed/duration);
+      const eased = wheelEaseOutQuint(t);
+      const current = startRot + (finalRotation-startRot)*eased;
+      wheelRender(current);
+
+      const seg = Math.floor(current / segAngle);
+      if(seg !== lastSeg){
+        wheelTick();
+        lastSeg = seg;
+      }
+
+      if(t < 1){
+        requestAnimationFrame(frame);
+      } else {
+        wheelState.rotation = finalRotation;
+        wheelFinishSpin(winnerIndex);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function wheelFinishSpin(winnerIndex){
+    const winnerLabel = wheelState.activeList[winnerIndex];
+    wheelAddHistory(winnerLabel);
+    wheelShowWinner(winnerLabel);
+    if(wheelState.removeAfterWin){
+      wheelState.activeList.splice(winnerIndex,1);
+      wheelRender();
+      wheelUpdateCountPill();
+      wheelUpdateResetBtn();
+    }
+    wheelSpinBtnEl.disabled = wheelState.activeList.length === 0;
+    wheelState.spinning = false;
+  }
+
+  // ---------- init (wired on first DOM-ready pass, see bottom of file) ----------
+  window.wheelInitOnce = function(){
+    wheelCanvasEl = document.getElementById('wheelCanvas');
+    wheelCtx = wheelCanvasEl.getContext('2d');
+    wheelStageEl = document.getElementById('wheelStage');
+    wheelSpinBtnEl = document.getElementById('wheelSpinBtn');
+    wheelCountPillEl = document.getElementById('wheelCountPill');
+    wheelWinnerBoxEl = document.getElementById('wheelWinnerBox');
+    wheelHistoryListEl = document.getElementById('wheelHistoryList');
+    wheelResetBtnEl = document.getElementById('wheelResetBtn');
+
+    document.getElementById('wheelTabNumbers').addEventListener('click', function(){ wheelSelectTab('numbers'); });
+    document.getElementById('wheelTabNames').addEventListener('click', function(){ wheelSelectTab('names'); });
+    document.getElementById('wheelBuildNumbers').addEventListener('click', function(){
+      wheelBuildNumbers(parseFloat(document.getElementById('wheelNumCount').value));
+    });
+    document.getElementById('wheelBuildNames').addEventListener('click', function(){
+      wheelBuildNames(document.getElementById('wheelNamesInput').value);
+    });
+    document.getElementById('wheelNumCount').addEventListener('keydown', function(e){
+      if(e.key === 'Enter') wheelBuildNumbers(parseFloat(this.value));
+    });
+    document.getElementById('wheelRemoveToggle').addEventListener('change', function(){
+      wheelState.removeAfterWin = this.checked;
+      wheelSaveSettings();
+    });
+    document.getElementById('wheelSoundToggle').addEventListener('change', function(){
+      wheelState.soundOn = this.checked;
+      wheelSaveSettings();
+    });
+    wheelResetBtnEl.addEventListener('click', function(){
+      wheelSetActiveList(wheelState.fullList);
+      wheelWinnerBoxEl.classList.remove('has-winner');
+      wheelWinnerBoxEl.innerHTML = '<span style="color:var(--muted);font-size:.85rem">Full list restored — spin again!</span>';
+    });
+    wheelSpinBtnEl.addEventListener('click', wheelStartSpin);
+
+    const saved = wheelLoadSettings();
+    if(saved){
+      if(saved.namesText) document.getElementById('wheelNamesInput').value = saved.namesText;
+      if(saved.numCount) document.getElementById('wheelNumCount').value = saved.numCount;
+      wheelState.removeAfterWin = !!saved.removeAfterWin;
+      document.getElementById('wheelRemoveToggle').checked = wheelState.removeAfterWin;
+      wheelState.soundOn = saved.soundOn !== false;
+      document.getElementById('wheelSoundToggle').checked = wheelState.soundOn;
+      if(saved.mode === 'names'){
+        wheelSelectTab('names');
+        wheelBuildNames(document.getElementById('wheelNamesInput').value);
+      } else {
+        wheelSelectTab('numbers');
+        wheelBuildNumbers(parseFloat(document.getElementById('wheelNumCount').value));
+      }
+    } else {
+      wheelBuildNumbers(12);
+    }
+  };
+})();
+
+// ════════════════════════════════════════
 //  Init setup grids/dropdowns on page load
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',()=>{
     buildSqSetupGrid();
     applyGameToggles();
+    window.wheelInitOnce();
     // Show My Rooms tab on home screen (no role set yet)
     const rt=document.getElementById('rooms-tab-btn');
     if(rt)rt.style.display='';
@@ -6546,6 +7080,7 @@ if(document.readyState==='loading'){
 } else {
   buildSqSetupGrid();
   applyGameToggles();
+  window.wheelInitOnce();
   const rt=document.getElementById('rooms-tab-btn');
   if(rt)rt.style.display='';
 }
