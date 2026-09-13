@@ -243,7 +243,8 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 #s-direct-join .join-room-sub{color:var(--muted);font-size:.88rem;text-align:center;margin-bottom:24px}
 
 /* ── TABS ── */
-.tab-bar{display:flex;gap:10px;width:100%;max-width:760px;margin-bottom:28px}
+.tab-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:760px;margin-bottom:28px}
+@media (max-width:560px){.tab-bar{grid-template-columns:repeat(2,1fr)}}
 .tab-btn{flex:1;padding:18px 10px 14px;border:1.5px solid rgba(255,255,255,.08);background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:700;font-size:.8rem;border-radius:14px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;line-height:1.3}
 .tab-btn .t-icon{font-size:1.8rem;line-height:1}
 .tab-btn:hover{background:var(--surface2);color:var(--text)}
@@ -298,6 +299,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .tab-btn.active.rooms-tab{border-color:rgba(167,243,208,.5);color:#6ee7b7}
 .tab-btn.active.solo-tab{border-color:rgba(239,71,111,.5);color:var(--pink)}
 .tab-btn.active.wheel-tab{border-color:rgba(34,211,238,.5);color:#22d3ee}
+.tab-btn.active.kitchen-tab{border-color:rgba(234,179,8,.5);color:#eab308}
 /* ── WHEEL OF MLT ── */
 .wheel-layout{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;width:100%;max-width:940px}
 .wheel-col{flex:1 1 380px;max-width:460px}
@@ -337,6 +339,31 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .wheel-history-empty{color:var(--muted);font-size:.85rem;padding:6px 4px}
 .wheel-confetti{position:absolute;top:-10px;width:7px;height:12px;opacity:.95;border-radius:2px}
 @keyframes wheelFall{to{transform:translateY(120px) rotate(380deg);opacity:0}}
+/* ── MLT KITCHEN ── */
+.kitchen-subtabs{display:flex;gap:6px;background:var(--surface2);padding:5px;border-radius:20px;border:1px solid rgba(255,255,255,.08);margin:14px 0 18px;max-width:420px}
+.kitchen-subtab-btn{flex:1;padding:9px 10px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:700;font-size:.83rem;border-radius:16px;cursor:pointer;transition:.15s}
+.kitchen-subtab-btn.active{background:#eab308;color:#0f0e17}
+.ig textarea{width:100%;background:var(--surface);border:1.5px solid rgba(255,255,255,.1);border-radius:11px;padding:12px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;outline:none;resize:vertical;min-height:80px;line-height:1.6;transition:.2s}
+.ig textarea:focus{border-color:var(--accent)}
+.ig textarea::placeholder{color:var(--muted)}
+.ig input.invalid,.ig textarea.invalid{border-color:var(--pink)}
+.kitchen-ing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px;margin-bottom:14px}
+.kitchen-ing-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px}
+.kitchen-ing-row span{font-size:.82rem}
+.kitchen-ing-row input{width:48px;text-align:center;background:var(--surface);border:1.5px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 4px;color:var(--text);font-size:.85rem}
+.kitchen-alert{display:none;gap:10px;align-items:flex-start;background:rgba(239,71,111,.12);border:1px solid var(--pink);color:var(--pink);border-radius:12px;padding:12px 15px;font-size:.85rem;line-height:1.45;margin-bottom:16px}
+.kitchen-alert.show{display:flex}
+.kitchen-confirm{display:none;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:30px 10px}
+.kitchen-confirm.show{display:flex}
+.kitchen-stamp{width:80px;height:80px;border-radius:50%;border:3px solid var(--green);color:var(--green);display:flex;align-items:center;justify-content:center}
+.kitchen-req-card{background:var(--surface2);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.kitchen-req-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.kitchen-req-name{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.5px}
+.kitchen-req-meta{color:var(--muted);font-size:.72rem;white-space:nowrap}
+.kitchen-req-row{font-size:.85rem;margin-bottom:4px;line-height:1.5}
+.kitchen-req-row b{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:.68rem;letter-spacing:.4px;margin-right:6px}
+.kitchen-req-link{color:#22d3ee;word-break:break-all}
+.kitchen-lock{max-width:360px;text-align:center}
 /* ── FIND GAMES SUB-TABS ── */
 .fg-subtabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
 .fg-subtab-btn{padding:9px 14px;border:1.5px solid rgba(255,255,255,.08);background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;border-radius:20px;cursor:pointer;transition:.2s;white-space:nowrap}
@@ -457,6 +484,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
     <button class="tab-btn find-tab" onclick="switchTab('find')"><span class="t-icon">🔎</span>Find Games</button>
     <button class="tab-btn solo-tab" onclick="switchTab('solo')"><span class="t-icon">🎯</span>Solo Games</button>
     <button class="tab-btn wheel-tab" onclick="switchTab('wheel')"><span class="t-icon">🎡</span>Wheel of MLT</button>
+    <button class="tab-btn kitchen-tab" onclick="switchTab('kitchen')"><span class="t-icon">🧾</span>MLT Kitchen</button>
     <button class="tab-btn rooms-tab" id="rooms-tab-btn" onclick="switchTab('rooms')" style="display:none"><span class="t-icon">🚪</span>My Rooms</button>
   </div>
 
@@ -783,6 +811,81 @@ Drew</textarea>
     </div>
   </div>
 </div>
+
+  <!-- MLT KITCHEN TAB -->
+  <div class="tab-panel" id="tab-kitchen">
+    <div class="section-header" style="margin-bottom:16px">
+      <h2 style="color:#eab308">🧾 MLT Kitchen</h2><div class="section-line"></div>
+    </div>
+    <p style="color:var(--muted);font-size:.83rem;margin:-8px 0 20px">Request cafe ingredients from the kitchen crew — one ticket per request. This link always works, so bookmark it and check back for updates.</p>
+
+    <div class="kitchen-subtabs" role="tablist">
+      <button class="kitchen-subtab-btn active" id="kitchenTabSubmit" role="tab" aria-selected="true" type="button">📝 Submit a Request</button>
+      <button class="kitchen-subtab-btn" id="kitchenTabStaff" role="tab" aria-selected="false" type="button">👩‍🍳 Kitchen Staff</button>
+    </div>
+
+    <!-- SUBMIT PANEL -->
+    <div id="kitchenPanelSubmit">
+      <div class="card" style="max-width:560px">
+        <div class="kitchen-alert" id="kitchenAlert">
+          <span>⚠️</span><span id="kitchenAlertText">All information is required. Please ensure your Name, IGN, Game Link, Friend Code, and Ingredient needs are completely filled out before submitting.</span>
+        </div>
+
+        <form id="kitchenForm">
+          <div class="ig">
+            <label>Your Name</label>
+            <input type="text" id="k-name" placeholder="e.g. Rosa Jansen" autocomplete="off">
+          </div>
+          <div class="ig">
+            <label>In-Game Name (IGN)</label>
+            <input type="text" id="k-ign" placeholder="e.g. CafeQueen_Rosa" autocomplete="off">
+          </div>
+          <div class="ig">
+            <label>Player / Friend Code</label>
+            <input type="text" id="k-code" placeholder="e.g. 482-119-207" autocomplete="off">
+          </div>
+          <div class="ig">
+            <label>Game Invite Link</label>
+            <input type="url" id="k-link" placeholder="https://game.link/invite/yourname" autocomplete="off">
+          </div>
+          <div class="ig" style="max-width:100%">
+            <label>Cafe Ingredients Needed</label>
+            <div class="kitchen-ing-grid" id="kitchenIngGrid"></div>
+            <textarea id="k-other" placeholder="Anything else, or notes on quantities (e.g. &quot;need the pink sugar from the spring event&quot;)"></textarea>
+          </div>
+          <button type="submit" class="btn btn-accent" id="kitchenSendBtn" style="width:100%;justify-content:center">➜ Send to the Kitchen</button>
+        </form>
+
+        <div class="kitchen-confirm" id="kitchenConfirm">
+          <div class="kitchen-stamp"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m5 13 4 4L19 7"/></svg></div>
+          <div style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:#eab308" id="kitchenConfirmFor"></div>
+          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:.5px;max-width:360px">Your ingredient request has been submitted to the MLT Kitchen!</h2>
+          <p style="color:var(--muted);font-size:.88rem;max-width:340px">An admin will review and send your ingredients shortly.</p>
+          <button type="button" class="btn btn-outline btn-sm" id="kitchenAgainBtn">Submit another request</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAFF PANEL -->
+    <div id="kitchenPanelStaff" style="display:none">
+      <div class="kitchen-lock card" id="kitchenLockBox">
+        <h2 style="font-size:1.1rem">Kitchen staff only</h2>
+        <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px">Enter the kitchen passcode to see and manage pending requests.</p>
+        <div class="ig" style="margin:0 auto 10px"><input type="password" id="kitchenPass" placeholder="Passcode"></div>
+        <button class="btn btn-purple btn-sm" id="kitchenUnlockBtn" type="button">Unlock</button>
+        <p id="kitchenPassErr" style="display:none;color:var(--pink);font-size:.78rem;margin-top:8px">Wrong passcode — try again.</p>
+      </div>
+
+      <div id="kitchenAdminView" style="display:none;width:100%;max-width:640px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+          <span class="wheel-count-pill" id="kitchenPendingCount" style="margin-bottom:0">0 pending requests</span>
+          <button class="btn btn-outline btn-sm" id="kitchenLockAgainBtn" type="button">Lock</button>
+        </div>
+        <div id="kitchenReqList"></div>
+        <p id="kitchenReqEmpty" style="color:var(--muted);font-size:.85rem;text-align:center;padding:30px 0;display:none">No pending requests — all caught up! 🎉</p>
+      </div>
+    </div>
+  </div>
 
   <!-- MY ROOMS TAB -->
   <div class="tab-panel" id="tab-rooms" style="width:100%;max-width:760px">
@@ -2432,6 +2535,7 @@ async function dbSet(p,v){if(!db)return;await _set(_ref(db,p),v)}
 async function dbUpdate(p,v){if(!db)return;await _update(_ref(db,p),v)}
 async function dbGet(p){if(!db)return null;const s=await _get(_ref(db,p));return s.exists()?s.val():null}
 function dbListen(p,cb){if(!db)return()=>{};const unsub=_onValue(_ref(db,p),s=>cb(s.exists()?s.val():null));return unsub}
+async function dbRemove(p){if(!db)return;await _remove(_ref(db,p))}
 
 // ════════════ NAVIGATION ════════════
 function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
@@ -4791,6 +4895,7 @@ function switchTab(tab) {
     'find':   { cls: 'find',   panel: 'find' },
     'solo':   { cls: 'solo',   panel: 'solo' },
     'wheel':  { cls: 'wheel',  panel: 'wheel' },
+    'kitchen':{ cls: 'kitchen',panel: 'kitchen' },
     'rooms':  { cls: 'rooms',  panel: 'rooms' }
   };
   const t = tabMap[tab] || { cls: tab, panel: tab };
@@ -7067,12 +7172,238 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
 })();
 
 // ════════════════════════════════════════
+//  MLT KITCHEN (Cafe Ingredients requests — shared via Firebase)
+// ════════════════════════════════════════
+(function(){
+  "use strict";
+
+  const KITCHEN_INGREDIENTS = ["Flour","Sugar","Milk","Eggs","Butter","Coffee Beans","Cocoa Powder","Vanilla","Fresh Fruit","Cheese"];
+  const KITCHEN_PASSCODE = "mltkitchen"; // change this to whatever passcode your kitchen staff should use
+  const KITCHEN_UNLOCK_KEY = "mlt_kitchen_staff_unlocked";
+
+  let kitchenData = {}; // live mirror of the 'kitchenRequests' path
+  let kitchenUnlocked = false;
+
+  function kitchenEl(id){ return document.getElementById(id); }
+
+  function kitchenBuildIngGrid(){
+    const grid = kitchenEl('kitchenIngGrid');
+    if(!grid || grid.children.length) return;
+    KITCHEN_INGREDIENTS.forEach(function(name, i){
+      const id = 'kIng_' + i;
+      const row = document.createElement('div');
+      row.className = 'kitchen-ing-row';
+      row.innerHTML = '<span>' + name + '</span><input type="number" min="0" max="99" step="1" value="0" id="' + id + '">';
+      grid.appendChild(row);
+    });
+  }
+
+  function kitchenIsValidUrl(value){
+    try { const u = new URL(value); return Boolean(u.protocol && u.host); }
+    catch(e){ return false; }
+  }
+
+  function kitchenCollectIngredients(){
+    const picked = KITCHEN_INGREDIENTS.map(function(name, i){
+      const el = kitchenEl('kIng_' + i);
+      const val = el ? (parseInt(el.value, 10) || 0) : 0;
+      return val > 0 ? name + ' x' + val : null;
+    }).filter(Boolean);
+    const other = kitchenEl('k-other').value.trim();
+    let text = picked.join(', ');
+    if(other) text = text ? text + '; Other: ' + other : 'Other: ' + other;
+    return text;
+  }
+
+  function kitchenSetInvalid(el, bad){ if(el) el.classList.toggle('invalid', bad); }
+  function kitchenShowAlert(show, msg){
+    const banner = kitchenEl('kitchenAlert');
+    if(msg) kitchenEl('kitchenAlertText').textContent = msg;
+    if(banner) banner.classList.toggle('show', show);
+  }
+
+  function kitchenSelectSubtab(which){
+    document.getElementById('kitchenTabSubmit').classList.toggle('active', which === 'submit');
+    document.getElementById('kitchenTabStaff').classList.toggle('active', which === 'staff');
+    document.getElementById('kitchenPanelSubmit').style.display = which === 'submit' ? '' : 'none';
+    document.getElementById('kitchenPanelStaff').style.display = which === 'staff' ? '' : 'none';
+    if(which === 'staff') kitchenRenderAdmin();
+  }
+
+  async function kitchenSubmit(e){
+    e.preventDefault();
+    const nameEl = kitchenEl('k-name');
+    const ignEl = kitchenEl('k-ign');
+    const codeEl = kitchenEl('k-code');
+    const linkEl = kitchenEl('k-link');
+    const otherEl = kitchenEl('k-other');
+
+    const memberName = nameEl.value.trim();
+    const ign = ignEl.value.trim();
+    const friendCode = codeEl.value.trim();
+    const inviteLink = linkEl.value.trim();
+    const ingredients = kitchenCollectIngredients();
+
+    const nameBad = !memberName;
+    const ignBad = !ign;
+    const codeBad = !friendCode;
+    const linkBad = !inviteLink || !kitchenIsValidUrl(inviteLink);
+    const ingredientsBad = !ingredients;
+
+    kitchenSetInvalid(nameEl, nameBad);
+    kitchenSetInvalid(ignEl, ignBad);
+    kitchenSetInvalid(codeEl, codeBad);
+    kitchenSetInvalid(linkEl, linkBad);
+    kitchenSetInvalid(otherEl, ingredientsBad);
+
+    if(nameBad || ignBad || codeBad || linkBad || ingredientsBad){
+      kitchenShowAlert(true, 'All information is required. Please ensure your Name, IGN, Game Link, Friend Code, and Ingredient needs are completely filled out before submitting.');
+      (nameBad ? nameEl : ignBad ? ignEl : codeBad ? codeEl : linkBad ? linkEl : otherEl).focus();
+      return;
+    }
+    kitchenShowAlert(false);
+
+    const sendBtn = kitchenEl('kitchenSendBtn');
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending…';
+
+    const reqId = Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    try {
+      await dbSet('kitchenRequests/' + reqId, {
+        name: memberName, ign: ign, friendCode: friendCode,
+        inviteLink: inviteLink, ingredients: ingredients, ts: Date.now()
+      });
+      kitchenEl('kitchenConfirmFor').textContent = 'Ticket for ' + memberName;
+      kitchenEl('kitchenForm').style.display = 'none';
+      kitchenEl('kitchenConfirm').classList.add('show');
+    } catch(err){
+      kitchenShowAlert(true, "Couldn't reach the kitchen — check your connection and try again.");
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = '➜ Send to the Kitchen';
+    }
+  }
+
+  function kitchenReset(){
+    kitchenEl('kitchenForm').reset();
+    KITCHEN_INGREDIENTS.forEach(function(_, i){ const el = kitchenEl('kIng_' + i); if(el) el.value = 0; });
+    [kitchenEl('k-name'), kitchenEl('k-ign'), kitchenEl('k-code'), kitchenEl('k-link'), kitchenEl('k-other')]
+      .forEach(function(el){ kitchenSetInvalid(el, false); });
+    kitchenShowAlert(false);
+    kitchenEl('kitchenConfirm').classList.remove('show');
+    kitchenEl('kitchenForm').style.display = '';
+  }
+
+  function kitchenTimeAgo(ts){
+    const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+    if(mins < 1) return 'just now';
+    if(mins < 60) return mins + 'm ago';
+    const hrs = Math.round(mins / 60);
+    if(hrs < 24) return hrs + 'h ago';
+    return Math.round(hrs / 24) + 'd ago';
+  }
+
+  function kitchenEscape(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function kitchenRenderAdmin(){
+    if(!kitchenUnlocked) return;
+    const list = kitchenEl('kitchenReqList');
+    const empty = kitchenEl('kitchenReqEmpty');
+    const countPill = kitchenEl('kitchenPendingCount');
+    if(!list) return;
+
+    const entries = Object.entries(kitchenData || {}).sort(function(a,b){ return (b[1].ts||0) - (a[1].ts||0); });
+    countPill.innerHTML = '<b>' + entries.length + '</b> pending request' + (entries.length === 1 ? '' : 's');
+
+    if(entries.length === 0){
+      list.innerHTML = '';
+      empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+
+    list.innerHTML = entries.map(function(entry){
+      const id = entry[0], req = entry[1];
+      return '' +
+        '<div class="kitchen-req-card">' +
+          '<div class="kitchen-req-top">' +
+            '<span class="kitchen-req-name">' + kitchenEscape(req.name || '—') + '</span>' +
+            '<span class="kitchen-req-meta">' + kitchenTimeAgo(req.ts || Date.now()) + '</span>' +
+          '</div>' +
+          '<div class="kitchen-req-row"><b>IGN</b>' + kitchenEscape(req.ign || '—') + '</div>' +
+          '<div class="kitchen-req-row"><b>Friend Code</b>' + kitchenEscape(req.friendCode || '—') + '</div>' +
+          '<div class="kitchen-req-row"><b>Invite Link</b><a class="kitchen-req-link" href="' + kitchenEscape(req.inviteLink || '#') + '" target="_blank" rel="noopener">' + kitchenEscape(req.inviteLink || '—') + '</a></div>' +
+          '<div class="kitchen-req-row"><b>Ingredients</b>' + kitchenEscape(req.ingredients || '—') + '</div>' +
+          '<button class="btn btn-accent btn-sm" style="margin-top:10px" onclick="kitchenMarkDone(\'' + id + '\')">✅ Mark as Done</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  window.kitchenMarkDone = async function(id){
+    try { await dbRemove('kitchenRequests/' + id); }
+    catch(e){ /* removal will simply retry on next click if this failed */ }
+  };
+
+  function kitchenTryUnlock(){
+    const val = kitchenEl('kitchenPass').value;
+    if(val === KITCHEN_PASSCODE){
+      kitchenUnlocked = true;
+      localStorage.setItem(KITCHEN_UNLOCK_KEY, '1');
+      kitchenEl('kitchenLockBox').style.display = 'none';
+      kitchenEl('kitchenAdminView').style.display = '';
+      kitchenEl('kitchenPassErr').style.display = 'none';
+      kitchenEl('kitchenPass').value = '';
+      kitchenRenderAdmin();
+    } else {
+      kitchenEl('kitchenPassErr').style.display = '';
+    }
+  }
+
+  function kitchenLock(){
+    kitchenUnlocked = false;
+    localStorage.removeItem(KITCHEN_UNLOCK_KEY);
+    kitchenEl('kitchenLockBox').style.display = '';
+    kitchenEl('kitchenAdminView').style.display = 'none';
+  }
+
+  window.kitchenInitOnce = function(){
+    kitchenBuildIngGrid();
+    kitchenEl('kitchenForm').addEventListener('submit', kitchenSubmit);
+    kitchenEl('kitchenAgainBtn').addEventListener('click', kitchenReset);
+    kitchenEl('kitchenTabSubmit').addEventListener('click', function(){ kitchenSelectSubtab('submit'); });
+    kitchenEl('kitchenTabStaff').addEventListener('click', function(){ kitchenSelectSubtab('staff'); });
+    kitchenEl('kitchenUnlockBtn').addEventListener('click', kitchenTryUnlock);
+    kitchenEl('kitchenPass').addEventListener('keydown', function(e){ if(e.key === 'Enter') kitchenTryUnlock(); });
+    kitchenEl('kitchenLockAgainBtn').addEventListener('click', kitchenLock);
+
+    if(localStorage.getItem(KITCHEN_UNLOCK_KEY) === '1'){
+      kitchenUnlocked = true;
+      kitchenEl('kitchenLockBox').style.display = 'none';
+      kitchenEl('kitchenAdminView').style.display = '';
+    }
+
+    if(window._dbReady){
+      dbListen('kitchenRequests', function(val){ kitchenData = val || {}; kitchenRenderAdmin(); });
+    } else {
+      window.addEventListener('db-ready', function(){
+        dbListen('kitchenRequests', function(val){ kitchenData = val || {}; kitchenRenderAdmin(); });
+      });
+    }
+  };
+})();
+
+// ════════════════════════════════════════
 //  Init setup grids/dropdowns on page load
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',()=>{
     buildSqSetupGrid();
     applyGameToggles();
     window.wheelInitOnce();
+    window.kitchenInitOnce();
     // Show My Rooms tab on home screen (no role set yet)
     const rt=document.getElementById('rooms-tab-btn');
     if(rt)rt.style.display='';
@@ -7081,6 +7412,7 @@ if(document.readyState==='loading'){
   buildSqSetupGrid();
   applyGameToggles();
   window.wheelInitOnce();
+  window.kitchenInitOnce();
   const rt=document.getElementById('rooms-tab-btn');
   if(rt)rt.style.display='';
 }
