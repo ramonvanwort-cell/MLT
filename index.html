@@ -819,6 +819,15 @@ Drew</textarea>
     </div>
     <p style="color:var(--muted);font-size:.83rem;margin:-8px 0 20px">Request cafe ingredients from the kitchen crew — one ticket per request. This link always works, so bookmark it and check back for updates.</p>
 
+    <div class="card" style="max-width:560px;padding:16px 20px 18px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;margin-bottom:6px;color:#eab308">🔗 Share with members</div>
+      <p style="color:var(--muted);font-size:.78rem;margin-bottom:10px;line-height:1.5">Send this link to members so they can request ingredients without opening the whole Game Box. (Assumes <code>kitchen-request.html</code> is hosted in the same folder as this page — edit it here if not.)</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="kitchenShareLink" readonly style="flex:1;min-width:180px;background:var(--surface2);border:1.5px solid rgba(255,255,255,.1);border-radius:11px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem" value="">
+        <button class="btn btn-outline btn-sm" id="kitchenCopyLinkBtn" type="button">📋 Copy</button>
+      </div>
+    </div>
+
     <div class="kitchen-subtabs" role="tablist">
       <button class="kitchen-subtab-btn active" id="kitchenTabSubmit" role="tab" aria-selected="true" type="button">📝 Submit a Request</button>
       <button class="kitchen-subtab-btn" id="kitchenTabStaff" role="tab" aria-selected="false" type="button">👩‍🍳 Kitchen Staff</button>
@@ -826,7 +835,13 @@ Drew</textarea>
 
     <!-- SUBMIT PANEL -->
     <div id="kitchenPanelSubmit">
-      <div class="card" style="max-width:560px">
+      <div class="card" id="kitchenClosedCard" style="max-width:560px;text-align:center;display:none">
+        <div style="font-size:2.4rem;margin-bottom:12px">🔒</div>
+        <h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.5px;margin-bottom:8px">The kitchen is closed for now</h2>
+        <p style="color:var(--muted);font-size:.9rem">Please return later. The kitchen crew will reopen requests soon.</p>
+      </div>
+
+      <div class="card" id="kitchenOpenCard" style="max-width:560px">
         <div class="kitchen-alert" id="kitchenAlert">
           <span>⚠️</span><span id="kitchenAlertText">All information is required. Please ensure your Name, IGN, Game Link, Friend Code, and Ingredient needs are completely filled out before submitting.</span>
         </div>
@@ -877,6 +892,19 @@ Drew</textarea>
       </div>
 
       <div id="kitchenAdminView" style="display:none;width:100%;max-width:640px">
+        <div class="card" style="margin-bottom:16px">
+          <div class="wheel-toggle-row" style="border-top:none;padding-top:0">
+            <div class="wheel-toggle-text">
+              <b>Kitchen open for requests</b>
+              <span>Turn off to pause new requests — members see a "kitchen closed" message instead of the form.</span>
+            </div>
+            <label class="wheel-switch">
+              <input type="checkbox" id="kitchenOpenToggle" checked>
+              <span class="track"></span>
+              <span class="thumb"></span>
+            </label>
+          </div>
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
           <span class="wheel-count-pill" id="kitchenPendingCount" style="margin-bottom:0">0 pending requests</span>
           <button class="btn btn-outline btn-sm" id="kitchenLockAgainBtn" type="button">Lock</button>
@@ -7183,8 +7211,18 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
 
   let kitchenData = {}; // live mirror of the 'kitchenRequests' path
   let kitchenUnlocked = false;
+  let kitchenIsOpen = true; // default open until 'kitchenOpen' says otherwise
 
   function kitchenEl(id){ return document.getElementById(id); }
+
+  function kitchenApplyOpenState(){
+    const openCard = kitchenEl('kitchenOpenCard');
+    const closedCard = kitchenEl('kitchenClosedCard');
+    if(openCard) openCard.style.display = kitchenIsOpen ? '' : 'none';
+    if(closedCard) closedCard.style.display = kitchenIsOpen ? 'none' : '';
+    const toggle = kitchenEl('kitchenOpenToggle');
+    if(toggle) toggle.checked = kitchenIsOpen;
+  }
 
   function kitchenBuildIngGrid(){
     const grid = kitchenEl('kitchenIngGrid');
@@ -7232,6 +7270,7 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
 
   async function kitchenSubmit(e){
     e.preventDefault();
+    if(!kitchenIsOpen){ kitchenApplyOpenState(); return; }
     const nameEl = kitchenEl('k-name');
     const ignEl = kitchenEl('k-ign');
     const codeEl = kitchenEl('k-code');
@@ -7316,7 +7355,7 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     const countPill = kitchenEl('kitchenPendingCount');
     if(!list) return;
 
-    const entries = Object.entries(kitchenData || {}).sort(function(a,b){ return (b[1].ts||0) - (a[1].ts||0); });
+    const entries = Object.entries(kitchenData || {}).sort(function(a,b){ return (a[1].ts||0) - (b[1].ts||0); });
     countPill.innerHTML = '<b>' + entries.length + '</b> pending request' + (entries.length === 1 ? '' : 's');
 
     if(entries.length === 0){
@@ -7379,6 +7418,30 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     kitchenEl('kitchenUnlockBtn').addEventListener('click', kitchenTryUnlock);
     kitchenEl('kitchenPass').addEventListener('keydown', function(e){ if(e.key === 'Enter') kitchenTryUnlock(); });
     kitchenEl('kitchenLockAgainBtn').addEventListener('click', kitchenLock);
+    kitchenEl('kitchenOpenToggle').addEventListener('change', function(){
+      kitchenIsOpen = this.checked;
+      kitchenApplyOpenState();
+      dbSet('kitchenOpen', kitchenIsOpen);
+    });
+
+    // Shareable link to the standalone submit-only page (kitchen-request.html),
+    // assumed to sit next to this file. Editable in case it's hosted elsewhere.
+    const shareInput = kitchenEl('kitchenShareLink');
+    if(shareInput){
+      try { shareInput.value = new URL('kitchen-request.html', window.location.href).href; }
+      catch(e){ shareInput.value = 'kitchen-request.html'; }
+    }
+    kitchenEl('kitchenCopyLinkBtn').addEventListener('click', function(){
+      const btn = this;
+      shareInput.select();
+      shareInput.setSelectionRange(0, 99999);
+      const done = function(){ const orig = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(function(){ btn.textContent = orig; }, 1600); };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(shareInput.value).then(done).catch(function(){ document.execCommand('copy'); done(); });
+      } else {
+        document.execCommand('copy'); done();
+      }
+    });
 
     if(localStorage.getItem(KITCHEN_UNLOCK_KEY) === '1'){
       kitchenUnlocked = true;
@@ -7386,12 +7449,14 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
       kitchenEl('kitchenAdminView').style.display = '';
     }
 
-    if(window._dbReady){
+    function startKitchenListeners(){
       dbListen('kitchenRequests', function(val){ kitchenData = val || {}; kitchenRenderAdmin(); });
+      dbListen('kitchenOpen', function(val){ kitchenIsOpen = (val === false) ? false : true; kitchenApplyOpenState(); });
+    }
+    if(window._dbReady){
+      startKitchenListeners();
     } else {
-      window.addEventListener('db-ready', function(){
-        dbListen('kitchenRequests', function(val){ kitchenData = val || {}; kitchenRenderAdmin(); });
-      });
+      window.addEventListener('db-ready', startKitchenListeners);
     }
   };
 })();

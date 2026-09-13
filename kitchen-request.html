@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MLT Kitchen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#DCD1B6;
+    --bg-2:#D2C5A6;
+    --surface:#F5EFE1;
+    --surface-2:#EAE1CB;
+    --ink:#241F1B;
+    --muted:#6E6455;
+    --brass:#9C6B2A;
+    --brass-ink:#241F1B;
+    --pine:#2F6656;
+    --rust:#9A3A2C;
+    --good:#3F7A4E;
+    --line:rgba(36,31,27,0.18);
+    --line-strong:rgba(36,31,27,0.32);
+    --shadow:rgba(36,31,27,0.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#161210;
+      --bg-2:#0F0D0B;
+      --surface:#26201A;
+      --surface-2:#302921;
+      --ink:#EDE4D3;
+      --muted:#A99C89;
+      --brass:#D9A756;
+      --brass-ink:#1A1511;
+      --pine:#6FA593;
+      --rust:#E0685A;
+      --good:#7FB88F;
+      --line:rgba(237,228,211,0.16);
+      --line-strong:rgba(237,228,211,0.3);
+      --shadow:rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161210;
+    --bg-2:#0F0D0B;
+    --surface:#26201A;
+    --surface-2:#302921;
+    --ink:#EDE4D3;
+    --muted:#A99C89;
+    --brass:#D9A756;
+    --brass-ink:#1A1511;
+    --pine:#6FA593;
+    --rust:#E0685A;
+    --good:#7FB88F;
+    --line:rgba(237,228,211,0.16);
+    --line-strong:rgba(237,228,211,0.3);
+    --shadow:rgba(0,0,0,0.5);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 15% -10%, color-mix(in srgb, var(--brass) 10%, transparent), transparent 55%),
+      radial-gradient(ellipse at 90% 110%, color-mix(in srgb, var(--pine) 8%, transparent), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Libre Franklin', system-ui, -apple-system, sans-serif;
+    min-height:100vh;
+    padding:clamp(20px, 6vw, 56px) 16px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:28px;
+  }
+  h1,h2,h3{font-family:'Fraunces', Georgia, serif; text-wrap:balance; margin:0;}
+
+  .masthead{
+    text-align:center;
+    max-width:520px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--brass);
+    font-weight:600;
+  }
+  .masthead h1{
+    font-size:clamp(1.9rem, 5vw, 2.6rem);
+    font-weight:700;
+    line-height:1.05;
+    letter-spacing:-0.01em;
+  }
+  .masthead p{
+    margin:0;
+    color:var(--muted);
+    font-size:0.98rem;
+    line-height:1.5;
+  }
+
+  .ticket-wrap{
+    width:100%;
+    max-width:560px;
+    position:relative;
+    filter:drop-shadow(0 18px 34px var(--shadow));
+    animation:settle 0.6s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ticket-wrap{animation:none;}
+  }
+  @keyframes settle{
+    from{opacity:0; transform:translateY(14px) rotate(-1.1deg);}
+    to{opacity:1; transform:translateY(0) rotate(0deg);}
+  }
+
+  .ticket{
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .ticket-head{
+    background:var(--ink);
+    color:var(--surface);
+    padding:18px 26px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .ticket-head .stamp-word{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.15rem;
+    letter-spacing:0.01em;
+  }
+  .ticket-head-right{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:3px;
+    min-width:0;
+  }
+  .ticket-head .ticket-no{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.08em;
+    opacity:0.75;
+    white-space:nowrap;
+  }
+  .ticket-head .ticket-for{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:0.92rem;
+    color:var(--brass);
+    max-width:220px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .perforation{
+    position:relative;
+    height:0;
+    border-top:2px dashed var(--line-strong);
+    margin:0 0;
+  }
+  .perforation::before,
+  .perforation::after{
+    content:"";
+    position:absolute;
+    top:-9px;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:var(--bg-2);
+    box-shadow:0 0 0 1px var(--line-strong) inset;
+  }
+  .perforation::before{ left:-9px; }
+  .perforation::after{ right:-9px; }
+
+  form{
+    padding:26px;
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+  }
+
+  .line-item{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .line-item label{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .line-item .field-name{
+    font-weight:600;
+    font-size:0.94rem;
+  }
+  .line-item .field-hint{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  input[type="text"], input[type="url"], textarea{
+    width:100%;
+    font-family:'Libre Franklin', sans-serif;
+    font-size:0.98rem;
+    color:var(--ink);
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:11px 13px;
+  }
+  textarea{resize:vertical; min-height:70px; line-height:1.5;}
+  input::placeholder, textarea::placeholder{color:var(--muted); opacity:0.75;}
+  input:focus-visible, textarea:focus-visible, button:focus-visible{
+    outline:2px solid var(--pine);
+    outline-offset:2px;
+  }
+  input.invalid, textarea.invalid{
+    border-color:var(--rust);
+    background:color-mix(in srgb, var(--rust) 8%, var(--surface-2));
+  }
+
+  .ingredients-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+    gap:10px 14px;
+  }
+  .ingredient-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:8px 10px;
+  }
+  .ingredient-row label{
+    font-size:0.88rem;
+    color:var(--ink);
+  }
+  .ingredient-row input[type="number"]{
+    width:52px;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-variant-numeric:tabular-nums;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:5px 4px;
+    color:var(--ink);
+    font-size:0.88rem;
+  }
+
+  .alert-banner{
+    display:none;
+    gap:10px;
+    align-items:flex-start;
+    background:color-mix(in srgb, var(--rust) 12%, var(--surface));
+    border:1px solid var(--rust);
+    color:var(--rust);
+    border-radius:6px;
+    padding:13px 15px;
+    font-size:0.9rem;
+    line-height:1.45;
+  }
+  .alert-banner.show{display:flex;}
+  .alert-banner svg{flex:none; margin-top:2px;}
+
+  .send-btn{
+    align-self:flex-start;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.02rem;
+    color:var(--brass-ink);
+    background:var(--brass);
+    border:none;
+    border-radius:999px;
+    padding:13px 26px 13px 22px;
+    cursor:pointer;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow:0 2px 0 color-mix(in srgb, var(--brass) 60%, black);
+  }
+  .send-btn:hover{ transform:translateY(-1px); }
+  .send-btn:active{ transform:translateY(1px); box-shadow:0 1px 0 color-mix(in srgb, var(--brass) 60%, black); }
+  .send-btn svg{flex:none;}
+  .send-btn:disabled{opacity:0.6; cursor:default; transform:none;}
+
+  .fine-print{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:var(--muted);
+    line-height:1.5;
+  }
+
+  /* confirmation state */
+  .confirm{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:18px;
+    padding:44px 26px 40px;
+  }
+  .confirm.show{display:flex;}
+  form.hide{display:none;}
+  .stamp{
+    width:112px;
+    height:112px;
+    border-radius:50%;
+    border:3px solid var(--good);
+    color:var(--good);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transform:rotate(-9deg);
+    animation:stamp-in 0.45s cubic-bezier(.2,.9,.3,1.3) both;
+  }
+  @media (prefers-reduced-motion: reduce){ .stamp{animation:none;} }
+  @keyframes stamp-in{
+    from{opacity:0; transform:rotate(-9deg) scale(0.6);}
+    to{opacity:1; transform:rotate(-9deg) scale(1);}
+  }
+  .stamp svg{width:52px;height:52px;}
+  .confirm-for{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--brass);
+    font-weight:600;
+  }
+  .confirm h2{font-size:1.35rem; max-width:380px;}
+  .confirm p{margin:0; color:var(--muted); max-width:380px; line-height:1.55;}
+  .again-btn{
+    margin-top:6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--pine);
+    background:transparent;
+    border:1px solid var(--pine);
+    border-radius:999px;
+    padding:9px 18px;
+    cursor:pointer;
+  }
+  .again-btn:hover{ background:color-mix(in srgb, var(--pine) 12%, transparent); }
+
+  footer{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    color:var(--muted);
+    opacity:0.8;
+    text-align:center;
+  }
+
+  @media (max-width:480px){
+    .ticket-head{padding:15px 18px;}
+    form{padding:20px;}
+    .ingredients-grid{grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));}
+  }
+</style>
+</head>
+<body>
+
+  <div class="masthead">
+    <div class="kicker">MLT · Monopoly Lottery and More</div>
+    <h1>Cafe Ingredients Request</h1>
+    <p>Fill out one ticket per request. The kitchen crew reviews these in order and sends what you need straight to your in-game cafe.</p>
+  </div>
+
+  <div class="ticket-wrap">
+    <div class="ticket">
+      <div class="ticket-head">
+        <span class="stamp-word">MLT Kitchen</span>
+        <span class="ticket-head-right">
+          <span class="ticket-for" id="ticketFor"></span>
+          <span class="ticket-no" id="ticketNo">TICKET —</span>
+        </span>
+      </div>
+      <div class="perforation"></div>
+
+      <form id="requestForm" novalidate>
+        <div class="alert-banner" id="alertBanner" role="alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+          <span id="alertText">All information is required. Please ensure your Name, IGN, Game Link, Friend Code, and Ingredient needs are completely filled out before submitting.</span>
+        </div>
+
+        <div class="line-item">
+          <label for="memberName">
+            <span class="field-name">Your Name</span>
+            <span class="field-hint">so we know who's asking</span>
+          </label>
+          <input type="text" id="memberName" name="memberName" placeholder="e.g. Rosa Jansen" autocomplete="off">
+        </div>
+
+        <div class="line-item">
+          <label for="ign">
+            <span class="field-name">In-Game Name</span>
+            <span class="field-hint">IGN · exact spelling</span>
+          </label>
+          <input type="text" id="ign" name="ign" placeholder="e.g. CafeQueen_Rosa" autocomplete="off">
+        </div>
+
+        <div class="line-item">
+          <label for="friendCode">
+            <span class="field-name">Player / Friend Code</span>
+            <span class="field-hint">so we can add you</span>
+          </label>
+          <input type="text" id="friendCode" name="friendCode" placeholder="e.g. 482-119-207" autocomplete="off">
+        </div>
+
+        <div class="line-item">
+          <label for="inviteLink">
+            <span class="field-name">Game Invite Link</span>
+            <span class="field-hint">valid URL</span>
+          </label>
+          <input type="url" id="inviteLink" name="inviteLink" placeholder="https://game.link/invite/yourname" autocomplete="off">
+        </div>
+
+        <div class="line-item">
+          <label for="otherIngredients">
+            <span class="field-name">Cafe Ingredients Needed</span>
+            <span class="field-hint">qty per item, 0 = not needed</span>
+          </label>
+          <div class="ingredients-grid" id="ingredientsGrid"></div>
+          <textarea id="otherIngredients" placeholder="Anything else, or notes on quantities (e.g. &quot;need the pink sugar from the spring event&quot;)"></textarea>
+        </div>
+
+        <button type="submit" class="send-btn" id="sendBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12h13M13 6l6 6-6 6"/></svg>
+          Send to the Kitchen
+        </button>
+
+        <div class="fine-print">Every field on this ticket is required before it can be sent.</div>
+      </form>
+
+      <div class="confirm" id="confirmView">
+        <div class="stamp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 13 4 4L19 7"/></svg>
+        </div>
+        <div class="confirm-for" id="confirmFor">Ticket for —</div>
+        <h2>Your ingredient request has been submitted to the MLT Kitchen!</h2>
+        <p>An admin will review and send your ingredients shortly.</p>
+        <button type="button" class="again-btn" id="againBtn">Submit another request</button>
+      </div>
+
+      <div class="confirm" id="closedView">
+        <div class="stamp" style="border-color:var(--rust);color:var(--rust)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </div>
+        <h2>The kitchen is closed for now</h2>
+        <p>Please return later. The kitchen crew will reopen requests soon.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>MLT Kitchen intake · requests are reviewed in the order received</footer>
+
+<script>
+(function(){
+  // Same Firebase project the MLT Games / MLT Kitchen tab already writes to.
+  // Requests land in the same 'kitchenRequests' list either way, so this page
+  // and the Kitchen Staff tab in the Game Box are always looking at the same data.
+  const FIREBASE_DB_URL = "https://mlt-games-default-rtdb.firebaseio.com";
+
+  const INGREDIENTS = ["Flour", "Sugar", "Milk", "Eggs", "Butter", "Coffee Beans", "Cocoa Powder", "Vanilla", "Fresh Fruit", "Cheese"];
+
+  const grid = document.getElementById('ingredientsGrid');
+  INGREDIENTS.forEach(function(name, i){
+    const id = 'ing_' + i;
+    const row = document.createElement('div');
+    row.className = 'ingredient-row';
+    row.innerHTML = '<label for="' + id + '">' + name + '</label>' +
+      '<input type="number" min="0" max="99" step="1" value="0" id="' + id + '" data-name="' + name + '">';
+    grid.appendChild(row);
+  });
+
+  const form = document.getElementById('requestForm');
+  const confirmView = document.getElementById('confirmView');
+  const closedView = document.getElementById('closedView');
+  const alertBanner = document.getElementById('alertBanner');
+  const sendBtn = document.getElementById('sendBtn');
+  const ticketNo = document.getElementById('ticketNo');
+  const ticketFor = document.getElementById('ticketFor');
+  const confirmFor = document.getElementById('confirmFor');
+  const nameInput = document.getElementById('memberName');
+
+  function showClosed(){
+    form.classList.add('hide');
+    confirmView.classList.remove('show');
+    closedView.classList.add('show');
+  }
+
+  function checkKitchenOpen(){
+    return fetch(FIREBASE_DB_URL + '/kitchenOpen.json')
+      .then(function(res){ return res.ok ? res.json() : true; })
+      .then(function(val){ return val !== false; }) // default open when unset
+      .catch(function(){ return true; }); // if the check itself fails, don't block submitting
+  }
+
+  // Check once on load so a closed kitchen shows the message right away
+  checkKitchenOpen().then(function(open){ if(!open) showClosed(); });
+
+  nameInput.addEventListener('input', function(){
+    ticketFor.textContent = nameInput.value.trim();
+  });
+
+  function stampTicketNumber(){
+    const n = Math.floor(1000 + Math.random() * 8999);
+    const now = new Date();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    ticketNo.textContent = 'TICKET #' + n + ' · ' + mm + '/' + dd;
+  }
+  stampTicketNumber();
+
+  function isValidUrl(value){
+    try {
+      const u = new URL(value);
+      return Boolean(u.protocol && u.host);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function collectIngredients(){
+    const picked = INGREDIENTS.map(function(name, i){
+      const val = parseInt(document.getElementById('ing_' + i).value, 10) || 0;
+      return val > 0 ? name + ' x' + val : null;
+    }).filter(Boolean);
+    const other = document.getElementById('otherIngredients').value.trim();
+    let text = picked.join(', ');
+    if (other){
+      text = text ? text + '; Other: ' + other : 'Other: ' + other;
+    }
+    return text;
+  }
+
+  function setInvalid(el, bad){
+    el.classList.toggle('invalid', bad);
+  }
+
+  function showAlert(show){
+    alertBanner.classList.toggle('show', show);
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const nameEl = document.getElementById('memberName');
+    const ignEl = document.getElementById('ign');
+    const codeEl = document.getElementById('friendCode');
+    const linkEl = document.getElementById('inviteLink');
+    const otherEl = document.getElementById('otherIngredients');
+
+    const memberName = nameEl.value.trim();
+    const ign = ignEl.value.trim();
+    const friendCode = codeEl.value.trim();
+    const inviteLink = linkEl.value.trim();
+    const ingredients = collectIngredients();
+
+    const nameBad = !memberName;
+    const ignBad = !ign;
+    const codeBad = !friendCode;
+    const linkBad = !inviteLink || !isValidUrl(inviteLink);
+    const ingredientsBad = !ingredients;
+
+    setInvalid(nameEl, nameBad);
+    setInvalid(ignEl, ignBad);
+    setInvalid(codeEl, codeBad);
+    setInvalid(linkEl, linkBad);
+    setInvalid(otherEl, ingredientsBad);
+
+    if (nameBad || ignBad || codeBad || linkBad || ingredientsBad){
+      showAlert(true);
+      const firstBad = nameBad ? nameEl : ignBad ? ignEl : codeBad ? codeEl : linkBad ? linkEl : otherEl;
+      firstBad.focus();
+      return;
+    }
+    showAlert(false);
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending…';
+
+    const reqId = Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+    const payload = {
+      name: memberName, ign: ign, friendCode: friendCode,
+      inviteLink: inviteLink, ingredients: ingredients, ts: Date.now()
+    };
+
+    function onDone(){
+      confirmFor.textContent = 'Ticket for ' + memberName;
+      form.classList.add('hide');
+      confirmView.classList.add('show');
+    }
+
+    function resetSendBtn(){
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12h13M13 6l6 6-6 6"/></svg> Send to the Kitchen';
+    }
+
+    checkKitchenOpen().then(function(open){
+      if(!open){ resetSendBtn(); showClosed(); return; }
+      return fetch(FIREBASE_DB_URL + '/kitchenRequests/' + reqId + '.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function(res){
+        if (!res.ok) throw new Error('Request failed');
+        onDone();
+      });
+    }).catch(function(){
+      resetSendBtn();
+      alertText.textContent = "Couldn't reach the kitchen — check your connection and try again.";
+      showAlert(true);
+    });
+  });
+
+  document.getElementById('againBtn').addEventListener('click', function(){
+    form.reset();
+    INGREDIENTS.forEach(function(_, i){ document.getElementById('ing_' + i).value = 0; });
+    [document.getElementById('memberName'), document.getElementById('ign'), document.getElementById('friendCode'), document.getElementById('inviteLink'), document.getElementById('otherIngredients')]
+      .forEach(function(el){ setInvalid(el, false); });
+    showAlert(false);
+    sendBtn.disabled = false;
+    sendBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12h13M13 6l6 6-6 6"/></svg> Send to the Kitchen';
+    stampTicketNumber();
+    ticketFor.textContent = '';
+    confirmFor.textContent = 'Ticket for —';
+    confirmView.classList.remove('show');
+    form.classList.remove('hide');
+  });
+
+  const alertText = document.getElementById('alertText');
+})();
+</script>
+</body>
+</html>
