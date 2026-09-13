@@ -363,6 +363,13 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .kitchen-req-row{font-size:.85rem;margin-bottom:4px;line-height:1.5}
 .kitchen-req-row b{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:.68rem;letter-spacing:.4px;margin-right:6px}
 .kitchen-req-link{color:#22d3ee;word-break:break-all}
+.kitchen-ing-checklist{display:flex;flex-direction:column;gap:6px;margin-top:4px;width:100%}
+.kitchen-ing-check{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:7px 10px;font-size:.85rem;cursor:pointer;transition:.2s}
+.kitchen-ing-check:hover{border-color:rgba(255,255,255,.18)}
+.kitchen-ing-check input{width:16px;height:16px;accent-color:#eab308;cursor:pointer;flex-shrink:0}
+.kitchen-ing-check.checked{opacity:.55}
+.kitchen-ing-check.checked span{text-decoration:line-through}
+.kitchen-all-gathered{color:var(--green);font-weight:700;font-size:.82rem}
 /* ── FIND GAMES SUB-TABS ── */
 .fg-subtabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
 .fg-subtab-btn{padding:9px 14px;border:1.5px solid rgba(255,255,255,.08);background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;border-radius:20px;cursor:pointer;transition:.2s;white-space:nowrap}
@@ -7229,6 +7236,10 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
   }
 
   function kitchenCollectIngredients(){
+    return kitchenCollectIngredientsData().text;
+  }
+
+  function kitchenCollectIngredientsData(){
     const picked = KITCHEN_INGREDIENTS.map(function(name, i){
       const el = kitchenEl('kIng_' + i);
       const val = el ? (parseInt(el.value, 10) || 0) : 0;
@@ -7237,7 +7248,9 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     const other = kitchenEl('k-other').value.trim();
     let text = picked.join(', ');
     if(other) text = text ? text + '; Other: ' + other : 'Other: ' + other;
-    return text;
+    const items = picked.slice();
+    if(other) items.push('Other: ' + other);
+    return { text: text, items: items };
   }
 
   function kitchenSetInvalid(el, bad){ if(el) el.classList.toggle('invalid', bad); }
@@ -7268,7 +7281,8 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     const ign = ignEl.value.trim();
     const friendCode = codeEl.value.trim();
     const inviteLink = linkEl.value.trim();
-    const ingredients = kitchenCollectIngredients();
+    const ingData = kitchenCollectIngredientsData();
+    const ingredients = ingData.text;
 
     const nameBad = !memberName;
     const ignBad = !ign;
@@ -7297,7 +7311,7 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     try {
       await dbSet('kitchenRequests/' + reqId, {
         name: memberName, ign: ign, friendCode: friendCode,
-        inviteLink: inviteLink, ingredients: ingredients, ts: Date.now()
+        inviteLink: inviteLink, ingredients: ingredients, items: ingData.items, ts: Date.now()
       });
       kitchenEl('kitchenConfirmFor').textContent = 'Ticket for ' + memberName;
       kitchenEl('kitchenForm').style.display = 'none';
@@ -7353,6 +7367,28 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
 
     list.innerHTML = entries.map(function(entry){
       const id = entry[0], req = entry[1];
+      const items = Array.isArray(req.items) && req.items.length ? req.items : null;
+      const checked = req.checked || {};
+      let ingredientsHtml;
+      if(items){
+        const allChecked = items.every(function(_, i){ return Boolean(checked[i]); });
+        ingredientsHtml =
+          '<div class="kitchen-req-row" style="align-items:flex-start"><b>Ingredients</b>' +
+            '<div class="kitchen-ing-checklist">' +
+              items.map(function(label, i){
+                const isChecked = Boolean(checked[i]);
+                return '<label class="kitchen-ing-check' + (isChecked ? ' checked' : '') + '">' +
+                  '<input type="checkbox"' + (isChecked ? ' checked' : '') +
+                    ' onchange="kitchenToggleItem(\'' + id + '\',' + i + ',this.checked)">' +
+                  '<span>' + kitchenEscape(label) + '</span>' +
+                '</label>';
+              }).join('') +
+            '</div>' +
+          '</div>' +
+          (allChecked ? '<div class="kitchen-req-row"><span class="kitchen-all-gathered">✅ All ingredients gathered</span></div>' : '');
+      } else {
+        ingredientsHtml = '<div class="kitchen-req-row"><b>Ingredients</b>' + kitchenEscape(req.ingredients || '—') + '</div>';
+      }
       return '' +
         '<div class="kitchen-req-card">' +
           '<div class="kitchen-req-top">' +
@@ -7362,11 +7398,16 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
           '<div class="kitchen-req-row"><b>IGN</b>' + kitchenEscape(req.ign || '—') + '</div>' +
           '<div class="kitchen-req-row"><b>Friend Code</b>' + kitchenEscape(req.friendCode || '—') + '</div>' +
           '<div class="kitchen-req-row"><b>Invite Link</b><a class="kitchen-req-link" href="' + kitchenEscape(req.inviteLink || '#') + '" target="_blank" rel="noopener">' + kitchenEscape(req.inviteLink || '—') + '</a></div>' +
-          '<div class="kitchen-req-row"><b>Ingredients</b>' + kitchenEscape(req.ingredients || '—') + '</div>' +
+          ingredientsHtml +
           '<button class="btn btn-accent btn-sm" style="margin-top:10px" onclick="kitchenMarkDone(\'' + id + '\')">✅ Mark as Done</button>' +
         '</div>';
     }).join('');
   }
+
+  window.kitchenToggleItem = async function(id, idx, isChecked){
+    try { await dbUpdate('kitchenRequests/' + id + '/checked', (function(){ const o={}; o[idx]=isChecked; return o; })()); }
+    catch(e){ /* will simply re-render from live data on next sync */ }
+  };
 
   window.kitchenMarkDone = async function(id){
     try { await dbRemove('kitchenRequests/' + id); }

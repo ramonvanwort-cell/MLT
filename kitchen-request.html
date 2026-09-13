@@ -546,6 +546,10 @@
   }
 
   function collectIngredients(){
+    return collectIngredientsData().text;
+  }
+
+  function collectIngredientsData(){
     const picked = INGREDIENTS.map(function(name, i){
       const val = parseInt(document.getElementById('ing_' + i).value, 10) || 0;
       return val > 0 ? name + ' x' + val : null;
@@ -555,7 +559,9 @@
     if (other){
       text = text ? text + '; Other: ' + other : 'Other: ' + other;
     }
-    return text;
+    const items = picked.slice();
+    if (other) items.push('Other: ' + other);
+    return { text: text, items: items };
   }
 
   function setInvalid(el, bad){
@@ -579,7 +585,8 @@
     const ign = ignEl.value.trim();
     const friendCode = codeEl.value.trim();
     const inviteLink = linkEl.value.trim();
-    const ingredients = collectIngredients();
+    const ingData = collectIngredientsData();
+    const ingredients = ingData.text;
 
     const nameBad = !memberName;
     const ignBad = !ign;
@@ -607,7 +614,7 @@
     const reqId = Date.now() + '_' + Math.random().toString(36).slice(2, 7);
     const payload = {
       name: memberName, ign: ign, friendCode: friendCode,
-      inviteLink: inviteLink, ingredients: ingredients, ts: Date.now()
+      inviteLink: inviteLink, ingredients: ingredients, items: ingData.items, ts: Date.now()
     };
 
     function onDone(){
