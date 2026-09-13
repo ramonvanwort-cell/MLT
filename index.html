@@ -363,7 +363,6 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .kitchen-req-row{font-size:.85rem;margin-bottom:4px;line-height:1.5}
 .kitchen-req-row b{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:.68rem;letter-spacing:.4px;margin-right:6px}
 .kitchen-req-link{color:#22d3ee;word-break:break-all}
-.kitchen-lock{max-width:360px;text-align:center}
 /* ── FIND GAMES SUB-TABS ── */
 .fg-subtabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
 .fg-subtab-btn{padding:9px 14px;border:1.5px solid rgba(255,255,255,.08);background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;border-radius:20px;cursor:pointer;transition:.2s;white-space:nowrap}
@@ -477,7 +476,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 
   <!-- TAB BAR -->
   <div class="tab-bar">
-    <button class="tab-btn bingo-tab active" onclick="switchTab('bingo')"><span class="t-icon">🎱</span>MLT Bingo</button>
+    <button class="tab-btn bingo-tab" onclick="switchTab('bingo')"><span class="t-icon">🎱</span>MLT Bingo</button>
     <button class="tab-btn lucky-tab" onclick="switchTab('lucky')"><span class="t-icon">🍀</span>Lucky Numbers</button>
     <button class="tab-btn other-tab" onclick="switchTab('other')"><span class="t-icon">🎮</span>Other Games</button>
     <button class="tab-btn fb-tab" onclick="switchTab('fb')"><span class="t-icon">📘</span>Facebook Games</button>
@@ -489,7 +488,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
   </div>
 
   <!-- BINGO TAB -->
-  <div class="tab-panel active" id="tab-bingo">
+  <div class="tab-panel" id="tab-bingo">
     <div class="hcards">
       <div class="hcard bingo" onclick="go('s-host-setup')">
         <div class="ic">👑</div>
@@ -883,15 +882,7 @@ Drew</textarea>
 
     <!-- STAFF PANEL -->
     <div id="kitchenPanelStaff" style="display:none">
-      <div class="kitchen-lock card" id="kitchenLockBox">
-        <h2 style="font-size:1.1rem">Kitchen staff only</h2>
-        <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px">Enter the kitchen passcode to see and manage pending requests.</p>
-        <div class="ig" style="margin:0 auto 10px"><input type="password" id="kitchenPass" placeholder="Passcode"></div>
-        <button class="btn btn-purple btn-sm" id="kitchenUnlockBtn" type="button">Unlock</button>
-        <p id="kitchenPassErr" style="display:none;color:var(--pink);font-size:.78rem;margin-top:8px">Wrong passcode — try again.</p>
-      </div>
-
-      <div id="kitchenAdminView" style="display:none;width:100%;max-width:640px">
+      <div id="kitchenAdminView" style="width:100%;max-width:640px">
         <div class="card" style="margin-bottom:16px">
           <div class="wheel-toggle-row" style="border-top:none;padding-top:0">
             <div class="wheel-toggle-text">
@@ -905,9 +896,8 @@ Drew</textarea>
             </label>
           </div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">
+        <div style="margin-bottom:14px">
           <span class="wheel-count-pill" id="kitchenPendingCount" style="margin-bottom:0">0 pending requests</span>
-          <button class="btn btn-outline btn-sm" id="kitchenLockAgainBtn" type="button">Lock</button>
         </div>
         <div id="kitchenReqList"></div>
         <p id="kitchenReqEmpty" style="color:var(--muted);font-size:.85rem;text-align:center;padding:30px 0;display:none">No pending requests — all caught up! 🎉</p>
@@ -7206,11 +7196,8 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
   "use strict";
 
   const KITCHEN_INGREDIENTS = ["Flour","Sugar","Milk","Eggs","Butter","Coffee Beans","Cocoa Powder","Vanilla","Fresh Fruit","Cheese"];
-  const KITCHEN_PASSCODE = "mltkitchen"; // change this to whatever passcode your kitchen staff should use
-  const KITCHEN_UNLOCK_KEY = "mlt_kitchen_staff_unlocked";
 
   let kitchenData = {}; // live mirror of the 'kitchenRequests' path
-  let kitchenUnlocked = false;
   let kitchenIsOpen = true; // default open until 'kitchenOpen' says otherwise
 
   function kitchenEl(id){ return document.getElementById(id); }
@@ -7349,7 +7336,6 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
   }
 
   function kitchenRenderAdmin(){
-    if(!kitchenUnlocked) return;
     const list = kitchenEl('kitchenReqList');
     const empty = kitchenEl('kitchenReqEmpty');
     const countPill = kitchenEl('kitchenPendingCount');
@@ -7387,37 +7373,12 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     catch(e){ /* removal will simply retry on next click if this failed */ }
   };
 
-  function kitchenTryUnlock(){
-    const val = kitchenEl('kitchenPass').value;
-    if(val === KITCHEN_PASSCODE){
-      kitchenUnlocked = true;
-      localStorage.setItem(KITCHEN_UNLOCK_KEY, '1');
-      kitchenEl('kitchenLockBox').style.display = 'none';
-      kitchenEl('kitchenAdminView').style.display = '';
-      kitchenEl('kitchenPassErr').style.display = 'none';
-      kitchenEl('kitchenPass').value = '';
-      kitchenRenderAdmin();
-    } else {
-      kitchenEl('kitchenPassErr').style.display = '';
-    }
-  }
-
-  function kitchenLock(){
-    kitchenUnlocked = false;
-    localStorage.removeItem(KITCHEN_UNLOCK_KEY);
-    kitchenEl('kitchenLockBox').style.display = '';
-    kitchenEl('kitchenAdminView').style.display = 'none';
-  }
-
   window.kitchenInitOnce = function(){
     kitchenBuildIngGrid();
     kitchenEl('kitchenForm').addEventListener('submit', kitchenSubmit);
     kitchenEl('kitchenAgainBtn').addEventListener('click', kitchenReset);
     kitchenEl('kitchenTabSubmit').addEventListener('click', function(){ kitchenSelectSubtab('submit'); });
     kitchenEl('kitchenTabStaff').addEventListener('click', function(){ kitchenSelectSubtab('staff'); });
-    kitchenEl('kitchenUnlockBtn').addEventListener('click', kitchenTryUnlock);
-    kitchenEl('kitchenPass').addEventListener('keydown', function(e){ if(e.key === 'Enter') kitchenTryUnlock(); });
-    kitchenEl('kitchenLockAgainBtn').addEventListener('click', kitchenLock);
     kitchenEl('kitchenOpenToggle').addEventListener('change', function(){
       kitchenIsOpen = this.checked;
       kitchenApplyOpenState();
@@ -7442,12 +7403,6 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
         document.execCommand('copy'); done();
       }
     });
-
-    if(localStorage.getItem(KITCHEN_UNLOCK_KEY) === '1'){
-      kitchenUnlocked = true;
-      kitchenEl('kitchenLockBox').style.display = 'none';
-      kitchenEl('kitchenAdminView').style.display = '';
-    }
 
     function startKitchenListeners(){
       dbListen('kitchenRequests', function(val){ kitchenData = val || {}; kitchenRenderAdmin(); });
