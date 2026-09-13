@@ -370,6 +370,14 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .kitchen-ing-check.checked{opacity:.55}
 .kitchen-ing-check.checked span{text-decoration:line-through}
 .kitchen-all-gathered{color:var(--green);font-weight:700;font-size:.82rem}
+.kitchen-ing-sent{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:8px 10px;font-size:.85rem;transition:.2s}
+.kitchen-ing-sent.done{border-color:rgba(6,214,160,.4);opacity:.75}
+.kitchen-ing-sent-name{white-space:nowrap}
+.kitchen-ing-sent-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kitchen-ing-sent-label{color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.4px}
+.kitchen-ing-sent-input{width:56px;text-align:center;background:var(--surface2);border:1.5px solid rgba(255,255,255,.14);border-radius:8px;padding:5px 4px;color:var(--text);font-size:.85rem}
+.kitchen-ing-outstanding{color:var(--pink);font-size:.75rem;font-weight:700;white-space:nowrap}
+.kitchen-ing-outstanding-ok{color:var(--green)}
 /* ── FIND GAMES SUB-TABS ── */
 .fg-subtabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
 .fg-subtab-btn{padding:9px 14px;border:1.5px solid rgba(255,255,255,.08);background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;border-radius:20px;cursor:pointer;transition:.2s;white-space:nowrap}
@@ -7349,6 +7357,15 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     });
   }
 
+  // Parses an item label like "Fruits x20" into { name:"Fruits", qty:20 }.
+  // Free-text entries (e.g. "Other: sprinkles") have no trailing "xN" and get qty:null,
+  // meaning they're tracked with a plain done/not-done checkbox instead of a sent count.
+  function kitchenParseItem(label){
+    const m = /^(.*)\sx(\d+)$/.exec(String(label));
+    if(m) return { name: m[1], qty: parseInt(m[2], 10) };
+    return { name: label, qty: null };
+  }
+
   function kitchenRenderAdmin(){
     const list = kitchenEl('kitchenReqList');
     const empty = kitchenEl('kitchenReqEmpty');
@@ -7369,23 +7386,41 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
       const id = entry[0], req = entry[1];
       const items = Array.isArray(req.items) && req.items.length ? req.items : null;
       const checked = req.checked || {};
+      const sent = req.sent || {};
       let ingredientsHtml;
       if(items){
-        const allChecked = items.every(function(_, i){ return Boolean(checked[i]); });
+        let allDone = true;
+        const rows = items.map(function(label, i){
+          const parsed = kitchenParseItem(label);
+          if(parsed.qty === null){
+            const isChecked = Boolean(checked[i]);
+            if(!isChecked) allDone = false;
+            return '<label class="kitchen-ing-check' + (isChecked ? ' checked' : '') + '">' +
+              '<input type="checkbox"' + (isChecked ? ' checked' : '') +
+                ' onchange="kitchenToggleItem(\'' + id + '\',' + i + ',this.checked)">' +
+              '<span>' + kitchenEscape(label) + '</span>' +
+            '</label>';
+          }
+          const sentVal = Math.max(0, parseInt(sent[i], 10) || 0);
+          const outstanding = Math.max(0, parsed.qty - sentVal);
+          if(outstanding > 0) allDone = false;
+          return '<div class="kitchen-ing-sent' + (outstanding === 0 ? ' done' : '') + '">' +
+            '<span class="kitchen-ing-sent-name">' + kitchenEscape(parsed.name) + ' <b>x' + parsed.qty + '</b></span>' +
+            '<span class="kitchen-ing-sent-controls">' +
+              '<span class="kitchen-ing-sent-label">Sent</span>' +
+              '<input type="number" min="0" class="kitchen-ing-sent-input" value="' + sentVal + '"' +
+                ' onchange="kitchenSetSent(\'' + id + '\',' + i + ',this.value,' + parsed.qty + ')">' +
+              (outstanding === 0
+                ? '<span class="kitchen-ing-outstanding kitchen-ing-outstanding-ok">✅ Complete</span>'
+                : '<span class="kitchen-ing-outstanding">Outstanding: ' + outstanding + '</span>') +
+            '</span>' +
+          '</div>';
+        }).join('');
         ingredientsHtml =
           '<div class="kitchen-req-row" style="align-items:flex-start"><b>Ingredients</b>' +
-            '<div class="kitchen-ing-checklist">' +
-              items.map(function(label, i){
-                const isChecked = Boolean(checked[i]);
-                return '<label class="kitchen-ing-check' + (isChecked ? ' checked' : '') + '">' +
-                  '<input type="checkbox"' + (isChecked ? ' checked' : '') +
-                    ' onchange="kitchenToggleItem(\'' + id + '\',' + i + ',this.checked)">' +
-                  '<span>' + kitchenEscape(label) + '</span>' +
-                '</label>';
-              }).join('') +
-            '</div>' +
+            '<div class="kitchen-ing-checklist">' + rows + '</div>' +
           '</div>' +
-          (allChecked ? '<div class="kitchen-req-row"><span class="kitchen-all-gathered">✅ All ingredients gathered</span></div>' : '');
+          (allDone ? '<div class="kitchen-req-row"><span class="kitchen-all-gathered">✅ All ingredients gathered</span></div>' : '');
       } else {
         ingredientsHtml = '<div class="kitchen-req-row"><b>Ingredients</b>' + kitchenEscape(req.ingredients || '—') + '</div>';
       }
@@ -7406,6 +7441,14 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
 
   window.kitchenToggleItem = async function(id, idx, isChecked){
     try { await dbUpdate('kitchenRequests/' + id + '/checked', (function(){ const o={}; o[idx]=isChecked; return o; })()); }
+    catch(e){ /* will simply re-render from live data on next sync */ }
+  };
+
+  window.kitchenSetSent = async function(id, idx, rawValue, qtyTotal){
+    let val = parseInt(rawValue, 10);
+    if(isNaN(val) || val < 0) val = 0;
+    if(val > qtyTotal) val = qtyTotal;
+    try { await dbUpdate('kitchenRequests/' + id + '/sent', (function(){ const o={}; o[idx]=val; return o; })()); }
     catch(e){ /* will simply re-render from live data on next sync */ }
   };
 
