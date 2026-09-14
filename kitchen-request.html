@@ -485,6 +485,29 @@
   // and the Kitchen Staff tab in the Game Box are always looking at the same data.
   const FIREBASE_DB_URL = "https://mlt-games-default-rtdb.firebaseio.com";
 
+  // ── Telegram notifications ──
+  // Paste your bot token + chat id here (see setup notes sent alongside this file).
+  // Leave the placeholders as-is to keep notifications turned off.
+  const TELEGRAM_BOT_TOKEN = "8944290339:AAEAm0Hs-s_f5r5u-iSF0m2jNtPefU_cWOg";
+  const TELEGRAM_CHAT_ID   = "878055741";
+
+  function notifyTelegram(req){
+    if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf('YOUR_') === 0) return;
+    if (!TELEGRAM_CHAT_ID || String(TELEGRAM_CHAT_ID).indexOf('YOUR_') === 0) return;
+    const lines = [
+      '🧾 New Kitchen request!',
+      'From: ' + req.name + ' (IGN: ' + req.ign + ')',
+      'Ingredients: ' + req.ingredients,
+      'Friend Code: ' + req.friendCode,
+      'Invite: ' + req.inviteLink
+    ];
+    fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: lines.join('\n') })
+    }).catch(function(){ /* notification failing should never block the actual request */ });
+  }
+
   const INGREDIENTS = ["Flour", "Eggs", "Dairy", "Cheese", "Veggies", "Fruits", "Nuts", "Honey", "Special Spice"];
 
   const grid = document.getElementById('ingredientsGrid');
@@ -636,6 +659,7 @@
         body: JSON.stringify(payload)
       }).then(function(res){
         if (!res.ok) throw new Error('Request failed');
+        notifyTelegram(payload);
         onDone();
       });
     }).catch(function(){
