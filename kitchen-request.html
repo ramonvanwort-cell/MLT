@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Tesseract.js: free, client-side OCR used to scan a screenshot of the in-game order screen -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
   :root{
     --bg:#DCD1B6;
@@ -237,6 +239,37 @@
     background:color-mix(in srgb, var(--rust) 8%, var(--surface-2));
   }
 
+  .scan-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  .scan-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--surface-2);
+    border:1px solid var(--line-strong);
+    border-radius:6px;
+    padding:9px 14px;
+    color:var(--ink);
+    font-family:'Libre Franklin', sans-serif;
+    font-weight:600;
+    font-size:0.88rem;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .scan-btn:hover{border-color:var(--pine); color:var(--pine);}
+  .scan-btn:disabled{opacity:0.6; cursor:default;}
+  .scan-status{
+    font-size:0.82rem;
+    color:var(--muted);
+    line-height:1.4;
+  }
+  .scan-status.ok{color:var(--good);}
+  .scan-status.warn{color:var(--rust);}
   .ingredients-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
@@ -444,6 +477,11 @@
             <span class="field-name">Cafe Ingredients Needed</span>
             <span class="field-hint">qty per item, 0 = not needed</span>
           </label>
+          <div class="scan-row">
+            <button type="button" class="scan-btn" id="scanBtn">📷 Scan order screen</button>
+            <input type="file" id="scanFileInput" accept="image/*" style="display:none">
+            <span class="scan-status" id="scanStatus"></span>
+          </div>
           <div class="ingredients-grid" id="ingredientsGrid"></div>
           <textarea id="otherIngredients" placeholder="Anything else, or notes on quantities (e.g. &quot;need the pink sugar from the spring event&quot;)"></textarea>
         </div>
@@ -518,6 +556,137 @@
     row.innerHTML = '<label for="' + id + '">' + name + '</label>' +
       '<input type="number" min="0" max="99" step="1" value="0" id="' + id + '" data-name="' + name + '">';
     grid.appendChild(row);
+  });
+
+  // ── Screenshot scanner (free, client-side OCR via Tesseract.js — no API key, no server) ──
+  // Reads a screenshot of the in-game order screen (e.g. "Required Ingredient Stickers: Eggs 7/8")
+  // and fills in how many of each ingredient are still missing.
+  let ocrWorkerPromise = null;
+  function getOcrWorker(){
+    if(!ocrWorkerPromise) ocrWorkerPromise = Tesseract.createWorker('eng');
+    return ocrWorkerPromise;
+  }
+
+  function loadImageFile(file){
+    return new Promise(function(resolve, reject){
+      const img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = function(){ reject(new Error('image load failed')); };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  function canvasFromImage(img, maxW){
+    const scale = Math.min(1, maxW / img.naturalWidth);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    return { canvas: canvas, scale: scale };
+  }
+
+  function cropUpscaled(img, rect, upscale){
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(rect.w * upscale));
+    canvas.height = Math.max(1, Math.round(rect.h * upscale));
+    canvas.getContext('2d').drawImage(img, rect.x, rect.y, rect.w, rect.h, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  }
+
+  function normWord(s){ return String(s || '').toLowerCase().replace(/[^a-z]/g, ''); }
+
+  async function scanOrderScreenshot(file){
+    const statusEl = document.getElementById('scanStatus');
+    const scanBtn = document.getElementById('scanBtn');
+    statusEl.className = 'scan-status';
+    statusEl.textContent = '🔍 Reading screenshot…';
+    scanBtn.disabled = true;
+    try {
+      const img = await loadImageFile(file);
+      const worker = await getOcrWorker();
+
+      // Pass 1: find where each ingredient's name label sits on the full screenshot.
+      const pass1 = canvasFromImage(img, 1400);
+      await worker.setParameters({ tessedit_pageseg_mode: '11', tessedit_char_whitelist: '' });
+      const { data } = await worker.recognize(pass1.canvas);
+      const words = (data.words || []).map(function(w){
+        return {
+          norm: normWord(w.text),
+          x0: w.bbox.x0 / pass1.scale, y0: w.bbox.y0 / pass1.scale,
+          x1: w.bbox.x1 / pass1.scale, y1: w.bbox.y1 / pass1.scale
+        };
+      });
+
+      // Pass 2: zoom into the small counter box just below each found label
+      // (e.g. "7/8") and read only digits — far more reliable than reading it
+      // at full-page scale, where it tends to get missed entirely.
+      await worker.setParameters({ tessedit_pageseg_mode: '6', tessedit_char_whitelist: '0123456789/' });
+
+      const found = [];
+      for(let i = 0; i < INGREDIENTS.length; i++){
+        const parts = INGREDIENTS[i].toLowerCase().split(/\s+/).map(normWord);
+        let box = null;
+        for(let w = 0; w < words.length; w++){
+          if(words[w].norm !== parts[0]) continue;
+          let ok = true;
+          const candidate = { x0: words[w].x0, y0: words[w].y0, x1: words[w].x1, y1: words[w].y1 };
+          for(let p = 1; p < parts.length; p++){
+            const next = words[w + p];
+            if(!next || next.norm !== parts[p]){ ok = false; break; }
+            candidate.x1 = Math.max(candidate.x1, next.x1);
+            candidate.y0 = Math.min(candidate.y0, next.y0);
+            candidate.y1 = Math.max(candidate.y1, next.y1);
+          }
+          if(ok){ box = candidate; break; }
+        }
+        if(!box) continue;
+
+        const bh = box.y1 - box.y0;
+        const cx = (box.x0 + box.x1) / 2;
+        const rect = {
+          x: Math.max(0, cx - bh * 3.5),
+          y: Math.min(img.naturalHeight - 1, box.y1 + bh * 0.15),
+          w: bh * 7,
+          h: bh * 3.2
+        };
+        rect.w = Math.min(rect.w, img.naturalWidth - rect.x);
+        rect.h = Math.min(rect.h, img.naturalHeight - rect.y);
+        if(rect.w <= 0 || rect.h <= 0) continue;
+
+        const cropCanvas = cropUpscaled(img, rect, 5);
+        const { data: cropData } = await worker.recognize(cropCanvas);
+        const m = /(\d+)\s*\/\s*(\d+)/.exec(cropData.text || '');
+        if(m){
+          const have = parseInt(m[1], 10), need = parseInt(m[2], 10);
+          const missing = Math.max(0, need - have);
+          found.push({ name: INGREDIENTS[i], missing: missing });
+          const input = document.querySelector('#ingredientsGrid input[data-name="' + INGREDIENTS[i] + '"]');
+          if(input) input.value = missing;
+        }
+      }
+
+      if(found.length){
+        statusEl.className = 'scan-status ok';
+        statusEl.textContent = '✅ Detected: ' + found.map(function(f){ return f.name + ' (' + f.missing + ' needed)'; }).join(', ') + '. Please double-check before sending.';
+      } else {
+        statusEl.className = 'scan-status warn';
+        statusEl.textContent = "⚠️ Couldn't recognize any ingredients in that screenshot — please fill the amounts in manually.";
+      }
+    } catch(err){
+      statusEl.className = 'scan-status warn';
+      statusEl.textContent = "⚠️ Scanning failed — please fill the amounts in manually.";
+    } finally {
+      scanBtn.disabled = false;
+    }
+  }
+
+  document.getElementById('scanBtn').addEventListener('click', function(){
+    document.getElementById('scanFileInput').click();
+  });
+  document.getElementById('scanFileInput').addEventListener('change', function(e){
+    const file = e.target.files && e.target.files[0];
+    if(file) scanOrderScreenshot(file);
+    e.target.value = '';
   });
 
   const form = document.getElementById('requestForm');

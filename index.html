@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>MLT Games</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+<!-- Tesseract.js: free, client-side OCR used by the Kitchen "Scan order screen" feature -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <!-- ════════════════════════════════════════════
      Paste your Firebase config here
@@ -347,6 +349,10 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .ig textarea:focus{border-color:var(--accent)}
 .ig textarea::placeholder{color:var(--muted)}
 .ig input.invalid,.ig textarea.invalid{border-color:var(--pink)}
+.kitchen-scan-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.kitchen-scan-status{font-size:.8rem;color:var(--muted);line-height:1.4}
+.kitchen-scan-status.ok{color:var(--green)}
+.kitchen-scan-status.warn{color:var(--pink)}
 .kitchen-ing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px;margin-bottom:14px}
 .kitchen-ing-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 10px}
 .kitchen-ing-row span{font-size:.82rem}
@@ -879,6 +885,11 @@ Drew</textarea>
           </div>
           <div class="ig" style="max-width:100%">
             <label>Cafe Ingredients Needed</label>
+            <div class="kitchen-scan-row">
+              <button type="button" class="btn btn-sm" id="kitchenScanBtn">📷 Scan order screen</button>
+              <input type="file" id="kitchenScanFileInput" accept="image/*" style="display:none">
+              <span class="kitchen-scan-status" id="kitchenScanStatus"></span>
+            </div>
             <div class="kitchen-ing-grid" id="kitchenIngGrid"></div>
             <textarea id="k-other" placeholder="Anything else, or notes on quantities (e.g. &quot;need the pink sugar from the spring event&quot;)"></textarea>
           </div>
@@ -7256,9 +7267,131 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
       const id = 'kIng_' + i;
       const row = document.createElement('div');
       row.className = 'kitchen-ing-row';
-      row.innerHTML = '<span>' + name + '</span><input type="number" min="0" max="99" step="1" value="0" id="' + id + '">';
+      row.innerHTML = '<span>' + name + '</span><input type="number" min="0" max="99" step="1" value="0" id="' + id + '" data-name="' + name + '">';
       grid.appendChild(row);
     });
+  }
+
+  // ── Screenshot scanner (free, client-side OCR via Tesseract.js — no API key, no server) ──
+  // Reads a screenshot of the in-game order screen (e.g. "Required Ingredient Stickers: Eggs 7/8")
+  // and fills in how many of each ingredient are still missing.
+  let kitchenOcrWorkerPromise = null;
+  function kitchenGetOcrWorker(){
+    if(!kitchenOcrWorkerPromise) kitchenOcrWorkerPromise = Tesseract.createWorker('eng');
+    return kitchenOcrWorkerPromise;
+  }
+
+  function kitchenLoadImageFile(file){
+    return new Promise(function(resolve, reject){
+      const img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = function(){ reject(new Error('image load failed')); };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  function kitchenCanvasFromImage(img, maxW){
+    const scale = Math.min(1, maxW / img.naturalWidth);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    return { canvas: canvas, scale: scale };
+  }
+
+  function kitchenCropUpscaled(img, rect, upscale){
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(rect.w * upscale));
+    canvas.height = Math.max(1, Math.round(rect.h * upscale));
+    canvas.getContext('2d').drawImage(img, rect.x, rect.y, rect.w, rect.h, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  }
+
+  function kitchenNormWord(s){ return String(s || '').toLowerCase().replace(/[^a-z]/g, ''); }
+
+  async function kitchenScanOrderScreenshot(file){
+    const statusEl = kitchenEl('kitchenScanStatus');
+    const scanBtn = kitchenEl('kitchenScanBtn');
+    statusEl.className = 'kitchen-scan-status';
+    statusEl.textContent = '🔍 Reading screenshot…';
+    scanBtn.disabled = true;
+    try {
+      const img = await kitchenLoadImageFile(file);
+      const worker = await kitchenGetOcrWorker();
+
+      // Pass 1: find where each ingredient's name label sits on the full screenshot.
+      const pass1 = kitchenCanvasFromImage(img, 1400);
+      await worker.setParameters({ tessedit_pageseg_mode: '11', tessedit_char_whitelist: '' });
+      const { data } = await worker.recognize(pass1.canvas);
+      const words = (data.words || []).map(function(w){
+        return {
+          norm: kitchenNormWord(w.text),
+          x0: w.bbox.x0 / pass1.scale, y0: w.bbox.y0 / pass1.scale,
+          x1: w.bbox.x1 / pass1.scale, y1: w.bbox.y1 / pass1.scale
+        };
+      });
+
+      // Pass 2: zoom into the small counter box just below each found label
+      // (e.g. "7/8") and read only digits — far more reliable than reading it
+      // at full-page scale, where it tends to get missed entirely.
+      await worker.setParameters({ tessedit_pageseg_mode: '6', tessedit_char_whitelist: '0123456789/' });
+
+      const found = [];
+      for(let i = 0; i < KITCHEN_INGREDIENTS.length; i++){
+        const parts = KITCHEN_INGREDIENTS[i].toLowerCase().split(/\s+/).map(kitchenNormWord);
+        let box = null;
+        for(let w = 0; w < words.length; w++){
+          if(words[w].norm !== parts[0]) continue;
+          let ok = true;
+          const candidate = { x0: words[w].x0, y0: words[w].y0, x1: words[w].x1, y1: words[w].y1 };
+          for(let p = 1; p < parts.length; p++){
+            const next = words[w + p];
+            if(!next || next.norm !== parts[p]){ ok = false; break; }
+            candidate.x1 = Math.max(candidate.x1, next.x1);
+            candidate.y0 = Math.min(candidate.y0, next.y0);
+            candidate.y1 = Math.max(candidate.y1, next.y1);
+          }
+          if(ok){ box = candidate; break; }
+        }
+        if(!box) continue;
+
+        const bh = box.y1 - box.y0;
+        const cx = (box.x0 + box.x1) / 2;
+        const rect = {
+          x: Math.max(0, cx - bh * 3.5),
+          y: Math.min(img.naturalHeight - 1, box.y1 + bh * 0.15),
+          w: bh * 7,
+          h: bh * 3.2
+        };
+        rect.w = Math.min(rect.w, img.naturalWidth - rect.x);
+        rect.h = Math.min(rect.h, img.naturalHeight - rect.y);
+        if(rect.w <= 0 || rect.h <= 0) continue;
+
+        const cropCanvas = kitchenCropUpscaled(img, rect, 5);
+        const { data: cropData } = await worker.recognize(cropCanvas);
+        const m = /(\d+)\s*\/\s*(\d+)/.exec(cropData.text || '');
+        if(m){
+          const have = parseInt(m[1], 10), need = parseInt(m[2], 10);
+          const missing = Math.max(0, need - have);
+          found.push({ name: KITCHEN_INGREDIENTS[i], missing: missing });
+          const input = document.querySelector('#kitchenIngGrid input[data-name="' + KITCHEN_INGREDIENTS[i] + '"]');
+          if(input) input.value = missing;
+        }
+      }
+
+      if(found.length){
+        statusEl.className = 'kitchen-scan-status ok';
+        statusEl.textContent = '✅ Detected: ' + found.map(function(f){ return f.name + ' (' + f.missing + ' needed)'; }).join(', ') + '. Please double-check before sending.';
+      } else {
+        statusEl.className = 'kitchen-scan-status warn';
+        statusEl.textContent = "⚠️ Couldn't recognize any ingredients in that screenshot — please fill the amounts in manually.";
+      }
+    } catch(err){
+      statusEl.className = 'kitchen-scan-status warn';
+      statusEl.textContent = "⚠️ Scanning failed — please fill the amounts in manually.";
+    } finally {
+      scanBtn.disabled = false;
+    }
   }
 
   function kitchenIsValidUrl(value){
@@ -7488,6 +7621,14 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     kitchenEl('kitchenAgainBtn').addEventListener('click', kitchenReset);
     kitchenEl('kitchenTabSubmit').addEventListener('click', function(){ kitchenSelectSubtab('submit'); });
     kitchenEl('kitchenTabStaff').addEventListener('click', function(){ kitchenSelectSubtab('staff'); });
+    kitchenEl('kitchenScanBtn').addEventListener('click', function(){
+      kitchenEl('kitchenScanFileInput').click();
+    });
+    kitchenEl('kitchenScanFileInput').addEventListener('change', function(e){
+      const file = e.target.files && e.target.files[0];
+      if(file) kitchenScanOrderScreenshot(file);
+      e.target.value = '';
+    });
     kitchenEl('kitchenOpenToggle').addEventListener('change', function(){
       kitchenIsOpen = this.checked;
       kitchenApplyOpenState();
