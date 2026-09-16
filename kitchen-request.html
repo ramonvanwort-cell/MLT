@@ -576,8 +576,11 @@
     });
   }
 
-  function canvasFromImage(img, maxW){
-    const scale = Math.min(1, maxW / img.naturalWidth);
+  function canvasFromImage(img, targetW){
+    // Always scale TOWARD the target width — upscaling small/compressed screenshots
+    // (e.g. ones that went through Messenger/WhatsApp and lost resolution) matters
+    // just as much as downscaling huge ones; OCR misses labels entirely on low-DPI input.
+    const scale = targetW / img.naturalWidth;
     const canvas = document.createElement('canvas');
     canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
     canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
@@ -606,7 +609,7 @@
       const worker = await getOcrWorker();
 
       // Pass 1: find where each ingredient's name label sits on the full screenshot.
-      const pass1 = canvasFromImage(img, 1400);
+      const pass1 = canvasFromImage(img, 2600);
       await worker.setParameters({ tessedit_pageseg_mode: '11', tessedit_char_whitelist: '' });
       const { data } = await worker.recognize(pass1.canvas);
       const words = (data.words || []).map(function(w){
