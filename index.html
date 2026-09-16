@@ -7323,39 +7323,62 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
       const worker = await kitchenGetOcrWorker();
 
       // Pass 1: find where each ingredient's name label sits on the full screenshot.
-      const pass1 = kitchenCanvasFromImage(img, 2600);
+      // OCR accuracy on a real phone photo/screenshot varies a lot with exact scale
+      // and JPEG artifacts, so this runs at several sizes and pools every word found
+      // rather than betting everything on one scale.
       await worker.setParameters({ tessedit_pageseg_mode: '11', tessedit_char_whitelist: '' });
-      const { data } = await worker.recognize(pass1.canvas);
-      const words = (data.words || []).map(function(w){
-        return {
-          norm: kitchenNormWord(w.text),
-          x0: w.bbox.x0 / pass1.scale, y0: w.bbox.y0 / pass1.scale,
-          x1: w.bbox.x1 / pass1.scale, y1: w.bbox.y1 / pass1.scale
-        };
-      });
+      const words = [];
+      for(const targetW of [1600, 2400, 3200]){
+        const pass = kitchenCanvasFromImage(img, targetW);
+        const { data } = await worker.recognize(pass.canvas);
+        (data.words || []).forEach(function(w){
+          words.push({
+            norm: kitchenNormWord(w.text),
+            x0: w.bbox.x0 / pass.scale, y0: w.bbox.y0 / pass.scale,
+            x1: w.bbox.x1 / pass.scale, y1: w.bbox.y1 / pass.scale
+          });
+        });
+      }
+
+      // A name's words are matched by position (same line, close together),
+      // not by array order — the pooled list above isn't in reading order.
+      // Pooling words from several scales means the SAME label can appear more
+      // than once with a slightly different (occasionally inflated — e.g. merged
+      // with the star icons above it) bounding box. Trying every candidate and
+      // keeping the smallest/tightest one avoids building a crop around one bad box.
+      function findNameBox(name){
+        const parts = name.toLowerCase().split(/\s+/).map(kitchenNormWord);
+        const firstCandidates = words.filter(function(w){ return w.norm === parts[0]; });
+        let best = null;
+        for(let c = 0; c < firstCandidates.length; c++){
+          let prev = firstCandidates[c];
+          let box = { x0: prev.x0, y0: prev.y0, x1: prev.x1, y1: prev.y1 };
+          let ok = true;
+          for(let p = 1; p < parts.length; p++){
+            const h = prev.y1 - prev.y0;
+            const next = words.find(function(w2){
+              return w2.norm === parts[p] &&
+                Math.abs(w2.y0 - prev.y0) < h * 0.7 &&
+                w2.x0 > prev.x0 &&
+                (w2.x0 - prev.x1) < h * 3;
+            });
+            if(!next){ ok = false; break; }
+            box.x1 = Math.max(box.x1, next.x1);
+            box.y0 = Math.min(box.y0, next.y0);
+            box.y1 = Math.max(box.y1, next.y1);
+            prev = next;
+          }
+          if(ok && (!best || (box.y1 - box.y0) < (best.y1 - best.y0))) best = box;
+        }
+        return best;
+      }
 
       // Pass 2: zoom into the small counter box just below each found label
       // (e.g. "7/8") and read only digits — far more reliable than reading it
       // at full-page scale, where it tends to get missed entirely.
-      await worker.setParameters({ tessedit_pageseg_mode: '6', tessedit_char_whitelist: '0123456789/' });
-
       const found = [];
       for(let i = 0; i < KITCHEN_INGREDIENTS.length; i++){
-        const parts = KITCHEN_INGREDIENTS[i].toLowerCase().split(/\s+/).map(kitchenNormWord);
-        let box = null;
-        for(let w = 0; w < words.length; w++){
-          if(words[w].norm !== parts[0]) continue;
-          let ok = true;
-          const candidate = { x0: words[w].x0, y0: words[w].y0, x1: words[w].x1, y1: words[w].y1 };
-          for(let p = 1; p < parts.length; p++){
-            const next = words[w + p];
-            if(!next || next.norm !== parts[p]){ ok = false; break; }
-            candidate.x1 = Math.max(candidate.x1, next.x1);
-            candidate.y0 = Math.min(candidate.y0, next.y0);
-            candidate.y1 = Math.max(candidate.y1, next.y1);
-          }
-          if(ok){ box = candidate; break; }
-        }
+        const box = findNameBox(KITCHEN_INGREDIENTS[i]);
         if(!box) continue;
 
         const bh = box.y1 - box.y0;
@@ -7371,8 +7394,21 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
         if(rect.w <= 0 || rect.h <= 0) continue;
 
         const cropCanvas = kitchenCropUpscaled(img, rect, 5);
-        const { data: cropData } = await worker.recognize(cropCanvas);
-        const m = /(\d+)\s*\/\s*(\d+)/.exec(cropData.text || '');
+        await worker.setParameters({ tessedit_pageseg_mode: '6', tessedit_char_whitelist: '0123456789/' });
+        let m = /(\d+)\s*\/\s*(\d+)/.exec((await worker.recognize(cropCanvas)).data.text || '');
+        if(!m){
+          // Retry once with a slightly different read mode — occasionally
+          // succeeds where the first attempt comes back empty.
+          await worker.setParameters({ tessedit_pageseg_mode: '3', tessedit_char_whitelist: '0123456789/' });
+          m = /(\d+)\s*\/\s*(\d+)/.exec((await worker.recognize(cropCanvas)).data.text || '');
+        }
+        if(!m){
+          // Third fallback — helps specifically when the crop rect ended up
+          // a bit oversized (extra background/UI included), which tends to
+          // break modes 6 and 3 but not 11.
+          await worker.setParameters({ tessedit_pageseg_mode: '11', tessedit_char_whitelist: '0123456789/' });
+          m = /(\d+)\s*\/\s*(\d+)/.exec((await worker.recognize(cropCanvas)).data.text || '');
+        }
         if(m){
           const have = parseInt(m[1], 10), need = parseInt(m[2], 10);
           const missing = Math.max(0, need - have);
