@@ -744,6 +744,38 @@
     closedView.classList.add('show');
   }
 
+  // Normalizes a Friend Code for comparison — strips spaces/dashes/casing so
+  // "482-119-207", "482 119 207" and "482119207" are all treated as the same code.
+  function normalizeCode(s){
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  function friendlyTimeAgo(ts){
+    const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+    if(mins < 1) return 'just now';
+    if(mins < 60) return mins + 'm ago';
+    const hrs = Math.round(mins / 60);
+    if(hrs < 24) return hrs + 'h ago';
+    return Math.round(hrs / 24) + 'd ago';
+  }
+
+  // One open order per Friend Code: fetch the current queue and see if this
+  // code already has a request sitting in it. Requests are "open" until
+  // Kitchen Staff mark them done, which removes them from this list.
+  function checkExistingOpenOrder(friendCode){
+    return fetch(FIREBASE_DB_URL + '/kitchenRequests.json')
+      .then(function(res){ return res.ok ? res.json() : null; })
+      .then(function(all){
+        if(!all) return null;
+        const norm = normalizeCode(friendCode);
+        const match = Object.values(all).find(function(r){
+          return normalizeCode(r && r.friendCode) === norm;
+        });
+        return match || null;
+      })
+      .catch(function(){ return null; }); // if the check itself fails, don't block submitting
+  }
+
   function checkKitchenOpen(){
     return fetch(FIREBASE_DB_URL + '/kitchenOpen.json')
       .then(function(res){ return res.ok ? res.json() : true; })
@@ -861,14 +893,24 @@
 
     checkKitchenOpen().then(function(open){
       if(!open){ resetSendBtn(); showClosed(); return; }
-      return fetch(FIREBASE_DB_URL + '/kitchenRequests/' + reqId + '.json', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).then(function(res){
-        if (!res.ok) throw new Error('Request failed');
-        notifyTelegram(payload);
-        onDone();
+      return checkExistingOpenOrder(friendCode).then(function(existing){
+        if(existing){
+          resetSendBtn();
+          setInvalid(codeEl, true);
+          alertText.textContent = 'You already have an open order (ticket for ' + (existing.name || memberName) + ', submitted ' + friendlyTimeAgo(existing.ts || Date.now()) + '). Please wait until the kitchen marks it as done before sending another request.';
+          showAlert(true);
+          codeEl.focus();
+          return;
+        }
+        return fetch(FIREBASE_DB_URL + '/kitchenRequests/' + reqId + '.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(function(res){
+          if (!res.ok) throw new Error('Request failed');
+          notifyTelegram(payload);
+          onDone();
+        });
       });
     }).catch(function(){
       resetSendBtn();

@@ -7506,6 +7506,20 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     }
     kitchenShowAlert(false);
 
+    // One open order per Friend Code: block a second submission while an
+    // earlier request from the same code is still sitting in the queue
+    // (it's "open" until Kitchen Staff mark it done, which removes it).
+    const normFriendCode = kitchenNormalizeCode(friendCode);
+    const existingOpen = Object.values(kitchenData || {}).find(function(r){
+      return kitchenNormalizeCode(r.friendCode) === normFriendCode;
+    });
+    if(existingOpen){
+      kitchenSetInvalid(codeEl, true);
+      kitchenShowAlert(true, 'You already have an open order (ticket for ' + (existingOpen.name || memberName) + ', submitted ' + kitchenTimeAgo(existingOpen.ts || Date.now()) + '). Please wait until the kitchen marks it as done before sending another request.');
+      codeEl.focus();
+      return;
+    }
+
     const sendBtn = kitchenEl('kitchenSendBtn');
     sendBtn.disabled = true;
     sendBtn.textContent = 'Sending…';
@@ -7552,6 +7566,12 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     return String(s).replace(/[&<>"']/g, function(c){
       return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
     });
+  }
+
+  // Normalizes a Friend Code for comparison — strips spaces/dashes/casing so
+  // "482-119-207", "482 119 207" and "482119207" are all treated as the same code.
+  function kitchenNormalizeCode(s){
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   }
 
   // Parses an item label like "Fruits x20" into { name:"Fruits", qty:20 }.
