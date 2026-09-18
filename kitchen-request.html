@@ -272,8 +272,7 @@
   .scan-status.warn{color:var(--rust);}
   .ingredients-cap{font-size:0.82rem; color:var(--muted); font-weight:600; text-transform:none; letter-spacing:normal;}
   .ingredients-cap.warn{color:var(--rust);}
-  .ingredient-row.capped{opacity:0.45;}
-  .ingredient-row input:disabled{cursor:not-allowed;}
+  #otherIngredients:disabled{opacity:0.45; cursor:not-allowed;}
   .ingredients-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
@@ -561,44 +560,54 @@
     row.innerHTML = '<label for="' + id + '">' + name + '</label>' +
       '<input type="number" min="0" max="99" step="1" value="0" id="' + id + '" data-name="' + name + '">';
     grid.appendChild(row);
-    row.querySelector('input').addEventListener('input', applyItemCap);
+    const inputEl = row.querySelector('input');
+    inputEl.addEventListener('input', function(){ applyItemCap(inputEl); });
   });
 
-  // Max 8 ingredient line items per order (9 named ingredients + "Other" note
-  // both count as a line item). Once 8 are picked, the remaining empty
-  // ingredient fields (and the "Other" box, if unused) are disabled so a
-  // member can't accidentally add a 9th — they have to remove one first.
+  // Max 8 ingredients total per order — the SUM of every ingredient's
+  // quantity (e.g. 1 Flour + 7 Cheese = 8; not "8 different ingredients").
+  // If a field's own change would push the total over the cap, that field
+  // gets trimmed back down right away so the total lands back on 8 — the
+  // member never has to notice a validation error, the number just settles.
   const ITEM_CAP = 8;
-  function applyItemCap(){
-    const capEl = document.getElementById('ingredientsCap');
+  function applyItemCap(changedEl){
     const otherEl = document.getElementById('otherIngredients');
-    let activeCount = 0;
-    const zeroInputs = [];
+    const inputs = [];
+    let total = 0;
     INGREDIENTS.forEach(function(name, i){
       const el = document.getElementById('ing_' + i);
       if(!el) return;
-      const val = parseInt(el.value, 10) || 0;
-      if(val > 0) activeCount++;
-      else zeroInputs.push(el);
+      inputs.push(el);
+      let val = parseInt(el.value, 10);
+      if(isNaN(val) || val < 0) val = 0;
+      total += val;
     });
     const otherActive = Boolean(otherEl && otherEl.value.trim());
-    const total = activeCount + (otherActive ? 1 : 0);
-    const atCap = total >= ITEM_CAP;
+    total += otherActive ? 1 : 0;
 
-    zeroInputs.forEach(function(el){
-      el.disabled = atCap;
-      const row = el.closest('.ingredient-row');
-      if(row) row.classList.toggle('capped', atCap);
+    if(total > ITEM_CAP && changedEl && inputs.indexOf(changedEl) !== -1){
+      const over = total - ITEM_CAP;
+      let val = parseInt(changedEl.value, 10);
+      if(isNaN(val) || val < 0) val = 0;
+      changedEl.value = Math.max(0, val - over);
+      total = ITEM_CAP;
+    }
+
+    const remaining = Math.max(0, ITEM_CAP - total);
+    inputs.forEach(function(el){
+      const val = parseInt(el.value, 10) || 0;
+      el.max = String(val + remaining);
     });
-    if(otherEl && !otherActive) otherEl.disabled = atCap;
+    if(otherEl && !otherActive) otherEl.disabled = remaining <= 0;
 
+    const capEl = document.getElementById('ingredientsCap');
     if(capEl){
-      capEl.textContent = total + ' / ' + ITEM_CAP + ' selected';
-      capEl.classList.toggle('warn', total > ITEM_CAP);
+      capEl.textContent = total + ' / ' + ITEM_CAP + ' ingredients';
+      capEl.classList.toggle('warn', total >= ITEM_CAP);
     }
     return total;
   }
-  document.getElementById('otherIngredients').addEventListener('input', applyItemCap);
+  document.getElementById('otherIngredients').addEventListener('input', function(){ applyItemCap(); });
   applyItemCap();
 
   // ── Screenshot scanner (free, client-side OCR via Tesseract.js — no API key, no server) ──
@@ -753,7 +762,7 @@
         statusEl.textContent = '✅ Detected: ' + found.map(function(f){ return f.name + ' (' + f.missing + ' needed)'; }).join(', ') + '. Please double-check before sending.';
         if(totalAfterScan > ITEM_CAP){
           statusEl.className = 'scan-status warn';
-          statusEl.textContent += ' ⚠️ That\'s ' + totalAfterScan + ' ingredients — orders are capped at ' + ITEM_CAP + ', please zero out ' + (totalAfterScan - ITEM_CAP) + ' before sending.';
+          statusEl.textContent += ' ⚠️ That\'s ' + totalAfterScan + ' ingredients in total — orders are capped at ' + ITEM_CAP + ', please reduce the quantities by ' + (totalAfterScan - ITEM_CAP) + ' before sending.';
         }
       } else {
         statusEl.className = 'scan-status warn';
@@ -919,9 +928,10 @@
       return;
     }
 
-    // Max 8 ingredient line items per order.
-    if (ingData.items.length > ITEM_CAP){
-      alertText.textContent = 'You can select up to ' + ITEM_CAP + ' ingredients per order (you currently have ' + ingData.items.length + '). Please remove some before sending.';
+    // Max 8 ingredients total per order (sum of quantities, e.g. 1 Flour + 7 Cheese = 8).
+    const capTotal = applyItemCap();
+    if (capTotal > ITEM_CAP){
+      alertText.textContent = 'You can select up to ' + ITEM_CAP + ' ingredients per order in total (you currently have ' + capTotal + '). Please reduce the quantities before sending.';
       showAlert(true);
       return;
     }
