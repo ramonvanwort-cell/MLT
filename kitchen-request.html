@@ -270,6 +270,10 @@
   }
   .scan-status.ok{color:var(--good);}
   .scan-status.warn{color:var(--rust);}
+  .ingredients-cap{font-size:0.82rem; color:var(--muted); font-weight:600; text-transform:none; letter-spacing:normal;}
+  .ingredients-cap.warn{color:var(--rust);}
+  .ingredient-row.capped{opacity:0.45;}
+  .ingredient-row input:disabled{cursor:not-allowed;}
   .ingredients-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
@@ -477,6 +481,7 @@
             <span class="field-name">Cafe Ingredients Needed</span>
             <span class="field-hint">qty per item, 0 = not needed</span>
           </label>
+          <div class="ingredients-cap" id="ingredientsCap"></div>
           <div class="scan-row">
             <button type="button" class="scan-btn" id="scanBtn">📷 Scan order screen</button>
             <input type="file" id="scanFileInput" accept="image/*" style="display:none">
@@ -556,7 +561,45 @@
     row.innerHTML = '<label for="' + id + '">' + name + '</label>' +
       '<input type="number" min="0" max="99" step="1" value="0" id="' + id + '" data-name="' + name + '">';
     grid.appendChild(row);
+    row.querySelector('input').addEventListener('input', applyItemCap);
   });
+
+  // Max 8 ingredient line items per order (9 named ingredients + "Other" note
+  // both count as a line item). Once 8 are picked, the remaining empty
+  // ingredient fields (and the "Other" box, if unused) are disabled so a
+  // member can't accidentally add a 9th — they have to remove one first.
+  const ITEM_CAP = 8;
+  function applyItemCap(){
+    const capEl = document.getElementById('ingredientsCap');
+    const otherEl = document.getElementById('otherIngredients');
+    let activeCount = 0;
+    const zeroInputs = [];
+    INGREDIENTS.forEach(function(name, i){
+      const el = document.getElementById('ing_' + i);
+      if(!el) return;
+      const val = parseInt(el.value, 10) || 0;
+      if(val > 0) activeCount++;
+      else zeroInputs.push(el);
+    });
+    const otherActive = Boolean(otherEl && otherEl.value.trim());
+    const total = activeCount + (otherActive ? 1 : 0);
+    const atCap = total >= ITEM_CAP;
+
+    zeroInputs.forEach(function(el){
+      el.disabled = atCap;
+      const row = el.closest('.ingredient-row');
+      if(row) row.classList.toggle('capped', atCap);
+    });
+    if(otherEl && !otherActive) otherEl.disabled = atCap;
+
+    if(capEl){
+      capEl.textContent = total + ' / ' + ITEM_CAP + ' selected';
+      capEl.classList.toggle('warn', total > ITEM_CAP);
+    }
+    return total;
+  }
+  document.getElementById('otherIngredients').addEventListener('input', applyItemCap);
+  applyItemCap();
 
   // ── Screenshot scanner (free, client-side OCR via Tesseract.js — no API key, no server) ──
   // Reads a screenshot of the in-game order screen (e.g. "Required Ingredient Stickers: Eggs 7/8")
@@ -704,9 +747,14 @@
         }
       }
 
+      const totalAfterScan = applyItemCap();
       if(found.length){
         statusEl.className = 'scan-status ok';
         statusEl.textContent = '✅ Detected: ' + found.map(function(f){ return f.name + ' (' + f.missing + ' needed)'; }).join(', ') + '. Please double-check before sending.';
+        if(totalAfterScan > ITEM_CAP){
+          statusEl.className = 'scan-status warn';
+          statusEl.textContent += ' ⚠️ That\'s ' + totalAfterScan + ' ingredients — orders are capped at ' + ITEM_CAP + ', please zero out ' + (totalAfterScan - ITEM_CAP) + ' before sending.';
+        }
       } else {
         statusEl.className = 'scan-status warn';
         statusEl.textContent = "⚠️ Couldn't recognize any ingredients in that screenshot — please fill the amounts in manually.";
@@ -716,6 +764,7 @@
       statusEl.textContent = "⚠️ Scanning failed — please fill the amounts in manually.";
     } finally {
       scanBtn.disabled = false;
+      applyItemCap();
     }
   }
 
@@ -869,6 +918,13 @@
       firstBad.focus();
       return;
     }
+
+    // Max 8 ingredient line items per order.
+    if (ingData.items.length > ITEM_CAP){
+      alertText.textContent = 'You can select up to ' + ITEM_CAP + ' ingredients per order (you currently have ' + ingData.items.length + '). Please remove some before sending.';
+      showAlert(true);
+      return;
+    }
     showAlert(false);
 
     sendBtn.disabled = true;
@@ -924,6 +980,7 @@
     INGREDIENTS.forEach(function(_, i){ document.getElementById('ing_' + i).value = 0; });
     [document.getElementById('memberName'), document.getElementById('ign'), document.getElementById('friendCode'), document.getElementById('inviteLink'), document.getElementById('otherIngredients')]
       .forEach(function(el){ setInvalid(el, false); });
+    applyItemCap();
     showAlert(false);
     sendBtn.disabled = false;
     sendBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12h13M13 6l6 6-6 6"/></svg> Send to the Kitchen';
