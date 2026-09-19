@@ -386,6 +386,59 @@
     color:var(--brass);
     font-weight:600;
   }
+  .monkey-mascot{
+    position:relative;
+    width:170px;
+    height:170px;
+    margin:0 auto;
+    opacity:0;
+    transform:rotate(-4deg);
+  }
+  .monkey-mascot.show{
+    opacity:1;
+    animation:monkey-pop 1.1s cubic-bezier(.22,1,.36,1) both;
+  }
+  @media (prefers-reduced-motion: reduce){ .monkey-mascot.show{animation:none;} }
+  /* A little "peek, duck, burst" gag — the mascot pokes up to check the
+     coast is clear, ducks back down, then bursts all the way through the
+     badge and settles with a couple of small bounces. */
+  @keyframes monkey-pop{
+    0%{transform:translateY(70px) scale(0.25) rotate(-4deg); opacity:0;}
+    12%{transform:translateY(70px) scale(0.25) rotate(-4deg); opacity:0;}
+    24%{transform:translateY(28px) scale(0.55) rotate(-9deg); opacity:1;}
+    34%{transform:translateY(55px) scale(0.4) rotate(-2deg); opacity:1;}
+    58%{transform:translateY(-14px) scale(1.12) rotate(6deg); opacity:1;}
+    74%{transform:translateY(6px) scale(0.94) rotate(-5deg); opacity:1;}
+    88%{transform:translateY(-4px) scale(1.03) rotate(0deg); opacity:1;}
+    100%{transform:translateY(0) scale(1) rotate(-4deg); opacity:1;}
+  }
+  /* A little Looney-Tunes-style "seal" badge: MLT KITCHEN arched over the
+     top, THANK YOU arched along the bottom, monkey mascot bursting out
+     of the middle. */
+  .monkey-badge{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    color:var(--brass);
+    filter:drop-shadow(0 10px 16px var(--shadow));
+  }
+  .monkey-badge-text{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:2.5px;
+    fill:currentColor;
+  }
+  .monkey-face{
+    position:absolute;
+    top:46%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:5rem;
+    line-height:1;
+    filter:drop-shadow(0 8px 10px var(--shadow));
+  }
   .confirm h2{font-size:1.35rem; max-width:380px;}
   .confirm p{margin:0; color:var(--muted); max-width:380px; line-height:1.55;}
   .again-btn{
@@ -499,8 +552,16 @@
       </form>
 
       <div class="confirm" id="confirmView">
-        <div class="stamp">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 13 4 4L19 7"/></svg>
+        <div class="monkey-mascot" id="monkeyMascot">
+          <svg class="monkey-badge" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" stroke-width="3" opacity="0.95"/>
+            <circle cx="100" cy="100" r="86" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.55"/>
+            <path id="monkeyTopArc" d="M 16,100 A 84,84 0 0 1 184,100" fill="none"/>
+            <path id="monkeyBottomArc" d="M 16,100 A 84,84 0 0 0 184,100" fill="none"/>
+            <text class="monkey-badge-text"><textPath href="#monkeyTopArc" startOffset="50%" text-anchor="middle">MLT KITCHEN</textPath></text>
+            <text class="monkey-badge-text"><textPath href="#monkeyBottomArc" startOffset="50%" text-anchor="middle">THANK YOU</textPath></text>
+          </svg>
+          <div class="monkey-face">🐒</div>
         </div>
         <div class="confirm-for" id="confirmFor">Ticket for —</div>
         <h2>Your ingredient request has been submitted to the MLT Kitchen!</h2>
@@ -817,6 +878,13 @@
     return Math.round(hrs / 24) + 'd ago';
   }
 
+  // A little Looney-Tunes-style seal badge on the confirmation screen —
+  // MLT KITCHEN / THANK YOU with the monkey mascot bursting through the middle.
+  function showMonkey(){
+    const mascot = document.getElementById('monkeyMascot');
+    if(mascot) mascot.classList.add('show');
+  }
+
   // One open order per Friend Code: fetch the current queue and see if this
   // code already has a request sitting in it. Requests are "open" until
   // Kitchen Staff mark them done, which removes them from this list.
@@ -948,6 +1016,7 @@
 
     function onDone(){
       confirmFor.textContent = 'Ticket for ' + memberName;
+      showMonkey();
       form.classList.add('hide');
       confirmView.classList.add('show');
     }
@@ -998,6 +1067,7 @@
     ticketFor.textContent = '';
     confirmFor.textContent = 'Ticket for —';
     confirmView.classList.remove('show');
+    document.getElementById('monkeyMascot').classList.remove('show');
     form.classList.remove('hide');
   });
 
