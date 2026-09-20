@@ -7309,48 +7309,62 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
     });
   }
 
-  // Max 8 ingredients total per order — the SUM of every ingredient's
-  // quantity (e.g. 1 Flour + 7 Cheese = 8; not "8 different ingredients").
-  // If a field's own change would push the total over the cap, that field
-  // gets trimmed back down right away so the total lands back on 8 — the
-  // member never has to notice a validation error, the number just settles.
-  const KITCHEN_ITEM_CAP = 8;
+  // Max 4 different ingredients per order, up to 8 of each — e.g. 8 Eggs +
+  // 8 Flour + 8 Fruits + 8 Cheese is fine (4 types, 8 each); a 5th type
+  // can't be started while 4 are already active. Each field is clamped to
+  // 8 on its own; the 4-type limit is enforced by disabling the remaining
+  // empty fields once 4 are active, and reverting a field that still
+  // manages to sneak a 5th type past that (e.g. a fast paste).
+  const KITCHEN_MAX_QTY_PER_TYPE = 8;
+  const KITCHEN_MAX_TYPES = 4;
   function kitchenApplyItemCap(changedEl){
     const otherEl = kitchenEl('k-other');
     const inputs = [];
-    let total = 0;
     KITCHEN_INGREDIENTS.forEach(function(name, i){
       const el = kitchenEl('kIng_' + i);
       if(!el) return;
       inputs.push(el);
+    });
+
+    // Clamp every field to the per-type cap on its own.
+    inputs.forEach(function(el){
       let val = parseInt(el.value, 10);
       if(isNaN(val) || val < 0) val = 0;
-      total += val;
+      if(val > KITCHEN_MAX_QTY_PER_TYPE) val = KITCHEN_MAX_QTY_PER_TYPE;
+      el.value = val;
     });
-    const otherActive = Boolean(otherEl && otherEl.value.trim());
-    total += otherActive ? 1 : 0;
 
-    if(total > KITCHEN_ITEM_CAP && changedEl && inputs.indexOf(changedEl) !== -1){
-      const over = total - KITCHEN_ITEM_CAP;
-      let val = parseInt(changedEl.value, 10);
-      if(isNaN(val) || val < 0) val = 0;
-      changedEl.value = Math.max(0, val - over);
-      total = KITCHEN_ITEM_CAP;
+    const otherActive = Boolean(otherEl && otherEl.value.trim());
+    let activeCount = inputs.filter(function(el){ return (parseInt(el.value, 10) || 0) > 0; }).length + (otherActive ? 1 : 0);
+
+    // If the field just edited is the one that pushed us past 4 distinct
+    // types, revert that specific field back to 0 rather than guessing
+    // which of the (now 5) active types the member meant to keep.
+    if(activeCount > KITCHEN_MAX_TYPES && changedEl && inputs.indexOf(changedEl) !== -1){
+      const changedVal = parseInt(changedEl.value, 10) || 0;
+      const othersActive = activeCount - (changedVal > 0 ? 1 : 0);
+      if(changedVal > 0 && othersActive >= KITCHEN_MAX_TYPES){
+        changedEl.value = 0;
+        activeCount = othersActive;
+      }
     }
 
-    const remaining = Math.max(0, KITCHEN_ITEM_CAP - total);
+    // Disable the still-empty fields once 4 types are active, so it's
+    // obvious the limit is reached rather than silently reverting on type.
+    const atLimit = activeCount >= KITCHEN_MAX_TYPES;
     inputs.forEach(function(el){
-      const val = parseInt(el.value, 10) || 0;
-      el.max = String(val + remaining);
+      const isActive = (parseInt(el.value, 10) || 0) > 0;
+      el.max = String(KITCHEN_MAX_QTY_PER_TYPE);
+      el.disabled = !isActive && atLimit;
     });
-    if(otherEl && !otherActive) otherEl.disabled = remaining <= 0;
+    if(otherEl && !otherActive) otherEl.disabled = atLimit;
 
     const capEl = kitchenEl('kitchenIngCap');
     if(capEl){
-      capEl.textContent = total + ' / ' + KITCHEN_ITEM_CAP + ' ingredients';
-      capEl.classList.toggle('warn', total >= KITCHEN_ITEM_CAP);
+      capEl.textContent = activeCount + ' / ' + KITCHEN_MAX_TYPES + ' ingredient types selected (max ' + KITCHEN_MAX_QTY_PER_TYPE + ' each)';
+      capEl.classList.toggle('warn', atLimit);
     }
-    return total;
+    return { activeCount: activeCount };
   }
 
   // ── Screenshot scanner (free, client-side OCR via Tesseract.js — no API key, no server) ──
@@ -7499,13 +7513,13 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
         }
       }
 
-      const totalAfterScan = kitchenApplyItemCap();
+      const scanCap = kitchenApplyItemCap();
       if(found.length){
         statusEl.className = 'kitchen-scan-status ok';
         statusEl.textContent = '✅ Detected: ' + found.map(function(f){ return f.name + ' (' + f.missing + ' needed)'; }).join(', ') + '. Please double-check before sending.';
-        if(totalAfterScan > KITCHEN_ITEM_CAP){
+        if(scanCap.activeCount > KITCHEN_MAX_TYPES){
           statusEl.className = 'kitchen-scan-status warn';
-          statusEl.textContent += ' ⚠️ That\'s ' + totalAfterScan + ' ingredients in total — orders are capped at ' + KITCHEN_ITEM_CAP + ', please reduce the quantities by ' + (totalAfterScan - KITCHEN_ITEM_CAP) + ' before sending.';
+          statusEl.textContent += ' ⚠️ That\'s ' + scanCap.activeCount + ' different ingredients detected — orders are limited to ' + KITCHEN_MAX_TYPES + ' different types (max ' + KITCHEN_MAX_QTY_PER_TYPE + ' each), please remove some before sending.';
         }
       } else {
         statusEl.className = 'kitchen-scan-status warn';
@@ -7592,10 +7606,10 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
       return;
     }
 
-    // Max 8 ingredients total per order (sum of quantities, e.g. 1 Flour + 7 Cheese = 8).
-    const capTotal = kitchenApplyItemCap();
-    if(capTotal > KITCHEN_ITEM_CAP){
-      kitchenShowAlert(true, 'You can select up to ' + KITCHEN_ITEM_CAP + ' ingredients per order in total (you currently have ' + capTotal + '). Please reduce the quantities before sending.');
+    // Max 4 different ingredient types per order, up to 8 of each.
+    const submitCap = kitchenApplyItemCap();
+    if(submitCap.activeCount > KITCHEN_MAX_TYPES){
+      kitchenShowAlert(true, 'You can select up to ' + KITCHEN_MAX_TYPES + ' different ingredients per order (max ' + KITCHEN_MAX_QTY_PER_TYPE + ' of each) — you currently have ' + submitCap.activeCount + ' different types. Please remove some before sending.');
       return;
     }
     kitchenShowAlert(false);
