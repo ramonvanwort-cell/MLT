@@ -7258,28 +7258,10 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
 
   const KITCHEN_INGREDIENTS = ["Flour","Eggs","Dairy","Cheese","Veggies","Fruits","Nuts","Honey","Special Spice"];
 
-  // ── Telegram notifications ──
-  // Paste your bot token + chat id here (see setup notes sent alongside this file).
-  // Leave the placeholders as-is to keep notifications turned off.
-  const TELEGRAM_BOT_TOKEN = "8944290339:AAEAm0Hs-s_f5r5u-iSF0m2jNtPefU_cWOg";
-  const TELEGRAM_CHAT_ID   = "-4997491692";
-
-  function kitchenNotifyTelegram(req){
-    if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.indexOf('YOUR_') === 0) return;
-    if(!TELEGRAM_CHAT_ID || String(TELEGRAM_CHAT_ID).indexOf('YOUR_') === 0) return;
-    const lines = [
-      '🧾 New Kitchen request!',
-      'From: ' + req.name + ' (IGN: ' + req.ign + ')',
-      'Ingredients: ' + req.ingredients,
-      'Friend Code: ' + req.friendCode,
-      'Invite: ' + req.inviteLink
-    ];
-    fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: lines.join('\n') })
-    }).catch(function(){ /* notification failing should never block the actual request */ });
-  }
+  // Kitchen feature switch — set to false to take the whole feature offline:
+  // the "MLT Kitchen" tab is hidden and the Kitchen Staff/Submit panels never
+  // get wired up. Flip back to true to bring it back.
+  const KITCHEN_ENABLED = false;
 
   let kitchenData = {}; // live mirror of the 'kitchenRequests' path
   let kitchenIsOpen = true; // default open until 'kitchenOpen' says otherwise
@@ -7574,6 +7556,7 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
 
   async function kitchenSubmit(e){
     e.preventDefault();
+    if(!KITCHEN_ENABLED) return;
     if(!kitchenIsOpen){ kitchenApplyOpenState(); return; }
     const nameEl = kitchenEl('k-name');
     const ignEl = kitchenEl('k-ign');
@@ -7639,7 +7622,6 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
         inviteLink: inviteLink, ingredients: ingredients, items: ingData.items, ts: Date.now()
       };
       await dbSet('kitchenRequests/' + reqId, reqPayload);
-      kitchenNotifyTelegram(reqPayload);
       kitchenEl('kitchenConfirmFor').textContent = 'Ticket for ' + memberName;
       kitchenShowMonkey();
       kitchenEl('kitchenForm').style.display = 'none';
@@ -7793,6 +7775,12 @@ createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomC
   };
 
   window.kitchenInitOnce = function(){
+    const kitchenTabBtn = document.querySelector('.tab-btn.kitchen-tab');
+    if(!KITCHEN_ENABLED){
+      if(kitchenTabBtn) kitchenTabBtn.style.display = 'none';
+      return; // feature switched off — see KITCHEN_ENABLED above to bring it back
+    }
+    if(kitchenTabBtn) kitchenTabBtn.style.display = '';
     kitchenBuildIngGrid();
     kitchenEl('k-other').addEventListener('input', function(){ kitchenApplyItemCap(); });
     kitchenApplyItemCap();
