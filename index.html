@@ -122,8 +122,12 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 
 /* ── PLAYER LIST ── */
 .plist{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px;min-height:34px}
-.pchip{background:var(--surface2);border-radius:28px;padding:5px 13px;font-size:.8rem;font-weight:700;border:1px solid rgba(255,255,255,.08)}
+.pchip{background:var(--surface2);border-radius:28px;padding:5px 13px;font-size:.8rem;font-weight:700;border:1px solid rgba(255,255,255,.08);display:inline-flex;align-items:center;gap:2px}
 .wchip{background:linear-gradient(135deg,rgba(255,209,102,.14),rgba(255,107,53,.14));border:1.5px solid var(--accent2);border-radius:8px;padding:5px 13px;font-size:.83rem;font-weight:700;display:inline-block;margin:3px}
+/* Host-only "remove player" control, appended to a pchip or a score row */
+.kick-x{margin-left:7px;color:var(--pink);cursor:pointer;font-weight:900;opacity:.55;font-size:.85em;line-height:1;padding:2px 4px;border-radius:5px}
+.kick-x:hover{opacity:1;background:rgba(239,71,111,.16)}
+.player-score-row .ps-right{display:flex;align-items:center;gap:8px}
 
 /* ── BINGO PLAYER CARD ── */
 .p-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:14px 0;width:100%;max-width:380px}
@@ -2664,6 +2668,31 @@ function goLN(role,game){
 
 function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join('')}
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+// Escapes a name for safe use inside `onclick="fn('...')"` — JS-string-escape
+// first (backslash/quote), THEN HTML-attribute-escape, matching the order the
+// browser actually undoes them in (HTML entities decode before the JS runs).
+function escJsAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ════════════════════════════════════════
+//  HOST: remove a player from the room (works the same for every game — a
+//  player is always a 'players/<name>' node, plus optional per-name 'scores'
+//  and 'votes' maps some games keep alongside it).
+async function kickPlayer(name){
+  if(!roomCode||myRole!=='host'||!name)return;
+  if(!confirm('Remove '+name+' from the room?\n\nThey can rejoin with the room code if you want them back later.'))return;
+  await dbUpdate('rooms/'+roomCode,{['players/'+name]:null,['scores/'+name]:null,['votes/'+name]:null});
+  addSystemMsg('🚪 '+name+' was removed from the room by the host');
+}
+// Small "✕" appended inline to a pchip or score row — same markup everywhere
+// a roster is rendered, so every game gets the same remove control for free.
+function kickBtn(name){return '<span class="kick-x" onclick="event.stopPropagation();kickPlayer(\''+escJsAttr(name)+'\')" title="Remove '+escH(name)+'">✕</span>'}
+
+// ════════════════════════════════════════
+//  PLAYER: detect being removed by the host mid-session (distinct from the
+//  whole room closing) and quietly send them back to the home screen — no
+//  "removed by host" message, just the same clean exit as leaving on their own.
+function wasKicked(room){return myRole==='player'&&!!roomCode&&!!myName&&!!room&&!!room.players&&!room.players[myName]}
+function showKicked(){goHome()}
 
 // ════════════════════════════════════════
 //  HOST WINNER ALERT — prominent banner shown to host when a winner is found
@@ -2872,7 +2901,7 @@ function startLNHostListen(){
     const el=document.getElementById('ln-h-pcount');
     if(el)el.textContent=ps.length+'/'+lnMaxPlayers+' players';
     document.getElementById('ln-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
-    document.getElementById('ln-h-plist').innerHTML=ps.length?ps.map(n=>`<div class="pchip">${escH(n)}</div>`).join(''):'<span style="color:var(--muted);font-size:.83rem">Waiting…</span>';
+    document.getElementById('ln-h-plist').innerHTML=ps.length?ps.map(n=>`<div class="pchip">${escH(n)}${kickBtn(n)}</div>`).join(''):'<span style="color:var(--muted);font-size:.83rem">Waiting…</span>';
     const wl=document.getElementById('ln-h-winners');
     wl.innerHTML=(room.winners&&room.winners.length)?room.winners.map(w=>`<div class="wchip">🏆 ${escH(w)}</div>`).join(''):'<span style="color:var(--muted);font-size:.83rem">No winners yet</span>';
     // Game 1: show player picks
@@ -3016,6 +3045,7 @@ async function pickLN3Number(n,el){
 function startLNPlayerListen(){
   const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
     if(!$id('lnp-game-label'))return;
@@ -3203,7 +3233,7 @@ function startBingoHostListen(){
     const ps=Object.keys(room.players||{});
     safeText('h-pcount',ps.length+' / 50 players joined');
     safeText('h-plabel',ps.length+' player'+(ps.length!==1?'s':'')+' connected');
-    document.getElementById('h-plist').innerHTML=ps.length?ps.map(n=>`<div class="pchip">${escH(n)}</div>`).join(''):'<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
+    document.getElementById('h-plist').innerHTML=ps.length?ps.map(n=>`<div class="pchip">${escH(n)}${kickBtn(n)}</div>`).join(''):'<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
     const wl=document.getElementById('h-winners');
     wl.innerHTML=(room.winners&&room.winners.length)?room.winners.map(w=>`<div class="wchip">🏆 ${escH(w)}</div>`).join(''):'<span style="color:var(--muted);font-size:.83rem">No winners yet</span>';
   });
@@ -3273,6 +3303,7 @@ async function claimBingo(){
 function startBingoPlayerListen(){
   const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
     if(!$id('p-num'))return;
@@ -3503,10 +3534,12 @@ function startHLHostListen(){
       res.textContent=room.lastCorrect==='tie'?'➡ Tie! Same number again!':room.lastCorrect==='higher'?'⬆ Higher! Correct voters score a point!':'⬇ Lower! Correct voters score a point!';}
     }
     const scores=room.scores||{};
-    const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+    // Roster comes from ps (every joined player), not just from who has
+    // scored, so the host can remove someone before the first round resolves.
+    const sorted=ps.map(n=>[n,scores[n]||0]).sort((a,b)=>b[1]-a[1]);
     safeHTML('hl-score-list',sorted.length
-      ? sorted.map(([n,s])=>`<div class="player-score-row"><span class="ps-name">${escH(n)}</span><span class="ps-score">${s}</span></div>`).join('')
-      : '<span style="color:var(--muted);font-size:.83rem">No scores yet — draw the first number!</span>');
+      ? sorted.map(([n,s])=>`<div class="player-score-row"><span class="ps-name">${escH(n)}</span><span class="ps-right"><span class="ps-score">${s}</span>${kickBtn(n)}</span></div>`).join('')
+      : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>');
     if(room.winners&&room.winners.length) safeHTML('hl-h-winners',room.winners.map(w=>`<div class="wchip">🏆 ${escH(w)}</div>`).join(''));
   });
 }
@@ -3555,6 +3588,7 @@ let hlLastRound=-1;
 
 function startHLPlayerListen(){
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){safeClass('sdot','add','err');safeText('stxt','Disconnected');return}
     safeClass('sdot','remove','err');safeText('stxt','Connected');
     safeText('sright',Object.keys(room.players||{}).length+' players online');
@@ -3684,7 +3718,7 @@ function startLastNHostListen(){
       const p=room.players[n];const userPicks=p.picks||[];
       const remaining=userPicks.filter(x=>!drawn.includes(x));
       const done=remaining.length===0&&userPicks.length===3;
-      return`<div class="pchip" style="${done?'border-color:#fbbf24':''}">${escH(n)}: ${userPicks.map(x=>`<b style="${drawn.includes(x)?'text-decoration:line-through;opacity:.4':''}">${x}</b>`).join(', ')||'picking…'}</div>`;
+      return`<div class="pchip" style="${done?'border-color:#fbbf24':''}">${escH(n)}: ${userPicks.map(x=>`<b style="${drawn.includes(x)?'text-decoration:line-through;opacity:.4':''}">${x}</b>`).join(', ')||'picking…'}${kickBtn(n)}</div>`;
     }).join(''):'<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>');
     safeHTML('lastn-h-winners',(room.winners&&room.winners.length)?room.winners.map(w=>`<div class="wchip">🏆 ${escH(w)}</div>`).join(''):'<span style="color:var(--muted);font-size:.83rem">No winners yet</span>');
   });
@@ -3778,6 +3812,7 @@ async function pickLastNNumber(n,el){
 }
 function startLastNPlayerListen(){
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){safeClass('sdot','add','err');safeText('stxt','Disconnected');return}
     safeClass('sdot','remove','err');safeText('stxt','Connected');
     safeText('sright',Object.keys(room.players||{}).length+' players online');
@@ -3910,10 +3945,12 @@ function startOEHostListen(){
       if(res){res.className='vote-result show correct';res.textContent=(room.lastCorrect==='odd'?'ODD':'EVEN')+'! Correct betters score a point!';}
     }
     const scores=room.scores||{};
-    const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+    // Roster comes from ps (every joined player), not just from who has
+    // scored, so the host can remove someone before the first round resolves.
+    const sorted=ps.map(n=>[n,scores[n]||0]).sort((a,b)=>b[1]-a[1]);
     safeHTML('oe-score-list',sorted.length
-      ?sorted.map(([n,s])=>`<div class="player-score-row"><span class="ps-name">${escH(n)}</span><span class="ps-score" style="color:var(--green)">${s}</span></div>`).join('')
-      :'<span style="color:var(--muted);font-size:.83rem">No scores yet</span>');
+      ?sorted.map(([n,s])=>`<div class="player-score-row"><span class="ps-name">${escH(n)}</span><span class="ps-right"><span class="ps-score" style="color:var(--green)">${s}</span>${kickBtn(n)}</span></div>`).join('')
+      :'<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>');
     if(room.winners&&room.winners.length) safeHTML('oe-h-winners',room.winners.map(w=>`<div class="wchip">🏆 ${escH(w)}</div>`).join(''));
   });
 }
@@ -3950,6 +3987,7 @@ async function castOEVote(v){
 }
 function startOEPlayerListen(){
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){safeClass('sdot','add','err');safeText('stxt','Disconnected');return}
     safeClass('sdot','remove','err');safeText('stxt','Connected');
     safeText('sright',Object.keys(room.players||{}).length+' players online');
@@ -4086,7 +4124,7 @@ function startDuckHostListen(){
     });
     // Player list
     document.getElementById('duck-h-plist').innerHTML=ps.length
-      ? ps.map(n=>{const p=room.players[n];const picks=(p.picks||[]).length;return`<div class="pchip">${escH(n)}: ${picks} duck${picks!==1?'s':''} picked</div>`}).join('')
+      ? ps.map(n=>{const p=room.players[n];const picks=(p.picks||[]).length;return`<div class="pchip">${escH(n)}: ${picks} duck${picks!==1?'s':''} picked${kickBtn(n)}</div>`}).join('')
       : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
     // Results when revealed — ranked by total, highest first
     if(room.revealed&&room.duckNumbers){
@@ -4183,6 +4221,7 @@ async function pickDuck(idx,el){
 function startDuckPlayerListen(){
   const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
     if(!$id('duckp-grid'))return;
@@ -4323,7 +4362,7 @@ function startSqHostListen(){
     cells.forEach(c=>c.classList.remove('sq-picked'));
     ps.forEach(pname=>{(room.players[pname].picks||[]).forEach(idx=>{if(cells[idx])cells[idx].classList.add('sq-picked')})});
     document.getElementById('sq-h-plist').innerHTML=ps.length
-      ? ps.map(n=>{const p=room.players[n];return`<div class="pchip">${escH(n)}: squares ${(p.picks||[]).map(i=>i+1).join(', ')||'none yet'}</div>`}).join('')
+      ? ps.map(n=>{const p=room.players[n];return`<div class="pchip">${escH(n)}: squares ${(p.picks||[]).map(i=>i+1).join(', ')||'none yet'}${kickBtn(n)}</div>`}).join('')
       : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
   });
 }
@@ -4372,6 +4411,7 @@ async function pickSquare(idx,el){
 function startSqPlayerListen(){
   const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
     if(!$id('sqp-grid'))return;
@@ -4503,7 +4543,7 @@ function startMMHostListen(){
     document.getElementById('mm-h-pcount').textContent=ps.length+' players joined';
     document.getElementById('mm-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
     document.getElementById('mm-h-plist').innerHTML=ps.length
-      ? ps.map(n=>`<div class="pchip">${escH(n)}</div>`).join('')
+      ? ps.map(n=>`<div class="pchip">${escH(n)}${kickBtn(n)}</div>`).join('')
       : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
     renderMMHostVotes(room.votes||{});
   });
@@ -4569,6 +4609,7 @@ async function castMMVote(suspect){
 function startMMPlayerListen(){
   const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){if(dot)dot.className='sdot err';if(stxt)stxt.textContent='Disconnected';return}
     if(dot)dot.className='sdot';if(stxt)stxt.textContent='Connected';
     if(!$id('mmp-suspect-list'))return;
@@ -4708,7 +4749,7 @@ function startPriceHostListen(){
     document.getElementById('price-h-pcount').textContent=ps.length+' players joined';
     document.getElementById('price-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
     document.getElementById('price-h-plist').innerHTML=ps.length
-      ? ps.map(n=>{const p=room.players[n];return`<div class="pchip">${escH(n)}${p.guess!=null?': $'+p.guess:' — no guess yet'}</div>`}).join('')
+      ? ps.map(n=>{const p=room.players[n];return`<div class="pchip">${escH(n)}${p.guess!=null?': $'+p.guess:' — no guess yet'}${kickBtn(n)}</div>`}).join('')
       : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
     if(room.secret!=null&&room.players){
       const gl=document.getElementById('price-guess-list');
@@ -4752,6 +4793,7 @@ async function pricepSubmitGuess(){
 function startPricePlayerListen(){
   const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
     if(!$id('pricep-item'))return;
@@ -4870,7 +4912,7 @@ function startTTLHostListen(){
     document.getElementById('ttl-h-pcount').textContent=ps.length+' players joined';
     document.getElementById('ttl-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
     document.getElementById('ttl-h-plist').innerHTML=ps.length
-      ? ps.map(n=>{const voted=(room.votes||{})[n]!=null;return`<div class="pchip">${escH(n)}${voted?' ✓ voted':' — waiting'}</div>`}).join('')
+      ? ps.map(n=>{const voted=(room.votes||{})[n]!=null;return`<div class="pchip">${escH(n)}${voted?' ✓ voted':' — waiting'}${kickBtn(n)}</div>`}).join('')
       : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
     if(room.statements&&room.statements.length){
       renderTTLStatements('ttl-h-statements',room.statements,room.votes||{},null,!!room.revealed,room.lieIndex,false);
@@ -4908,6 +4950,7 @@ async function castTTLVote(idx){
 function startTTLPlayerListen(){
   const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
     dot.className='sdot';stxt.textContent='Connected';
     if(!$id('ttlp-statement-list'))return;
@@ -5731,12 +5774,13 @@ function startFGHostListen(){
     const ps=Object.keys(room.players||{});
     safeText('fgh-pcount',ps.length+' players joined');
     safeText('fgh-plabel',ps.length+' player'+(ps.length!==1?'s':'')+' connected');
-    // Leaderboard
+    // Leaderboard — built from ps (every joined player), not just from who has
+    // answered, so the host can remove someone before their first answer.
     const scores=room.scores||{};
-    const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+    const sorted=ps.map(n=>[n,scores[n]||0]).sort((a,b)=>b[1]-a[1]);
     safeHTML('fgh-leaderboard',sorted.length
-      ? sorted.map(([n,s],i)=>`<div class="player-score-row"><span class="ps-name">${i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':''}${escH(n)}</span><span class="ps-score" style="color:var(--accent2)">${s}</span></div>`).join('')
-      : '<span style="color:var(--muted);font-size:.83rem">No answers yet</span>');
+      ? sorted.map(([n,s],i)=>`<div class="player-score-row"><span class="ps-name">${i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':''}${escH(n)}</span><span class="ps-right"><span class="ps-score" style="color:var(--accent2)">${s}</span>${kickBtn(n)}</span></div>`).join('')
+      : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>');
     if(room.winners&&room.winners.length&&room.status==='finished'){
       safeHTML('fgh-winners',room.winners.map((w,i)=>`<div class="wchip">${i===0?'🥇':i===1?'🥈':'🥉'} ${escH(w)}</div>`).join(''));
     }
@@ -5776,6 +5820,7 @@ async function joinFGRoom(){
 
 function startFGPlayerListen(){
   unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
     if(!room){safeClass('sdot','add','err');safeText('stxt','Disconnected');return}
     safeClass('sdot','remove','err');safeText('stxt','Connected');
     safeText('sright',Object.keys(room.players||{}).length+' players online');
