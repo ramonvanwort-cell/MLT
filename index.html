@@ -498,6 +498,27 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .prize-chip{background:var(--surface2);border-radius:28px;padding:5px 13px;font-size:.8rem;font-weight:700;border:1px solid rgba(255,255,255,.08);display:inline-flex;align-items:center;gap:6px}
 .prize-chip .pz-amt{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#4ade80}
 
+/* ── Solo Lottery Scratch Ticket (local — no room/Firebase needed) ── */
+#scratch-solo-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;flex-direction:column;overflow-y:auto}
+#scratch-solo-overlay.show{display:flex}
+.ssl-body{max-width:480px;margin:0 auto;width:100%;padding:0 16px 32px}
+.ssl-paytable{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px}
+.ssl-pay-chip{background:var(--surface2);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:6px 11px;font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:6px}
+.ssl-pay-chip .spc-sym{font-size:1.15rem;line-height:1}
+.ssl-stats{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+.ssl-hint{color:var(--muted);font-size:.83rem;text-align:center;margin:0 0 16px}
+.ssl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:360px;margin:0 auto}
+.ssl-cell{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.3);background:var(--surface2)}
+.ssl-cell .ssl-under{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.1rem;background:linear-gradient(135deg,#1e293b,#334155)}
+.ssl-cell canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none;transition:opacity .4s ease}
+.ssl-cell canvas.sc-done{opacity:0;pointer-events:none}
+.ssl-result{margin-top:18px;text-align:center;border-radius:14px;padding:18px;display:none}
+.ssl-result.show{display:block}
+.ssl-result.win{background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(21,128,61,.1));border:1.5px solid rgba(34,197,94,.35)}
+.ssl-result.lose{background:var(--surface2);border:1.5px solid rgba(255,255,255,.08)}
+.ssl-result .sr-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;margin-bottom:4px}
+.ssl-result .sr-sub{color:var(--muted);font-size:.85rem;white-space:pre-line}
+
 /* Guess the Square */
 .sq-grid{display:inline-grid;gap:6px;margin:14px auto}
 .sq-cell{aspect-ratio:1;border-radius:10px;background:var(--surface2);border:2px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;cursor:pointer;transition:.2s;user-select:none;min-width:52px}
@@ -782,6 +803,12 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <div class="game-tag find-game-tag">Spot It</div>
         <h3>Colour vs Word</h3>
         <p>Tap the ink colour — not the word. Your brain will fight you!</p>
+      </div>
+      <div class="hcard find-card" onclick="openScratchTicket()">
+        <div class="ic">🎟️</div>
+        <div class="game-tag find-game-tag">Lucky</div>
+        <h3>Scratch Ticket</h3>
+        <p>Scratch all 9 boxes and match 3 of a kind to win — you won't win every time!</p>
       </div>
     </div>
   </div>
@@ -2646,6 +2673,29 @@ Drew</textarea>
   </div>
 </div>
 
+<!-- ══════════ SOLO LOTTERY SCRATCH TICKET ══════════ -->
+<div id="scratch-solo-overlay">
+  <div class="fg-header">
+    <h2>🎟️ Lottery Scratch Ticket</h2>
+    <button class="fg-close" onclick="closeScratchTicket()">✕</button>
+  </div>
+  <div class="fg-body ssl-body">
+    <div class="ssl-paytable" id="ssl-paytable"></div>
+    <div class="ssl-stats">
+      <div class="fg-score-box"><div class="fg-sv" id="ssl-played">0</div><div class="fg-sl">Tickets</div></div>
+      <div class="fg-score-box"><div class="fg-sv" id="ssl-won">0</div><div class="fg-sl">Winners</div></div>
+      <div class="fg-score-box"><div class="fg-sv" id="ssl-total">$0</div><div class="fg-sl">Total Won</div></div>
+    </div>
+    <p class="ssl-hint">Scratch all 9 boxes — match 3 of the same symbol to win that prize. No room, no players, just you and your luck!</p>
+    <div class="ssl-grid" id="ssl-grid"></div>
+    <div class="fr" style="margin-top:16px;justify-content:center">
+      <button class="btn btn-outline btn-sm" id="ssl-reveal-btn" onclick="sslRevealAll()">👀 Reveal Rest</button>
+      <button class="btn" style="background:linear-gradient(135deg,#16a34a,#4ade80);color:#0f0e17" id="ssl-new-btn" onclick="sslNewTicket()">🎟️ New Ticket</button>
+    </div>
+    <div class="ssl-result" id="ssl-result"></div>
+  </div>
+</div>
+
 <!-- ══════════ ROOM CLOSED OVERLAY ══════════ -->
 <div id="room-closed-ov" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center">
   <div style="font-size:3.5rem;margin-bottom:16px">🔒</div>
@@ -4399,8 +4449,12 @@ async function revealScratchWinner(){
   const topPrize=ps.length?Math.max(...ps.map(n=>(room.players[n].prize)||0)):0;
   const winners=ps.filter(n=>(room.players[n].prize||0)===topPrize);
   await dbUpdate('rooms/'+roomCode,{revealed:true,winners});
-  if(winners.length) addSystemMsg('🎉 Scratch cards revealed! Biggest prize: $'+topPrize+'. Winner(s): '+winners.join(', ')+'!');
-  else addSystemMsg('🎉 Scratch cards revealed! Nobody joined this round.');
+  if(winners.length){
+    addSystemMsg('🎉 Scratch cards revealed! Biggest prize: $'+topPrize+'. Winner(s): '+winners.join(', ')+'!');
+    showHostWinnerAlert('🎟️ '+winners.join(' & ')+' won $'+topPrize+'!','scratch-h-label');
+  } else {
+    addSystemMsg('🎉 Scratch cards revealed! Nobody joined this round.');
+  }
 }
 
 async function resetScratchGame(){
@@ -5596,7 +5650,289 @@ const EMOJI_CLUES = [
   {emojis:'👠🎃🕛', answer:'Cinderella'},
   {emojis:'🐝🎬🍯', answer:'Bee Movie'},
   {emojis:'🎈🏠👴', answer:'Up'},
-  {emojis:'🚗⚡🏁', answer:'Cars'}
+  {emojis:'🚗⚡🏁', answer:'Cars'},
+  {emojis:'🤠🚀🧸', answer:'Toy Story'},
+  {emojis:'🧌🐴🏰', answer:'Shrek'},
+  {emojis:'🐟🔵❓', answer:'Finding Dory'},
+  {emojis:'👹🚪😱', answer:'Monsters, Inc.'},
+  {emojis:'🦸‍♂️🦸‍♀️💥', answer:'The Incredibles'},
+  {emojis:'🐀🍳👨‍🍳', answer:'Ratatouille'},
+  {emojis:'💀🎸🌺', answer:'Coco'},
+  {emojis:'🌊🛶🌺', answer:'Moana'},
+  {emojis:'🧞🪔🐒', answer:'Aladdin'},
+  {emojis:'🧜‍♀️🐚🌊', answer:'The Little Mermaid'},
+  {emojis:'🌹🏰👹', answer:'Beauty and the Beast'},
+  {emojis:'🐰🦊🏙️', answer:'Zootopia'},
+  {emojis:'🟡👓😈', answer:'Despicable Me'},
+  {emojis:'🦁🦓🏝️', answer:'Madagascar'},
+  {emojis:'🐿️🌰🧊', answer:'Ice Age'},
+  {emojis:'🐼🥋🎋', answer:'Kung Fu Panda'},
+  {emojis:'🐉🛡️👦', answer:'How to Train Your Dragon'},
+  {emojis:'🐯🐻🌴', answer:'The Jungle Book'},
+  {emojis:'👱‍♀️🏰💡', answer:'Tangled'},
+  {emojis:'🏹👧🐻', answer:'Brave'},
+  {emojis:'😀😢😡', answer:'Inside Out'},
+  {emojis:'🕹️👊🍬', answer:'Wreck-It Ralph'},
+  {emojis:'💊🕶️🤖', answer:'The Matrix'},
+  {emojis:'🌲💙👽', answer:'Avatar'},
+  {emojis:'⭐⚔️🚀', answer:'Star Wars'},
+  {emojis:'🤠🐍🏺', answer:'Indiana Jones'},
+  {emojis:'🏴‍☠️⚓🦜', answer:'Pirates of the Caribbean'},
+  {emojis:'💣🕶️🏃', answer:'Mission: Impossible'},
+  {emojis:'🏎️💨🔑', answer:'The Fast and the Furious'},
+  {emojis:'🕴️🍸🔫', answer:'James Bond'},
+  {emojis:'🏢🎄🔫', answer:'Die Hard'},
+  {emojis:'🚗🔥🏜️', answer:'Mad Max: Fury Road'},
+  {emojis:'🚗⏰⚡', answer:'Back to the Future'},
+  {emojis:'👽🚲🌕', answer:'E.T. the Extra-Terrestrial'},
+  {emojis:'🏛️🌙🦖', answer:'Night at the Museum'},
+  {emojis:'🤖❤️🔧', answer:'Iron Man'},
+  {emojis:'🦸‍♂️🦸‍♀️🌍', answer:'The Avengers'},
+  {emojis:'🛡️👸⚡', answer:'Wonder Woman'},
+  {emojis:'🐆👑🌍', answer:'Black Panther'},
+  {emojis:'🦸‍♂️🔵🔴', answer:'Superman'},
+  {emojis:'🗡️🔴😂', answer:'Deadpool'},
+  {emojis:'💚💪😡', answer:'The Incredible Hulk'},
+  {emojis:'🧩🩸🔪', answer:'Saw'},
+  {emojis:'👧😈🛏️', answer:'The Exorcist'},
+  {emojis:'🤡🎈🚨', answer:'IT'},
+  {emojis:'🤫👂🏚️', answer:'A Quiet Place'},
+  {emojis:'👻🏚️🕯️', answer:'The Conjuring'},
+  {emojis:'🔪🎭📞', answer:'Scream'},
+  {emojis:'🧟🚗🍔', answer:'Zombieland'},
+  {emojis:'🏃‍♂️🍫📦', answer:'Forrest Gump'},
+  {emojis:'⛓️📚🔨', answer:'The Shawshank Redemption'},
+  {emojis:'🥊🏃‍♂️🏆', answer:'Rocky'},
+  {emojis:'⚔️🦁🏟️', answer:'Gladiator'},
+  {emojis:'🎪🎩🔥', answer:'The Greatest Showman'},
+  {emojis:'🎹💃🌆', answer:'La La Land'},
+  {emojis:'🚗💃🕺', answer:'Grease'},
+  {emojis:'🎤🏝️💍', answer:'Mamma Mia!'},
+  {emojis:'🏎️🕵️‍♂️🌍', answer:'Cars 2'},
+  {emojis:'🏎️👴🏁', answer:'Cars 3'},
+  {emojis:'👹🎓📚', answer:'Monsters University'},
+  {emojis:'🤠🧸🔥', answer:'Toy Story 3'},
+  {emojis:'🤠🍴🧸', answer:'Toy Story 4'},
+  {emojis:'🐜🍃🎪', answer:'A Bug\'s Life'},
+  {emojis:'🐉🏖️🍝', answer:'Luca'},
+  {emojis:'🎹👻🌌', answer:'Soul'},
+  {emojis:'🐼👧❤️', answer:'Turning Red'},
+  {emojis:'🐉⚔️🌏', answer:'Raya and the Last Dragon'},
+  {emojis:'❄️👸🌊', answer:'Frozen II'},
+  {emojis:'🐸👸💋', answer:'The Princess and the Frog'},
+  {emojis:'⚔️👩🐉', answer:'Mulan'},
+  {emojis:'💪⚡🏛️', answer:'Hercules'},
+  {emojis:'🔔⛪🙇', answer:'The Hunchback of Notre Dame'},
+  {emojis:'🪵👦🤥', answer:'Pinocchio'},
+  {emojis:'🦌🌲🔥', answer:'Bambi'},
+  {emojis:'🐕🍝❤️', answer:'Lady and the Tramp'},
+  {emojis:'🐕🐾⚫', answer:'101 Dalmatians'},
+  {emojis:'🏹🦊🌳', answer:'Robin Hood'},
+  {emojis:'🐭✈️💍', answer:'The Rescuers'},
+  {emojis:'🐱🎹🇫🇷', answer:'The Aristocats'},
+  {emojis:'🐇🎩🍄', answer:'Alice in Wonderland'},
+  {emojis:'👸🌹💤', answer:'Sleeping Beauty'},
+  {emojis:'🍎👸⛏️', answer:'Snow White and the Seven Dwarfs'},
+  {emojis:'🐱🐕🏙️', answer:'Oliver & Company'},
+  {emojis:'🧙‍♀️🎃🕯️', answer:'Hocus Pocus'},
+  {emojis:'🎃🎄💀', answer:'The Nightmare Before Christmas'},
+  {emojis:'💀👰🎻', answer:'Corpse Bride'},
+  {emojis:'🗝️👧🧵', answer:'Coraline'},
+  {emojis:'👻👦🧟', answer:'ParaNorman'},
+  {emojis:'🎸🌙⚔️', answer:'Kubo and the Two Strings'},
+  {emojis:'🟡💛👮', answer:'Despicable Me 2'},
+  {emojis:'🟡👯🏠', answer:'Despicable Me 3'},
+  {emojis:'🎤🐨🎭', answer:'Sing'},
+  {emojis:'🐶🐱🏙️', answer:'The Secret Life of Pets'},
+  {emojis:'🌳🧡🏭', answer:'The Lorax'},
+  {emojis:'💚🎄😠', answer:'The Grinch'},
+  {emojis:'🐰🥚🎸', answer:'Hop'},
+  {emojis:'🦜🇧🇷🎶', answer:'Rio'},
+  {emojis:'🌿👧🐞', answer:'Epic'},
+  {emojis:'🕊️🕵️💥', answer:'Spies in Disguise'},
+  {emojis:'🧚🎶🌈', answer:'Trolls'},
+  {emojis:'🦈🐠🎙️', answer:'Shark Tale'},
+  {emojis:'🦔🌳🍕', answer:'Over the Hedge'},
+  {emojis:'🐀🚽🇬🇧', answer:'Flushed Away'},
+  {emojis:'🐔🏃🥧', answer:'Chicken Run'},
+  {emojis:'👶💼🍼', answer:'The Boss Baby'},
+  {emojis:'🦢📦👶', answer:'Storks'},
+  {emojis:'🦸🩲📚', answer:'Captain Underpants: The First Epic Movie'},
+  {emojis:'🧊🦍👣', answer:'Smallfoot'},
+  {emojis:'👻🏚️🖤', answer:'The Addams Family'},
+  {emojis:'❄️🧊🐾', answer:'Abominable'},
+  {emojis:'🎢🌸🐻', answer:'Wonder Park'},
+  {emojis:'🧸💗🏭', answer:'UglyDolls'},
+  {emojis:'🐴🏜️👧', answer:'Spirit Untamed'},
+  {emojis:'🦇🏙️🔥', answer:'Batman Begins'},
+  {emojis:'🦇🃏🔫', answer:'The Dark Knight'},
+  {emojis:'🦇💣🏚️', answer:'The Dark Knight Rises'},
+  {emojis:'🦸‍♂️🦇⚡', answer:'Justice League'},
+  {emojis:'🔱🌊👑', answer:'Aquaman'},
+  {emojis:'⚡👦🦸', answer:'Shazam!'},
+  {emojis:'🦸‍♂️🪨🔵', answer:'Man of Steel'},
+  {emojis:'🕷️🌀🎨', answer:'Spider-Man: Into the Spider-Verse'},
+  {emojis:'🕷️✈️🌍', answer:'Spider-Man: Far From Home'},
+  {emojis:'🕷️🌀🧙', answer:'Spider-Man: No Way Home'},
+  {emojis:'⭐🚀👩', answer:'Captain Marvel'},
+  {emojis:'⚡🔨👑', answer:'Thor'},
+  {emojis:'⚡🌈💥', answer:'Thor: Ragnarok'},
+  {emojis:'🐜🔬👨', answer:'Ant-Man'},
+  {emojis:'🪄🧙‍♂️🌀', answer:'Doctor Strange'},
+  {emojis:'🕷️🔫🇷🇺', answer:'Black Widow'},
+  {emojis:'⚡🧬👥', answer:'X-Men'},
+  {emojis:'🦾🩸🚗', answer:'Logan'},
+  {emojis:'🗡️⏳😂', answer:'Deadpool 2'},
+  {emojis:'🕰️🦉🩸', answer:'Watchmen'},
+  {emojis:'😈🔥🪓', answer:'Hellboy'},
+  {emojis:'🥊😷🎭', answer:'Kick-Ass'},
+  {emojis:'🦖🏝️📱', answer:'Jurassic World'},
+  {emojis:'🦍🏙️🏢', answer:'King Kong'},
+  {emojis:'🦎🔥🏙️', answer:'Godzilla'},
+  {emojis:'🤖🚗💥', answer:'Transformers'},
+  {emojis:'🤖⏳🔫', answer:'The Terminator'},
+  {emojis:'🤖🚓👮', answer:'RoboCop'},
+  {emojis:'👁️🔮🚨', answer:'Minority Report'},
+  {emojis:'🤖🚓⚙️', answer:'I, Robot'},
+  {emojis:'🤖🌃🌧️', answer:'Blade Runner'},
+  {emojis:'🌀💤🏙️', answer:'Inception'},
+  {emojis:'🧑‍🚀🌍💨', answer:'Gravity'},
+  {emojis:'🧑‍🚀🥔🔴', answer:'The Martian'},
+  {emojis:'🛸📖👽', answer:'Arrival'},
+  {emojis:'👽🔺🏚️', answer:'War of the Worlds'},
+  {emojis:'⏳🪖🔁', answer:'Edge of Tomorrow'},
+  {emojis:'💣🪂🕶️', answer:'Mission: Impossible – Fallout'},
+  {emojis:'🕴️👊📘', answer:'Jack Reacher'},
+  {emojis:'🐶🔫🕴️', answer:'John Wick'},
+  {emojis:'📞👨‍🦳🔫', answer:'Taken'},
+  {emojis:'🧩⚔️🏙️', answer:'Divergent'},
+  {emojis:'🌀🏃‍♂️🧱', answer:'The Maze Runner'},
+  {emojis:'🧛🐺❤️', answer:'Twilight'},
+  {emojis:'🐍🧙‍♂️📖', answer:'Harry Potter and the Chamber of Secrets'},
+  {emojis:'🐕⏳🧙‍♂️', answer:'Harry Potter and the Prisoner of Azkaban'},
+  {emojis:'🔥🏆🧙‍♂️', answer:'Harry Potter and the Goblet of Fire'},
+  {emojis:'🧪🧙‍♂️📗', answer:'Harry Potter and the Half-Blood Prince'},
+  {emojis:'⚰️🧙‍♂️🔺', answer:'Harry Potter and the Deathly Hallows'},
+  {emojis:'🦄🧳🧙‍♂️', answer:'Fantastic Beasts and Where to Find Them'},
+  {emojis:'🐉💍🏔️', answer:'The Hobbit: An Unexpected Journey'},
+  {emojis:'⚡🔱🏛️', answer:'Percy Jackson & the Olympians: The Lightning Thief'},
+  {emojis:'❄️⚔️🚀', answer:'The Empire Strikes Back'},
+  {emojis:'👦🏎️⚔️', answer:'The Phantom Menace'},
+  {emojis:'🌋⚔️😈', answer:'Revenge of the Sith'},
+  {emojis:'⭐🤖⚔️', answer:'The Force Awakens'},
+  {emojis:'🎲🍸🔫', answer:'Casino Royale'},
+  {emojis:'🏴🔫🏚️', answer:'Skyfall'},
+  {emojis:'👁️💰🔫', answer:'GoldenEye'},
+  {emojis:'🐙🕴️🔫', answer:'Spectre'},
+  {emojis:'🏎️💰🚂', answer:'Fast Five'},
+  {emojis:'🏎️✈️💔', answer:'Furious 7'},
+  {emojis:'🏎️🚀👨‍👦', answer:'F9: The Fast Saga'},
+  {emojis:'📺👨‍🦰🐻', answer:'Anchorman: The Legend of Ron Burgundy'},
+  {emojis:'👨‍🦱👨‍🦲🛏️', answer:'Step Brothers'},
+  {emojis:'🥂🐯🚗', answer:'The Hangover'},
+  {emojis:'🍺👦🆔', answer:'Superbad'},
+  {emojis:'💄📕👧', answer:'Mean Girls'},
+  {emojis:'👱‍♀️⚖️💗', answer:'Legally Blonde'},
+  {emojis:'🤓🥔🕺', answer:'Napoleon Dynamite'},
+  {emojis:'🦜🕵️😜', answer:'Ace Ventura: Pet Detective'},
+  {emojis:'🕶️🦷😎', answer:'Austin Powers: International Man of Mystery'},
+  {emojis:'💁‍♂️📸🤪', answer:'Zoolander'},
+  {emojis:'⚡🙏😂', answer:'Bruce Almighty'},
+  {emojis:'🤥👨‍⚖️🚫', answer:'Liar Liar'},
+  {emojis:'⏰❄️🔁', answer:'Groundhog Day'},
+  {emojis:'📺⏯️👨', answer:'Click'},
+  {emojis:'🎄🧝👦', answer:'Elf'},
+  {emojis:'🎄🏠💡', answer:'National Lampoon\'s Christmas Vacation'},
+  {emojis:'🎅🛷🔔', answer:'The Santa Clause'},
+  {emojis:'🏠🎄🗽', answer:'Home Alone 2: Lost in New York'},
+  {emojis:'🔪🎃🌕', answer:'Halloween'},
+  {emojis:'🛏️🔪😴', answer:'A Nightmare on Elm Street'},
+  {emojis:'🪚🏚️👹', answer:'The Texas Chain Saw Massacre'},
+  {emojis:'🔪🧸👹', answer:'Child\'s Play'},
+  {emojis:'🏚️👻🔴', answer:'Insidious'},
+  {emojis:'🏠👵😱', answer:'Hereditary'},
+  {emojis:'🌀🧠😱', answer:'Get Out'},
+  {emojis:'📖👤😱', answer:'The Babadook'},
+  {emojis:'🚨🔫🏠', answer:'The Purge'},
+  {emojis:'🧟🏥🇬🇧', answer:'28 Days Later'},
+  {emojis:'🚆🧟🇰🇷', answer:'Train to Busan'},
+  {emojis:'🧟🛒🏬', answer:'Dawn of the Dead'},
+  {emojis:'👦😈🔥', answer:'The Omen'},
+  {emojis:'🎷⚖️🎤', answer:'Chicago'},
+  {emojis:'🎩🎭❤️', answer:'Moulin Rouge!'},
+  {emojis:'🎭🕯️👻', answer:'The Phantom of the Opera'},
+  {emojis:'🎤👗⭐', answer:'Dreamgirls'},
+  {emojis:'🧙‍♀️💚🎈', answer:'Wicked'},
+  {emojis:'📓🚣❤️', answer:'The Notebook'},
+  {emojis:'👠💄💰', answer:'Pretty Woman'},
+  {emojis:'💃🕺🏖️', answer:'Dirty Dancing'},
+  {emojis:'👻🏺❤️', answer:'Ghost'},
+  {emojis:'💌💻❤️', answer:'You\'ve Got Mail'},
+  {emojis:'☕🍽️❤️', answer:'When Harry Met Sally'},
+  {emojis:'📅☀️💔', answer:'500 Days of Summer'},
+  {emojis:'📔🕊️💔', answer:'A Walk to Remember'},
+  {emojis:'💍🇸🇬💰', answer:'Crazy Rich Asians'},
+  {emojis:'🖤🔗🥂', answer:'Fifty Shades of Grey'},
+  {emojis:'💍🚗❤️', answer:'The Vow'},
+  {emojis:'🐴🔫👨‍👦', answer:'The Godfather Part II'},
+  {emojis:'🔫🍝🕴️', answer:'Goodfellas'},
+  {emojis:'💼🔫💃', answer:'Pulp Fiction'},
+  {emojis:'🦋🔪🐑', answer:'The Silence of the Lambs'},
+  {emojis:'👢😡🇺🇸', answer:'American History X'},
+  {emojis:'🕯️⚫🚂', answer:'Schindler\'s List'},
+  {emojis:'🟢🚶‍♂️⚡', answer:'The Green Mile'},
+  {emojis:'🏥🐦🔨', answer:'One Flew Over the Cuckoo\'s Nest'},
+  {emojis:'🧠📐😵', answer:'A Beautiful Mind'},
+  {emojis:'🥊👊🏆', answer:'Million Dollar Baby'},
+  {emojis:'📐🧑‍🏫💭', answer:'Good Will Hunting'},
+  {emojis:'📚🕯️🎓', answer:'Dead Poets Society'},
+  {emojis:'💰🐺📈', answer:'The Wolf of Wall Street'},
+  {emojis:'✈️✍️🕵️', answer:'Catch Me If You Can'},
+  {emojis:'🔐💻🇬🇧', answer:'The Imitation Game'},
+  {emojis:'🎙️👑😬', answer:'The King\'s Speech'},
+  {emojis:'🪖🌊🎖️', answer:'Saving Private Ryan'},
+  {emojis:'⚓🪖🌊', answer:'Dunkirk'},
+  {emojis:'🚁🔫🏜️', answer:'Black Hawk Down'},
+  {emojis:'🎯🪖🇺🇸', answer:'American Sniper'},
+  {emojis:'⛰️🪖✝️', answer:'Hacksaw Ridge'},
+  {emojis:'🚤🌴💣', answer:'Apocalypse Now'},
+  {emojis:'🗡️🏴🎨', answer:'Braveheart'},
+  {emojis:'🐴⚔️🏛️', answer:'Troy'},
+  {emojis:'🛡️⚔️🏛️', answer:'300'},
+  {emojis:'⚾👦🐕', answer:'The Sandlot'},
+  {emojis:'🏈🤝⚫', answer:'Remember the Titans'},
+  {emojis:'⛸️🇺🇸🏒', answer:'Miracle'},
+  {emojis:'⚾📊💰', answer:'Moneyball'},
+  {emojis:'🥊🥋👊', answer:'Creed'},
+  {emojis:'🏀👽🐰', answer:'Space Jam'},
+  {emojis:'🏈🏠❤️', answer:'The Blind Side'},
+  {emojis:'🏈🌙⭐', answer:'Friday Night Lights'},
+  {emojis:'🎰🕴️💰', answer:'Ocean\'s Eleven'},
+  {emojis:'🃏👁️🎩', answer:'Now You See Me'},
+  {emojis:'🚗🎧🔫', answer:'Baby Driver'},
+  {emojis:'🔫🏙️💰', answer:'Heat'},
+  {emojis:'🏦🎭👮', answer:'Inside Man'},
+  {emojis:'🔫🎱🇬🇧', answer:'Lock, Stock and Two Smoking Barrels'},
+  {emojis:'🕶️⏳👽', answer:'Men in Black 3'},
+  {emojis:'🎲🌴🕹️', answer:'Jumanji: Welcome to the Jungle'},
+  {emojis:'🎲🦁🏠', answer:'Jumanji'},
+  {emojis:'🏛️🌙✈️', answer:'Night at the Museum: Battle of the Smithsonian'},
+  {emojis:'🏜️🐛👑', answer:'Dune'},
+  {emojis:'🧬🚕🔺', answer:'The Fifth Element'},
+  {emojis:'💡🏍️🖥️', answer:'Tron'},
+  {emojis:'🎮😎👔', answer:'Free Guy'},
+  {emojis:'🦖🌋🚢', answer:'Jurassic World: Fallen Kingdom'},
+  {emojis:'📓👦😬', answer:'Diary of a Wimpy Kid'},
+  {emojis:'📚👧🔮', answer:'Matilda'},
+  {emojis:'👩👧🔄', answer:'Freaky Friday'},
+  {emojis:'👯‍♀️🏕️❤️', answer:'The Parent Trap'},
+  {emojis:'🔬👶🐜', answer:'Honey, I Shrunk the Kids'},
+  {emojis:'🥋🦵🖐️', answer:'The Karate Kid'},
+  {emojis:'🎸🏫🤘', answer:'School of Rock'},
+  {emojis:'🏀🎤❤️', answer:'High School Musical'},
+  {emojis:'🎤👩‍🌾🤠', answer:'Hannah Montana: The Movie'},
+  {emojis:'🧱😎🏗️', answer:'The Lego Movie'},
+  {emojis:'🍫🎩✨', answer:'Wonka'},
 ];
 
 // ── Content bank: Trivia Quiz Show ──
@@ -7236,6 +7572,187 @@ async function closeRoom(){
 // Hook saveRoomToLocal into existing create functions
 const _origCreateRoom=createRoom;
 createRoom=async function(){await _origCreateRoom.apply(this,arguments);if(roomCode)saveRoomToLocal(roomCode,myName,'bingo','host',document.getElementById('room-label')?.value||'MLT Bingo')};
+
+// ════════════════════════════════════════
+//  SOLO LOTTERY SCRATCH TICKET (local — no room/Firebase needed)
+// ════════════════════════════════════════
+// Non-winning filler symbols — distinct from each other so an accidental
+// 3-of-a-kind among them still pays nothing, same as a real scratch ticket.
+const SSL_BLANKS = [
+  {sym:'🍉', weight:19},
+  {sym:'🍇', weight:18},
+  {sym:'⭐', weight:18},
+];
+// Prize symbols — lower weight (rarer) pairs with a bigger payout.
+const SSL_SYMBOLS = [
+  {sym:'🍒', prize:2,   weight:14},
+  {sym:'🍋', prize:5,   weight:11},
+  {sym:'🔔', prize:10,  weight:9},
+  {sym:'🍀', prize:25,  weight:7},
+  {sym:'💎', prize:100, weight:3},
+  {sym:'7️⃣', prize:500, weight:1}
+];
+const SSL_ALL_SYMBOLS = [...SSL_BLANKS, ...SSL_SYMBOLS];
+
+let sslTicket=[];           // array of 9 {sym, scratched}
+let sslPlayed=0, sslWon=0, sslTotalWon=0;
+let sslFinished=false;
+let sslActiveCell=null;     // {checkDone, stop} for whichever cell is mid-drag
+
+// Single page-wide mouseup listener (registered once) so a drag that ends
+// outside the small canvas it started on still finalizes correctly, without
+// stacking a new window listener every time a ticket or cell is (re)built.
+window.addEventListener('mouseup', () => {
+  if (sslActiveCell) { sslActiveCell.checkDone(); sslActiveCell.stop(); sslActiveCell = null; }
+});
+
+function sslWeightedPick(){
+  const total=SSL_ALL_SYMBOLS.reduce((a,s)=>a+s.weight,0);
+  let r=Math.random()*total;
+  for(const s of SSL_ALL_SYMBOLS){ if(r<s.weight) return s.sym; r-=s.weight; }
+  return SSL_ALL_SYMBOLS[0].sym;
+}
+
+function sslBuildPaytable(){
+  document.getElementById('ssl-paytable').innerHTML = SSL_SYMBOLS.map(s=>
+    `<div class="ssl-pay-chip"><span class="spc-sym">${s.sym}</span>×3 = $${s.prize}</div>`
+  ).join('');
+}
+
+function sslUpdateStats(){
+  document.getElementById('ssl-played').textContent=sslPlayed;
+  document.getElementById('ssl-won').textContent=sslWon;
+  document.getElementById('ssl-total').textContent='$'+sslTotalWon;
+}
+
+function openScratchTicket(){
+  sslBuildPaytable();
+  sslUpdateStats();
+  document.getElementById('scratch-solo-overlay').classList.add('show');
+  sslNewTicket();
+}
+function closeScratchTicket(){
+  document.getElementById('scratch-solo-overlay').classList.remove('show');
+}
+
+function sslNewTicket(){
+  sslTicket = Array.from({length:9}, ()=>({sym:sslWeightedPick(), scratched:false}));
+  sslFinished=false;
+  sslActiveCell=null;
+  const resEl=document.getElementById('ssl-result');
+  resEl.className='ssl-result'; resEl.innerHTML='';
+  document.getElementById('ssl-reveal-btn').disabled=false;
+  sslRenderGrid();
+}
+
+function sslRenderGrid(){
+  const grid=document.getElementById('ssl-grid');
+  grid.innerHTML='';
+  sslTicket.forEach((cell,i)=>{
+    const d=document.createElement('div');
+    d.className='ssl-cell';
+    d.innerHTML='<div class="ssl-under">'+cell.sym+'</div><canvas data-idx="'+i+'"></canvas>';
+    grid.appendChild(d);
+  });
+  // Canvases need real layout dimensions, so size/init them on the next frame.
+  requestAnimationFrame(()=>{
+    sslTicket.forEach((cell,i)=>{
+      const canvas=grid.querySelector('canvas[data-idx="'+i+'"]');
+      if(canvas) sslInitCell(canvas, i);
+    });
+  });
+}
+
+function sslInitCell(canvas, idx){
+  const ctx=canvas.getContext('2d');
+  const r=canvas.getBoundingClientRect();
+  canvas.width=r.width||100; canvas.height=r.height||100;
+  canvas.classList.remove('sc-done');
+  function drawFoil(){
+    ctx.globalCompositeOperation='source-over';
+    const g=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    g.addColorStop(0,'#cbd5e1');g.addColorStop(.5,'#94a3b8');g.addColorStop(1,'#cbd5e1');
+    ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='rgba(255,255,255,.6)';
+    ctx.font='bold 18px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('?',canvas.width/2,canvas.height/2);
+  }
+  drawFoil();
+  let drawing=false,last=null;
+  function pos(e){
+    const rc=canvas.getBoundingClientRect();
+    const t=e.touches&&e.touches[0];
+    return{x:(t?t.clientX:e.clientX)-rc.left,y:(t?t.clientY:e.clientY)-rc.top};
+  }
+  function scratchAt(x,y){
+    ctx.globalCompositeOperation='destination-out';
+    ctx.beginPath();ctx.arc(x,y,13,0,Math.PI*2);ctx.fill();
+    if(last){ctx.lineWidth=24;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(x,y);ctx.stroke()}
+    last={x,y};
+  }
+  function checkDone(){
+    const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let cleared=0,total=0;
+    for(let i=3;i<data.length;i+=4*8){total++;if(data[i]===0)cleared++}
+    if(total>0&&cleared/total>0.4)sslCompleteCell(idx);
+  }
+  let throttle=0;
+  function onMove(e){
+    e.preventDefault();
+    const p=pos(e);scratchAt(p.x,p.y);
+    if(Date.now()-throttle>100){throttle=Date.now();checkDone()}
+  }
+  function onDown(e){
+    if(sslFinished||sslTicket[idx].scratched)return;
+    drawing=true;last=null;
+    sslActiveCell={checkDone, stop:()=>{drawing=false;last=null}};
+    onMove(e);
+  }
+  function onUp(){ if(drawing)checkDone(); drawing=false;last=null; sslActiveCell=null; }
+  canvas.onmousedown=onDown;
+  canvas.onmousemove=(e)=>{if(drawing)onMove(e)};
+  canvas.ontouchstart=onDown;
+  canvas.ontouchmove=(e)=>{if(drawing)onMove(e)};
+  canvas.ontouchend=onUp;
+}
+
+function sslCompleteCell(idx){
+  if(sslFinished||sslTicket[idx].scratched)return;
+  sslTicket[idx].scratched=true;
+  const canvas=document.querySelector('#ssl-grid canvas[data-idx="'+idx+'"]');
+  if(canvas)canvas.classList.add('sc-done');
+  if(sslTicket.every(c=>c.scratched))sslFinishTicket();
+}
+
+function sslRevealAll(){
+  if(sslFinished)return;
+  sslTicket.forEach((c,i)=>{ if(!c.scratched)sslCompleteCell(i); });
+}
+
+function sslFinishTicket(){
+  if(sslFinished)return;
+  sslFinished=true;
+  sslPlayed++;
+  document.getElementById('ssl-reveal-btn').disabled=true;
+  const counts={};
+  sslTicket.forEach(c=>{counts[c.sym]=(counts[c.sym]||0)+1});
+  let totalWin=0; const wins=[];
+  SSL_SYMBOLS.forEach(s=>{
+    if((counts[s.sym]||0)>=3){ totalWin+=s.prize; wins.push(s); }
+  });
+  const resEl=document.getElementById('ssl-result');
+  if(totalWin>0){
+    sslWon++; sslTotalWon+=totalWin;
+    resEl.className='ssl-result show win';
+    resEl.innerHTML='<div class="sr-title">🎉 You won $'+totalWin+'!</div>'
+      +'<div class="sr-sub">'+wins.map(w=>'3× '+w.sym+' = $'+w.prize).join('\n')+'</div>';
+  } else {
+    resEl.className='ssl-result show lose';
+    resEl.innerHTML='<div class="sr-title">😬 No match this time</div>'
+      +'<div class="sr-sub">Not every ticket\'s a winner — grab a new one and try again!</div>';
+  }
+  sslUpdateStats();
+}
 
 // ════════════════════════════════════════
 //  WHEEL OF MLT (local — no room/Firebase needed)
