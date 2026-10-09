@@ -483,6 +483,21 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
 .duck-result .dr-ducks{font-size:2rem;margin-bottom:6px}
 .duck-result .dr-nums{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;background:linear-gradient(90deg,#f59e0b,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
+.scratch-card-wrap{position:relative;width:100%;max-width:340px;height:200px;margin:14px auto;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.scratch-under{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#166534,#15803d);text-align:center;padding:10px}
+.scratch-under .su-label{color:rgba(255,255,255,.85);font-size:.8rem;font-weight:700;letter-spacing:.5px;margin-bottom:4px}
+.scratch-under .su-amount{font-family:'Bebas Neue',sans-serif;font-size:3rem;line-height:1;color:#fde68a;text-shadow:0 2px 8px rgba(0,0,0,.3)}
+.scratch-under .su-sub{color:rgba(255,255,255,.7);font-size:.78rem;margin-top:6px}
+.scratch-card-wrap canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none;transition:opacity .5s ease}
+.scratch-card-wrap canvas.sc-done{opacity:0;pointer-events:none}
+.scratch-hint{text-align:center;color:var(--muted);font-size:.8rem;margin-top:-6px;margin-bottom:10px}
+.scratch-result{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(21,128,61,.1));border:1.5px solid rgba(34,197,94,.3);border-radius:14px;padding:16px;margin:12px 0;display:none;text-align:center}
+.scratch-result.show{display:block}
+.scratch-result .sr-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#4ade80;margin-bottom:4px}
+.scratch-result .sr-sub{color:var(--muted);font-size:.85rem}
+.prize-chip{background:var(--surface2);border-radius:28px;padding:5px 13px;font-size:.8rem;font-weight:700;border:1px solid rgba(255,255,255,.08);display:inline-flex;align-items:center;gap:6px}
+.prize-chip .pz-amt{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#4ade80}
+
 /* Guess the Square */
 .sq-grid{display:inline-grid;gap:6px;margin:14px auto}
 .sq-cell{aspect-ratio:1;border-radius:10px;background:var(--surface2);border:2px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;cursor:pointer;transition:.2s;user-select:none;min-width:52px}
@@ -676,6 +691,12 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
         <div class="game-tag fb-game-tag">Host</div>
         <h3>Two Truths and a Lie</h3>
         <p>Host enters three statements — one's a lie. Players vote which one — host reveals the truth!</p>
+      </div>
+      <div class="hcard fb" onclick="go('s-scratch-setup')">
+        <div class="ic">🎟️</div>
+        <div class="game-tag fb-game-tag">Host</div>
+        <h3>Scratch &amp; Win</h3>
+        <p>Every player gets a hidden scratch card with a prize. Scratch it off — whoever reveals the biggest prize wins!</p>
       </div>
     </div>
     <div style="margin-top:16px">
@@ -1801,6 +1822,98 @@ Drew</textarea>
       <div class="dr-ducks" id="duckp-result-emojis">🦆 🦆</div>
       <div style="color:var(--muted);font-size:.82rem;margin-bottom:4px">Your duck numbers added up to</div>
       <div class="dr-nums" id="duckp-result-nums">— —</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SCRATCH & WIN SETUP ══════════ -->
+<div class="screen" id="s-scratch-setup">
+  <div class="card">
+    <h2>🎟️ Scratch &amp; Win — Host Setup</h2>
+    <p class="sub">Every player gets a hidden scratch card with a random prize. Once everyone's scratched, reveal the winner — biggest prize takes it all!</p>
+    <div class="ig"><label>Your Name</label><input id="scratch-host-name" placeholder="e.g. Sarah" maxlength="20"/></div>
+    <div class="ig"><label>Room Name (optional)</label><input id="scratch-room-label" placeholder="e.g. Friday Scratch Night" maxlength="30"/></div>
+    <div class="ig"><label>Prize Range</label>
+      <select id="scratch-range">
+        <option value="10-100">Small — $10 to $100</option>
+        <option value="50-500" selected>Medium — $50 to $500</option>
+        <option value="100-1000">Big — $100 to $1,000</option>
+        <option value="500-5000">Jackpot — $500 to $5,000</option>
+      </select>
+    </div>
+    <div class="ig"><label>Max Players</label>
+      <select id="scratch-max">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="20" selected>20</option>
+        <option value="25">25</option>
+        <option value="30">30</option>
+        <option value="40">40</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+    <button class="btn" style="background:linear-gradient(135deg,#16a34a,#4ade80);color:#0f0e17" onclick="createScratchRoom()">Create Room →</button>
+    <p class="err-txt" id="scratch-setup-err"></p>
+  </div>
+</div>
+
+<!-- ══════════ SCRATCH & WIN HOST GAME ══════════ -->
+<div class="screen" id="s-scratch-host">
+  <div class="rcd">
+    <div class="code" id="scratch-h-code" style="background:linear-gradient(90deg,#16a34a,#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent">——</div>
+    <div class="hint">Room ready · <span id="scratch-h-pcount">0 players joined</span></div>
+    <div class="share-box">
+      <div class="share-label">🔗 Player join link</div>
+      <div class="share-link-row">
+        <input id="scratch-share-link" readonly onclick="this.select()" value=""/>
+        <button class="copy-btn" id="scratch-copy-btn" onclick="copyLink('scratch-share-link','scratch-copy-btn')">Copy Link</button>
+      </div>
+    </div>
+    <button class="btn btn-danger btn-sm close-room-btn" onclick="closeRoom()" style="margin-top:10px;width:100%">🔒 Close &amp; Delete Room</button>
+  </div>
+  <div class="card">
+    <h2>🎟️ Scratch &amp; Win</h2>
+    <p class="sub" id="scratch-h-sub">Players are scratching their cards. When ready, press Reveal to crown the winner!</p>
+    <div style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.88rem;color:#4ade80">
+      🏆 Whoever reveals the <b>biggest prize</b> wins! Prizes stay hidden on your side until you reveal.
+    </div>
+    <div class="fr" style="margin-top:4px">
+      <button class="btn" style="background:linear-gradient(135deg,#16a34a,#4ade80);color:#0f0e17" onclick="revealScratchWinner()">🏆 Reveal Winner!</button>
+      <button class="btn btn-danger btn-sm" onclick="resetScratchGame()">🔄 New Round</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>👥 Players &amp; Prizes</h2>
+    <p class="sub" id="scratch-h-plabel">0 players connected</p>
+    <div id="scratch-h-plist" class="plist"></div>
+    <div class="sl mt14">🏆 Results</div>
+    <div id="scratch-h-results"><span style="color:var(--muted);font-size:.83rem">Reveal the winner to see results</span></div>
+  </div>
+</div>
+
+<!-- ══════════ SCRATCH & WIN PLAYER ══════════ -->
+<div class="screen" id="s-scratch-player">
+  <div style="width:100%;max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:1px" id="scratchp-rlabel">Room</div>
+        <div style="color:var(--muted);font-size:.78rem">Playing as <b id="scratchp-name">—</b></div>
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:5px;background:linear-gradient(90deg,#16a34a,#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="scratchp-code">—</div>
+    </div>
+    <div class="scratch-card-wrap" id="scratchp-wrap">
+      <div class="scratch-under">
+        <div class="su-label">YOUR PRIZE</div>
+        <div class="su-amount" id="scratchp-amount">$—</div>
+        <div class="su-sub">scratch the card above to reveal!</div>
+      </div>
+      <canvas id="scratchp-canvas"></canvas>
+    </div>
+    <p class="scratch-hint" id="scratchp-hint">👆 Drag your finger or mouse across the card to scratch it off</p>
+    <div class="scratch-result" id="scratchp-result">
+      <div class="sr-title" id="scratchp-result-title">⏳ Waiting for host…</div>
+      <div class="sr-sub" id="scratchp-result-sub">Everyone needs to scratch before the host can reveal the winner.</div>
     </div>
   </div>
 </div>
@@ -4033,6 +4146,7 @@ function startOEPlayerListen(){
 //  LUCKY DUCK
 // ════════════════════════════════════════
 let duckCount=20, duckPicksAllowed=2, duckNumbers=[], duckMyPicks=[], duckRevealed=false;
+let scratchPrizeMin=50, scratchPrizeMax=500, scratchMyPrize=null, scratchMyScratched=false, scratchResultShown=false;
 
 function shuffleArray(a){return a.sort(()=>Math.random()-.5)}
 
@@ -4248,6 +4362,209 @@ function startDuckPlayerListen(){
       showRoomClosed();
     }
 
+  });
+}
+
+// ════════════════════════════════════════
+//  SCRATCH & WIN
+// ════════════════════════════════════════
+function scratchRandomPrize(min,max){return min+Math.floor(Math.random()*(max-min+1))}
+
+async function createScratchRoom(){
+  const name=document.getElementById('scratch-host-name').value.trim();
+  const label=document.getElementById('scratch-room-label').value.trim()||'Scratch & Win';
+  const err=document.getElementById('scratch-setup-err');err.textContent='';
+  if(!name){err.textContent='Enter your name';return}
+  if(!db){err.textContent='Firebase not connected';return}
+  const range=document.getElementById('scratch-range').value.split('-').map(Number);
+  scratchPrizeMin=range[0];scratchPrizeMax=range[1];
+  const maxP=parseInt(document.getElementById('scratch-max').value);
+  const code=genCode();
+  roomCode=code;myName=name;myRole='host';gameType='scratch';
+  await dbSet('rooms/'+code,{code,type:'scratch',hostName:name,label,maxPlayers:maxP,
+    prizeMin:scratchPrizeMin,prizeMax:scratchPrizeMax,players:{},revealed:false,winners:[],created:Date.now()});
+  document.getElementById('scratch-h-code').textContent=code;
+  document.getElementById('scratch-share-link').value=buildJoinURL(code);
+  go('s-scratch-host');setHostUI();
+  startScratchHostListen();startChatListen();showChatFab();
+  saveRoomToLocal(code,name,'scratch','host',label);
+  addSystemMsg('🎟️ Scratch & Win room '+code+' created — prizes from $'+scratchPrizeMin+' to $'+scratchPrizeMax+'! Biggest prize wins.');
+}
+
+async function revealScratchWinner(){
+  if(!confirm('Reveal the winner now? This ends the round!'))return;
+  const room=await dbGet('rooms/'+roomCode);
+  if(!room)return;
+  const ps=Object.keys(room.players||{});
+  const topPrize=ps.length?Math.max(...ps.map(n=>(room.players[n].prize)||0)):0;
+  const winners=ps.filter(n=>(room.players[n].prize||0)===topPrize);
+  await dbUpdate('rooms/'+roomCode,{revealed:true,winners});
+  if(winners.length) addSystemMsg('🎉 Scratch cards revealed! Biggest prize: $'+topPrize+'. Winner(s): '+winners.join(', ')+'!');
+  else addSystemMsg('🎉 Scratch cards revealed! Nobody joined this round.');
+}
+
+async function resetScratchGame(){
+  if(!confirm('Start a new round? Everyone gets a fresh prize!'))return;
+  const room=await dbGet('rooms/'+roomCode);
+  if(!room)return;
+  const names=Object.keys(room.players||{});
+  const players={};
+  names.forEach(n=>{players[n]={joined:(room.players[n]&&room.players[n].joined)||Date.now(),prize:scratchRandomPrize(scratchPrizeMin,scratchPrizeMax),scratched:false}});
+  await dbUpdate('rooms/'+roomCode,{players,revealed:false,winners:[]});
+  addSystemMsg('🔄 New round — fresh prizes assigned to everyone!');
+}
+
+function startScratchHostListen(){
+  unsubHost=dbListen('rooms/'+roomCode,room=>{
+    if(!room)return;
+    if(!$id('scratch-h-pcount'))return;
+    const ps=Object.keys(room.players||{});
+    document.getElementById('scratch-h-pcount').textContent=ps.length+' players joined';
+    document.getElementById('scratch-h-plabel').textContent=ps.length+' player'+(ps.length!==1?'s':'')+' connected';
+    document.getElementById('scratch-h-plist').innerHTML=ps.length
+      ? ps.map(n=>{const p=room.players[n]||{};const st=p.scratched?'✅ Scratched':'⏳ Scratching…';return`<div class="pchip">${escH(n)}: ${st}${kickBtn(n)}</div>`}).join('')
+      : '<span style="color:var(--muted);font-size:.83rem">Waiting for players…</span>';
+    if(room.revealed){
+      const res=document.getElementById('scratch-h-results');
+      const winners=room.winners||[];
+      const ranked=ps.map(n=>({n,prize:(room.players[n]&&room.players[n].prize)||0})).sort((a,b)=>b.prize-a.prize);
+      res.innerHTML=ranked.length
+        ? ranked.map(r=>{const isW=winners.includes(r.n);return`<div class="pchip" style="border-color:${isW?'#22c55e':'#4ade80'}">${isW?'🏆 ':''}${escH(r.n)}: <b>$${r.prize}</b></div>`}).join('')
+        : '<span style="color:var(--muted);font-size:.83rem">No players yet</span>';
+    } else {
+      document.getElementById('scratch-h-results').innerHTML='<span style="color:var(--muted);font-size:.83rem">Reveal the winner to see results</span>';
+    }
+  });
+}
+
+async function joinScratchRoom(code,name){
+  const room=await dbGet('rooms/'+code);
+  if(!room||room.type!=='scratch')return false;
+  scratchPrizeMin=room.prizeMin||10;scratchPrizeMax=room.prizeMax||100;
+  scratchResultShown=false;
+  const isRejoin=!!(room.players&&room.players[name]);
+  if(isRejoin){
+    scratchMyPrize=room.players[name].prize;
+    scratchMyScratched=!!room.players[name].scratched;
+  } else {
+    scratchMyPrize=scratchRandomPrize(scratchPrizeMin,scratchPrizeMax);
+    scratchMyScratched=false;
+    await dbUpdate('rooms/'+code+'/players',{[name]:{joined:Date.now(),prize:scratchMyPrize,scratched:false}});
+  }
+  document.getElementById('scratchp-rlabel').textContent=room.label||'Scratch & Win';
+  document.getElementById('scratchp-name').textContent=name;
+  document.getElementById('scratchp-code').textContent=code;
+  document.getElementById('scratchp-result').classList.remove('show');
+  initScratchCard(!!room.revealed, scratchMyScratched);
+  go('s-scratch-player');document.getElementById('sbar').style.display='flex';
+  setPlayerUI();
+  startScratchPlayerListen();startChatListen();showChatFab();
+  if(!isRejoin) addSystemMsg('👋 '+name+' joined the Scratch & Win room');
+  return true;
+}
+
+function initScratchCard(alreadyRevealed, alreadyScratched){
+  document.getElementById('scratchp-amount').textContent='$'+scratchMyPrize;
+  const canvas=document.getElementById('scratchp-canvas');
+  const wrap=document.getElementById('scratchp-wrap');
+  canvas.classList.remove('sc-done');
+  const ctx=canvas.getContext('2d');
+  const r=wrap.getBoundingClientRect();
+  canvas.width=r.width||340;canvas.height=r.height||200;
+  function drawFoil(){
+    ctx.globalCompositeOperation='source-over';
+    const g=ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    g.addColorStop(0,'#cbd5e1');g.addColorStop(.5,'#94a3b8');g.addColorStop(1,'#cbd5e1');
+    ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='rgba(255,255,255,.6)';
+    ctx.font='bold 16px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('🎟️ SCRATCH HERE 🎟️',canvas.width/2,canvas.height/2);
+  }
+  drawFoil();
+  if(alreadyScratched||alreadyRevealed){completeScratch(true);return}
+  let drawing=false,last=null;
+  function pos(e){
+    const rc=canvas.getBoundingClientRect();
+    const t=e.touches&&e.touches[0];
+    return{x:(t?t.clientX:e.clientX)-rc.left,y:(t?t.clientY:e.clientY)-rc.top};
+  }
+  function scratchAt(x,y){
+    ctx.globalCompositeOperation='destination-out';
+    ctx.beginPath();ctx.arc(x,y,18,0,Math.PI*2);ctx.fill();
+    if(last){ctx.lineWidth=36;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(x,y);ctx.stroke()}
+    last={x,y};
+  }
+  function checkDone(){
+    const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let cleared=0,total=0;
+    for(let i=3;i<data.length;i+=4*8){total++;if(data[i]===0)cleared++}
+    if(total>0&&cleared/total>0.45)completeScratch(false);
+  }
+  let throttle=0;
+  function onMove(e){
+    e.preventDefault();
+    const p=pos(e);scratchAt(p.x,p.y);
+    if(Date.now()-throttle>150){throttle=Date.now();checkDone()}
+  }
+  function onDown(e){drawing=true;last=null;onMove(e)}
+  function onUp(){if(drawing)checkDone();drawing=false;last=null}
+  canvas.onmousedown=onDown;
+  canvas.onmousemove=(e)=>{if(drawing)onMove(e)};
+  window.addEventListener('mouseup',onUp);
+  canvas.ontouchstart=onDown;
+  canvas.ontouchmove=(e)=>{if(drawing)onMove(e)};
+  canvas.ontouchend=onUp;
+}
+
+function completeScratch(silent){
+  const canvas=document.getElementById('scratchp-canvas');
+  if(canvas)canvas.classList.add('sc-done');
+  if(!scratchMyScratched){
+    scratchMyScratched=true;
+    if(roomCode&&myName)dbUpdate('rooms/'+roomCode+'/players/'+myName,{scratched:true}).catch(()=>{});
+    if(!silent)addSystemMsg('🎟️ '+myName+' scratched their card!');
+  }
+}
+
+function startScratchPlayerListen(){
+  const dot=document.getElementById('sdot'),stxt=document.getElementById('stxt');
+  unsubPlayer=dbListen('rooms/'+roomCode,room=>{
+    if(wasKicked(room)){showKicked();return}
+    if(!room){dot.className='sdot err';stxt.textContent='Disconnected';return}
+    dot.className='sdot';stxt.textContent='Connected';
+    if(!$id('scratchp-canvas'))return;
+    document.getElementById('sright').textContent=Object.keys(room.players||{}).length+' players online';
+    const myData=(room.players&&room.players[myName])||{};
+    if(!room.revealed&&myData.scratched===false&&scratchMyScratched){
+      // Host started a new round — reset this player's card back to un-scratched
+      scratchMyScratched=false;scratchResultShown=false;
+      if(myData.prize!=null)scratchMyPrize=myData.prize;
+      document.getElementById('scratchp-result').classList.remove('show');
+      initScratchCard(false,false);
+    }
+    if(myData.prize!=null&&myData.prize!==scratchMyPrize){scratchMyPrize=myData.prize;document.getElementById('scratchp-amount').textContent='$'+scratchMyPrize}
+    if(room.revealed){
+      if(!scratchMyScratched)completeScratch(true);
+      document.getElementById('scratchp-result').classList.add('show');
+      if(!scratchResultShown){
+        scratchResultShown=true;
+        const winners=room.winners||[];
+        const won=winners.includes(myName);
+        const topPrize=Math.max(0,...Object.values(room.players||{}).map(p=>p.prize||0));
+        document.getElementById('scratchp-result-title').textContent=won?'🏆 You won $'+scratchMyPrize+'!':'Round over!';
+        document.getElementById('scratchp-result-sub').textContent=won?'Your scratch card had the biggest prize!':'The biggest prize this round was $'+topPrize+'.';
+        if(winners.length)showWinnerBanner(winners);
+        if(won)showWin('🎟️ Scratch & Win!','Your card revealed $'+scratchMyPrize+' — the biggest prize!');
+        addSystemMsg('🎟️ '+myName+'\'s card: $'+scratchMyPrize+(won?' 🏆 WINNER!':''));
+      }
+    } else if(scratchMyScratched){
+      document.getElementById('scratchp-result').classList.add('show');
+      document.getElementById('scratchp-result-title').textContent='⏳ Waiting for host…';
+      document.getElementById('scratchp-result-sub').textContent='Your prize is locked in at $'+scratchMyPrize+'. Waiting for the host to reveal the winner.';
+    }
+    if(room.status==='closed'){
+      showRoomClosed();
+    }
   });
 }
 
@@ -4992,7 +5309,7 @@ async function joinFBRoom(){
   if(!db){err.textContent='Firebase not connected';return}
   const room=await dbGet('rooms/'+code);
   if(!room){err.textContent='Room not found — check the code!';return}
-  const fbTypes=['duck','sq','mm','price','ttl'];
+  const fbTypes=['duck','sq','mm','price','ttl','scratch'];
   if(!fbTypes.includes(room.type)){err.textContent='This is not a Facebook Games room';return}
   const pc=Object.keys(room.players||{}).length;
   if(pc>=(room.maxPlayers||20)){err.textContent='Room is full';return}
@@ -5003,6 +5320,7 @@ async function joinFBRoom(){
   else if(room.type==='mm')await joinMMRoom(code,name);
   else if(room.type==='price')await joinPriceRoom(code,name);
   else if(room.type==='ttl')await joinTTLRoom(code,name);
+  else if(room.type==='scratch')await joinScratchRoom(code,name);
 }
 
 // ════════════════════════════════════════
@@ -5193,7 +5511,7 @@ async function directJoin() {
     document.getElementById('oej-name').value = name;
     document.getElementById('oej-code').value = directJoinCode;
     await joinOERoom();
-  } else if (['duck','sq','mm','price','ttl'].includes(directJoinType)) {
+  } else if (['duck','sq','mm','price','ttl','scratch'].includes(directJoinType)) {
     document.getElementById('fbj-name').value = name;
     document.getElementById('fbj-code').value = directJoinCode;
     await joinFBRoom();
@@ -6638,6 +6956,11 @@ async function rejoinAsHost(room){
       }
     }
     go('s-ttl-host'); setHostUI(); startTTLHostListen(); startChatListen(); showChatFab();
+  } else if(type==='scratch'){
+    scratchPrizeMin=room.prizeMin||10; scratchPrizeMax=room.prizeMax||100;
+    document.getElementById('scratch-h-code').textContent=room.code;
+    document.getElementById('scratch-share-link').value=buildJoinURL(room.code);
+    go('s-scratch-host'); setHostUI(); startScratchHostListen(); startChatListen(); showChatFab();
   } else if(type==='fg'){
     fghGameType=room.gameType||'odd';
     fghTotalRounds=room.totalRounds||8;
@@ -6838,6 +7161,20 @@ async function rejoinAsPlayer(room, name){
     }
     go('s-ttl-player'); document.getElementById('sbar').style.display='flex';
     startTTLPlayerListen(); startChatListen(); showChatFab();
+  } else if(type==='scratch'){
+    gameType='scratch';
+    scratchPrizeMin=room.prizeMin||10; scratchPrizeMax=room.prizeMax||100;
+    scratchResultShown=false;
+    const pd=room.players&&room.players[name];
+    scratchMyPrize=pd&&pd.prize!=null?pd.prize:scratchRandomPrize(scratchPrizeMin,scratchPrizeMax);
+    scratchMyScratched=!!(pd&&pd.scratched);
+    document.getElementById('scratchp-rlabel').textContent=room.label||'Scratch & Win';
+    document.getElementById('scratchp-name').textContent=name;
+    document.getElementById('scratchp-code').textContent=room.code;
+    document.getElementById('scratchp-result').classList.remove('show');
+    go('s-scratch-player'); document.getElementById('sbar').style.display='flex';
+    initScratchCard(!!room.revealed, scratchMyScratched);
+    startScratchPlayerListen(); startChatListen(); showChatFab();
   } else if(type==='fg'){
     gameType='fg';
     fgpGameType=room.gameType||'odd';
