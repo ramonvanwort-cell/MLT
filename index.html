@@ -834,6 +834,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
           </div>
           <span class="wheel-count-pill" id="wheelCountPill">12 options on the wheel</span>
           <button class="btn btn-accent wheel-spin-btn" id="wheelSpinBtn" type="button">SPIN!</button>
+          <button class="btn btn-outline btn-sm" id="wheelShuffleBtn" type="button" style="width:100%;justify-content:center;margin-top:10px">🔀 Shuffle entries</button>
           <div class="wheel-winner-box" id="wheelWinnerBox">
             <span style="color:var(--muted);font-size:.85rem" id="wheelWinnerEmpty">No winner yet — press SPIN to begin.</span>
           </div>
@@ -7782,7 +7783,7 @@ function sslFinishTicket(){
     spinning: false
   };
 
-  let wheelCanvasEl, wheelCtx, wheelStageEl, wheelSpinBtnEl, wheelCountPillEl, wheelWinnerBoxEl, wheelHistoryListEl, wheelResetBtnEl;
+  let wheelCanvasEl, wheelCtx, wheelStageEl, wheelSpinBtnEl, wheelCountPillEl, wheelWinnerBoxEl, wheelHistoryListEl, wheelResetBtnEl, wheelShuffleBtnEl;
   let wheelDpr = Math.max(1, window.devicePixelRatio || 1);
   let wheelAudioCtx = null;
 
@@ -7840,6 +7841,27 @@ function sslFinishTicket(){
     wheelState.fullList = list;
     wheelSetActiveList(list);
     wheelSaveSettings();
+  }
+
+  // Shuffle the entries on the wheel (Fisher–Yates). The full list is shuffled too,
+  // so "Restore full list" keeps the new order; already-picked entries stay off the wheel.
+  function wheelShuffleArray(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+  function wheelShuffle(){
+    if(wheelState.spinning || wheelState.activeList.length < 2) return;
+    const remaining = {};
+    wheelState.activeList.forEach(function(x){ remaining[x] = (remaining[x]||0) + 1; });
+    wheelState.fullList = wheelShuffleArray(wheelState.fullList.slice());
+    const active = [];
+    wheelState.fullList.forEach(function(x){
+      if(remaining[x] > 0){ active.push(x); remaining[x]--; }
+    });
+    wheelSetActiveList(active);
   }
 
   function wheelUpdateCountPill(){
@@ -8035,6 +8057,7 @@ function sslFinishTicket(){
     if(n === 0) return;
     wheelState.spinning = true;
     wheelSpinBtnEl.disabled = true;
+    wheelShuffleBtnEl.disabled = true;
 
     const winnerIndex = Math.floor(Math.random() * n);
     const segAngle = (Math.PI*2) / n;
@@ -8097,6 +8120,7 @@ function sslFinishTicket(){
       wheelUpdateResetBtn();
     }
     wheelSpinBtnEl.disabled = wheelState.activeList.length === 0;
+    wheelShuffleBtnEl.disabled = wheelState.activeList.length < 2;
     wheelState.spinning = false;
   }
 
@@ -8110,6 +8134,7 @@ function sslFinishTicket(){
     wheelWinnerBoxEl = document.getElementById('wheelWinnerBox');
     wheelHistoryListEl = document.getElementById('wheelHistoryList');
     wheelResetBtnEl = document.getElementById('wheelResetBtn');
+    wheelShuffleBtnEl = document.getElementById('wheelShuffleBtn');
 
     document.getElementById('wheelTabNumbers').addEventListener('click', function(){ wheelSelectTab('numbers'); });
     document.getElementById('wheelTabNames').addEventListener('click', function(){ wheelSelectTab('names'); });
@@ -8136,6 +8161,7 @@ function sslFinishTicket(){
       wheelWinnerBoxEl.innerHTML = '<span style="color:var(--muted);font-size:.85rem">Full list restored — spin again!</span>';
     });
     wheelSpinBtnEl.addEventListener('click', wheelStartSpin);
+    wheelShuffleBtnEl.addEventListener('click', wheelShuffle);
 
     const saved = wheelLoadSettings();
     if(saved){
