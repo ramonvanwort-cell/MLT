@@ -850,7 +850,7 @@ header{padding:16px 28px;display:flex;align-items:center;justify-content:space-b
           <div id="wheelPanelNumbers">
             <div class="ig" style="max-width:100%">
               <label>Number of segments</label>
-              <input type="number" id="wheelNumCount" min="2" max="100" value="12">
+              <input type="number" id="wheelNumCount" min="2" max="150" value="12">
             </div>
             <p class="wheel-help">The wheel gets numbers 1 through whatever count you enter here.</p>
             <button class="btn btn-purple" id="wheelBuildNumbers" type="button" style="width:100%;justify-content:center">Update wheel</button>
@@ -7769,6 +7769,7 @@ function sslFinishTicket(){
   const WHEEL_COLORS = ['#ffb627','#ff3d7f','#2fd3c8','#7b5cfa','#ff7a45','#4fd164','#3da5ff','#ff5c5c','#ffe066','#c86bff'];
   const wheelReduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const WHEEL_STORE_KEY = 'mlt_wheel_state_v1';
+  const WHEEL_MAX_ENTRIES = 150;
 
   const wheelState = {
     mode: 'numbers',
@@ -7820,7 +7821,7 @@ function sslFinishTicket(){
   }
 
   function wheelBuildNumbers(n){
-    n = Math.max(2, Math.min(100, Math.floor(n) || 12));
+    n = Math.max(2, Math.min(WHEEL_MAX_ENTRIES, Math.floor(n) || 12));
     document.getElementById('wheelNumCount').value = n;
     const list = [];
     for(let i=1;i<=n;i++) list.push(String(i));
@@ -7835,7 +7836,7 @@ function sslFinishTicket(){
       alert('Enter at least 2 names (one per line).');
       return;
     }
-    if(list.length > 100) list = list.slice(0,100);
+    if(list.length > WHEEL_MAX_ENTRIES) list = list.slice(0, WHEEL_MAX_ENTRIES);
     wheelState.fullList = list;
     wheelSetActiveList(list);
     wheelSaveSettings();
@@ -7922,7 +7923,9 @@ function sslFinishTicket(){
     }
 
     const segAngle = (Math.PI*2) / n;
-    const fontSize = Math.max(10, Math.min(20, 230/n)) * wheelDpr;
+    // Fit the label to the segment's width at the label position, so up to 150 entries stay legible
+    const arcPx = (radius - 20*wheelDpr) * segAngle;
+    const fontSize = Math.max(6*wheelDpr, Math.min(20*wheelDpr, (230/n)*wheelDpr, arcPx*0.9));
 
     wheelCtx.save();
     wheelCtx.translate(cx,cy);
@@ -7937,7 +7940,7 @@ function sslFinishTicket(){
       wheelCtx.closePath();
       wheelCtx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
       wheelCtx.fill();
-      wheelCtx.lineWidth = 2*wheelDpr;
+      wheelCtx.lineWidth = (n > 60 ? 1 : 2)*wheelDpr;
       wheelCtx.strokeStyle = '#0f0e17';
       wheelCtx.stroke();
     }
